@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "yang-web"
+version = "1.0.0"
+description = "Yang Web Arsenal — 离线 CTF Web 瑞士军刀"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "XiaoYang", email = "xiaoyang@example.com"}
+]
+keywords = ["ctf", "web", "security", "pentest", "payload", "decoder", "jwt"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.scripts]
+yang-web = "yang_web.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/XiaoYang/yang-web"
+Repository = "https://github.com/XiaoYang/yang-web.git"
+Issues = "https://github.com/XiaoYang/yang-web/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
