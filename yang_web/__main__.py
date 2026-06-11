@@ -7,14 +7,25 @@
 """
 import sys
 
+
+def main_gui():
+    """启动图形界面."""
+    from yang_web.gui import run_gui
+    run_gui()
+
+
+def main_cli():
+    """启动命令行."""
+    from yang_web.cli import main
+    main()
+
+
 if __name__ == "__main__":
-    # 无参数 或 明确指定 --gui → GUI 模式
-    if len(sys.argv) == 1:
-        from yang_web.gui import run_gui
-        run_gui()
+    if len(sys.argv) <= 1:
+        main_gui()
     elif sys.argv[1] == "--gui":
-        from yang_web.gui import run_gui
-        run_gui()
+        main_gui()
+    elif sys.argv[1] == "--cli":
+        main_cli()
     else:
-        from yang_web.cli import main
-        main()
+        main_cli()
