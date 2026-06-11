@@ -35,10 +35,16 @@ from .payloads import lfi as _lfi_mod
 from .payloads import ssrf as _ssrf_mod
 from .payloads import xss as _xss_mod
 from .payloads import php as _php_mod
+from .payloads import upload as _upload_mod
 
 # Aliases for function-level use
 ssti = _ssti_mod
 sqli = _sqli_mod
+lfi = _lfi_mod
+ssrf = _ssrf_mod
+xss = _xss_mod
+php = _php_mod
+upload = _upload_mod
 lfi = _lfi_mod
 ssrf = _ssrf_mod
 xss = _xss_mod
@@ -249,6 +255,18 @@ def cmd_sqli(args):
                 print(f"  {item['payload']}")
         return
 
+    if args.waf:
+        data = sqli.get_waf_bypass(args.waf if args.waf != "all" else "")
+        print(bold("\n🛡️ SQL WAF 绕过技巧:"))
+        for cat, items in data.items():
+            print(f"\n  {bold(green(cat))}:")
+            for item in items:
+                print(f"    {dim('•')} {yellow(item['name'])}")
+                print(f"      {dim(item['tip'])}")
+                if item.get('eg'):
+                    print(f"      {cyan('示例:')} {item['eg']}")
+        return
+
     # 默认: 显示所有数据库概览
     print(bold("\n🗄️ SQL 注入 Payload 概览:"))
     for db_name, payloads in sqli.EXPLOIT.items():
@@ -441,6 +459,78 @@ def cmd_rce_cmd(args):
     print(f"\n{dim('提示: --shell bash --ip 10.0.0.1 --port 4444 生成反弹 Shell')}")
 
 
+def cmd_upload(args):
+    """文件上传 Payload 命令."""
+    if args.ext:
+        print(bold("\n📎 后缀名绕过:"))
+        for cat, payloads in upload.EXT_BYPASS.items():
+            print(f"\n  {bold(green(cat))}:")
+            for p in payloads[:8]:
+                print(f"    {dim('•')} {p}")
+            if len(payloads) > 8:
+                print(f"    {dim(f'... 还有 {len(payloads)-8} 个')}")
+        return
+
+    if args.mime:
+        print(bold("\n🎭 Content-Type & 文件头伪造:"))
+        for ftype, info in upload.MIME_HEADER_FAKE.items():
+            print(f"\n  {bold(green(ftype))}:")
+            print(f"    Content-Type: {info['Content-Type']}")
+            print(f"    文件头hex: {info['文件头hex']}")
+        return
+
+    if args.content:
+        print(bold("\n🖼️ 图片马内容绕过:"))
+        for cat, payloads in upload.CONTENT_BYPASS.items():
+            print(f"\n  {bold(green(cat))}:")
+            for p in payloads[:6]:
+                print(f"    {dim('•')} {p}")
+        return
+
+    if args.parse:
+        serv = args.parse if args.parse != "all" else ""
+        data = upload.get_parse_vuln(serv)
+        print(bold("\n🔧 服务端解析漏洞:"))
+        for server, vulns in data.items():
+            print(f"\n  {bold(green(server))}:")
+            for v in vulns:
+                print(f"    {dim('•')} {yellow(v['name'])} — {v['tip']}")
+                print(f"      {cyan('示例:')} {v['eg']}")
+        return
+
+    if args.htaccess:
+        s = upload.generate_htaccess()
+        print(bold("\n📝 .htaccess Payload:"))
+        print(f"  {s}")
+        return
+
+    if args.userini:
+        s = upload.generate_userini()
+        print(bold("\n📝 .user.ini Payload:"))
+        print(f"  {s}")
+        return
+
+    if args.advanced:
+        print(bold("\n🚀 高级绕过技巧:"))
+        for cat, items in upload.ADVANCED_BYPASS.items():
+            print(f"\n  {bold(green(cat))}:")
+            for item in items:
+                print(f"    {dim('•')} {yellow(item['name'])} — {item['tip']}")
+        return
+
+    # 默认概览
+    print(bold("\n📤 文件上传攻击概览:"))
+    print(f"  {green('--ext')}         后缀名绕过")
+    print(f"  {green('--mime')}        Content-Type 伪造")
+    print(f"  {green('--content')}     图片马内容绕过")
+    print(f"  {green('--parse nginx')} 解析漏洞")
+    print(f"  {green('--htaccess')}    .htaccess 利用")
+    print(f"  {green('--userini')}     .user.ini 利用")
+    print(f"  {green('--advanced')}    高级技巧")
+    shell = upload.generate_image_shell()
+    print(f"\n{dim('快速一句话: ' + shell)}")
+
+
 def cmd_php_cmd(args):
     """PHP 技巧命令."""
     if args.magic:
@@ -477,6 +567,15 @@ def cmd_php_cmd(args):
                 print(f"  {dim('•')} {item}")
             if len(items) > 8:
                 print(f"  {dim(f'... 还有 {len(items)-8} 个')}")
+        return
+
+    if args.waf_php:
+        print(bold("\n🛡️ PHP RCE WAF 绕过技巧:"))
+        for cat, items in php.PHP_RCE_BYPASS.items():
+            if "WAF" in cat or "绕过" in cat:
+                print(f"\n  {bold(green(cat))}:")
+                for item in items[:12]:
+                    print(f"    {dim('•')} {item}")
         return
 
     # 默认
@@ -665,6 +764,7 @@ def build_parser():
     p_sqli.add_argument("--blind", action="store_true", help="显示盲注模板")
     p_sqli.add_argument("--search", metavar="KW", help="搜索 Payload")
     p_sqli.add_argument("--list", action="store_true", help="列出支持数据库")
+    p_sqli.add_argument("--waf", type=str, nargs='?', const='all', metavar="CAT", help="SQL WAF 绕过技巧")
 
     # ── lfi ──
     p_lfi = sub.add_parser("lfi", help="LFI / Path Traversal Payload")
@@ -703,9 +803,20 @@ def build_parser():
     p_php.add_argument("--magic", nargs="?", const="all", help="Magic Hash")
     p_php.add_argument("--type-juggle", action="store_true", dest="type_juggle", help="弱类型比较")
     p_php.add_argument("--deserialize", action="store_true", help="反序列化技巧")
+    p_php.add_argument("--waf-php", action="store_true", help="PHP RCE WAF 绕过技巧")
     p_php.add_argument("--rce", dest="rce_php", action="store_true", help="RCE Bypass 技巧")
 
-    # ── hashid ──
+        # ── upload ──
+    p_upload = sub.add_parser("upload", help="文件上传 Payload")
+    p_upload.add_argument("--ext", action="store_true", help="后缀名绕过")
+    p_upload.add_argument("--mime", action="store_true", help="Content-Type 伪造")
+    p_upload.add_argument("--content", action="store_true", help="图片马内容绕过")
+    p_upload.add_argument("--parse", type=str, help="解析漏洞 (nginx/apache/iis/all)")
+    p_upload.add_argument("--htaccess", action="store_true", help=".htaccess Payload")
+    p_upload.add_argument("--userini", action="store_true", help=".user.ini Payload")
+    p_upload.add_argument("--advanced", action="store_true", help="高级绕过技巧")
+
+# ── hashid ──
     p_hashid = sub.add_parser("hashid", help="Hash 类型识别")
     p_hashid.add_argument("text", nargs="?", help="Hash 字符串 (或通过管道 stdin)")
 
@@ -748,6 +859,7 @@ def main():
         "xss": cmd_xss_cmd,
         "rce": cmd_rce_cmd,
         "php": cmd_php_cmd,
+        "upload": cmd_upload,
         "hashid": cmd_hashid,
         "jwt": cmd_jwt,
         "scan": cmd_scan,
