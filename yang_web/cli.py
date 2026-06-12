@@ -13,8 +13,9 @@
     hashid   识别 Hash 类型
     jwt      JWT 解析 / 攻击
     scan     目录扫描 (离线词库)
-    scripts  内嵌 CTF 脚本库 (26 个脚本，一键调用)
-    solve    一键智能解题（自动检测 → 尝试脚本 → 输出结果）
+    scripts  内嵌 CTF 脚本库 (41 个脚本)
+    solve    一键智能解题
+    misc     20+ 常见密码类型知识库（编码/解码/参考图）
 """
 import argparse
 import sys
@@ -38,6 +39,10 @@ from .payloads import ssrf as _ssrf_mod
 from .payloads import xss as _xss_mod
 from .payloads import php as _php_mod
 from .payloads import upload as _upload_mod
+from .core.misc_crypto import (
+    CIPHER_TYPES, list_ciphers, search_ciphers, get_cipher,
+    get_image_path, get_categories, encode as mc_encode, decode as mc_decode,
+)
 from .scripts import (
     list_scripts, search_scripts, get_script, get_script_path,
     run_script, auto_solve, SCRIPTS, CATEGORIES,
@@ -848,6 +853,91 @@ def cmd_scripts(args):
             print(f"      {dim('运行:')} {cyan('yang-web scripts --run ' + repr(key))}")
 
 
+# ═══════════════════════════════════════════════════════════
+#  Misc Crypto 子命令
+# ═══════════════════════════════════════════════════════════
+
+def cmd_misc(args):
+    """Misc Crypto 知识库命令."""
+    # --list: 列出所有密码类型
+    if args.category or (not args.search and not args.id and not args.encode and not args.decode):
+        ciphers = list_ciphers(args.category)
+        if args.category:
+            print(bold(f"\n📂 分类: {args.category} ({len(ciphers)} 种)"))
+        else:
+            cats = get_categories()
+            print(bold(f"\n🔐 Misc Crypto 知识库 — {len(ciphers)} 种密码类型"))
+            print(dim(f"  分类: {', '.join(cats)}"))
+            print(dim(f"  用法: yang-web misc --id <类型>      查看详情"))
+            print(dim(f"        yang-web misc --encode <类型> -t 明文  编码"))
+            print(dim(f"        yang-web misc --decode <类型> -t 密文  解码"))
+            print(dim(f"        yang-web misc --search <关键词>    搜索\n"))
+
+        for c in ciphers:
+            tag = green("🔧") if c.get("encode") else blue("📖")
+            img = dim(" [图]") if c.get("image") else ""
+            print(f"  {tag} {bold(c['name']):12s} {dim('(')}{c['id']:20s}{dim(')')} {c['category']}{img}")
+
+        if not args.category:
+            print(dim(f"\n  共 {len(ciphers)} 种 — 使用 --category <分类> 筛选"))
+        return
+
+    # --search: 搜索
+    if args.search:
+        results = search_ciphers(args.search)
+        if not results:
+            print(yellow(f"未找到 '{args.search}' 相关密码类型"))
+            return
+        print(bold(f"\n🔍 搜索 '{args.search}' → {len(results)} 条结果:\n"))
+        for r in results:
+            print(f"  {bold(r['name'])} ({r['id']}) — {r['description']}")
+        return
+
+    # --id: 查看详情
+    if args.id:
+        info = get_cipher(args.id)
+        if not info:
+            print(red(f"未知密码类型: {args.id}"))
+            print(dim("使用 yang-web misc 查看所有可用类型"))
+            return
+        print(bold(f"\n📖 {info['name']} ({args.id})"))
+        print(f"  分类: {info['category']}")
+        print(f"  别名: {', '.join(info.get('aliases', []))}")
+        print(f"  描述: {info['description']}")
+        if info.get("features"):
+            print(f"  特征: {', '.join(info['features'])}")
+        if info.get("encode"):
+            print(f"  {green('✓')} 支持编码/解码")
+        else:
+            print(f"  {blue('ℹ')} 仅提供参考图")
+        img = get_image_path(args.id)
+        if img:
+            print(f"  🖼 参考图: {img}")
+        return
+
+    # --encode: 编码
+    if args.encode:
+        if not args.text:
+            print(red("请提供 -t/--text 参数"))
+            return
+        key = args.key or ""
+        result = mc_encode(args.encode, args.text, key=key)
+        print(bold(f"\n🔒 {args.encode} 编码:"))
+        print(f"  {green(result)}")
+        return
+
+    # --decode: 解码
+    if args.decode:
+        if not args.text:
+            print(red("请提供 -t/--text 参数"))
+            return
+        key = args.key or ""
+        result = mc_decode(args.decode, args.text, key=key)
+        print(bold(f"\n🔓 {args.decode} 解码:"))
+        print(f"  {green(result)}")
+        return
+
+
 def cmd_solve(args):
     """一键智能解题命令."""
     input_data = args.input
@@ -1034,6 +1124,16 @@ def build_parser():
                           help="输入类型 (默认: text)")
     p_solve.add_argument("--file", metavar="PATH", help="文件路径模式")
 
+    # ── misc ──
+    p_misc = sub.add_parser("misc", help="Misc Crypto 知识库 (20+ 密码类型)")
+    p_misc.add_argument("--category", metavar="CAT", help="按分类筛选")
+    p_misc.add_argument("--search", metavar="KW", help="搜索密码类型")
+    p_misc.add_argument("--id", metavar="ID", help="查看指定密码详情")
+    p_misc.add_argument("--encode", metavar="ID", help="编码密码类型")
+    p_misc.add_argument("--decode", metavar="ID", help="解码密码类型")
+    p_misc.add_argument("-t", "--text", metavar="TEXT", help="输入文本")
+    p_misc.add_argument("-k", "--key", metavar="KEY", help="密钥 (维吉尼亚等需要)")
+
     # ── scan ──
     p_scan = sub.add_parser("scan", help="目录扫描 (离线词库)")
     p_scan.add_argument("type", nargs="?", choices=["dir", "file"], default="dir", help="词库类型 (dir/file)")
@@ -1074,6 +1174,7 @@ def main():
         "jwt": cmd_jwt,
         "scan": cmd_scan,
         "scripts": cmd_scripts,
+        "misc": cmd_misc,
         "solve": cmd_solve,
     }
 

@@ -1,0 +1,38 @@
+    	    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+
+	A   A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+	B   B C D E F G H I J K L M N O P Q R S T U V W X Y Z A 
+	C   C D E F G H I J K L M N O P Q R S T U V W X Y Z A B
+	D   D E F G H I J K L M N O P Q R S T U V W X Y Z A B C 
+	E   E F G H I J K L M N O P Q R S T U V W X Y Z A B C D 
+	F   F G H I J K L M N O P Q R S T U V W X Y Z A B C D E 
+	G   G H I J K L M N O P Q R S T U V W X Y Z A B C D E F 
+	H   H I J K L M N O P Q R S T U V W X Y Z A B C D E F G 
+	I   I J K L M N O P Q R S T U V W X Y Z A B C D E F G H 
+	J   J K L M N O P Q R S T U V W X Y Z A B C D E F G H I 
+	K   K L M N O P Q R S T U V W X Y Z A B C D E F G H I J 
+	L   L M N O P Q R S T U V W X Y Z A B C D E F G H I J K 
+	M   M N O P Q R S T U V W X Y Z A B C D E F G H I J K L 
+	N   N O P Q R S T U V W X Y Z A B C D E F G H I J K L M 
+	O   O P Q R S T U V W X Y Z A B C D E F G H I J K L M N 
+	P   P Q R S T U V W X Y Z A B C D E F G H I J K L M N O 
+	Q   Q R S T U V W X Y Z A B C D E F G H I J K L M N O P 
+	R   R S T U V W X Y Z A B C D E F G H I J K L M N O P Q 
+	S   S T U V W X Y Z A B C D E F G H I J K L M N O P Q R  
+	T   T U V W X Y Z A B C D E F G H I J K L M N O P Q R S 
+	U   U V W X Y Z A B C D E F G H I J K L M N O P Q R S T 
+	V   V W X Y Z A B C D E F G H I J K L M N O P Q R S T U
+	W   W X Y Z A B C D E F G H I J K L M N O P Q R S T U V 
+	X   X Y Z A B C D E F G H I J K L M N O P Q R S T U V W 
+	Y   Y Z A B C D E F G H I J K L M N O P Q R S T U V W X 
+	Z   Z A B C D E F G H I J K L M N O P Q R S T U V W X Y 
+
+
+    行和列分别用待加密的字符和加密当前字符的密钥来决定,然后横竖的交集,就是当前字符加密后的结果!
+
+    比起传统的凯撒(caesar)密码,维吉尼亚(vigenere)在移位密码带来的字符出现频率上,具有更多迷惑性!多表替换,意味着不同字母移位替换时,遇到不同的密钥(偏移量),可能得到相同的密文;当然,相同的明文经过加密可能获得不同的密文,
+    下面是一个用 dorainm 当作密钥来加密 blood has not been cold yet的例子
+
+明文: bloodhasbotbeencoldyet
+密钥: dorainmdorainmdorainmd
+密文: EZFOLUMVBFTJRQQQFLLLQW
