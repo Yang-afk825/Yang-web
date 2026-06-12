@@ -14,7 +14,8 @@ from .core.hashid import identify as hash_identify
 from .core.jwt import decode_jwt, analyze_jwt, none_attack, brute_jwt, BUILTIN_WORDLIST
 from .core.misc_crypto import (
     CIPHER_TYPES, list_ciphers, search_ciphers, get_cipher,
-    get_image_path, get_categories, encode as mc_encode, decode as mc_decode,
+    get_image_path, get_text_content, get_categories,
+    encode as mc_encode, decode as mc_decode,
 )
 from .payloads import ssti, sqli, lfi, ssrf, xss, php, upload
 
@@ -392,7 +393,7 @@ class MiscCryptoPanel(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, bg=BG)
         _label(self, "🔐 Misc Crypto Knowledge Base", fg=ACCENT, font_size=16, bold=True, pady=8)
-        _label(self, "20+ CTF Misc 密码类型 — 编码/解码 + 参考图", fg=YELLOW, font_size=9)
+        _label(self, "20+ CTF Misc 密码类型 — 编码/解码 + 参考图/说明文本", fg=YELLOW, font_size=9)
 
         # ── Top bar: category + search ──
         top = tk.Frame(self, bg=BG)
@@ -432,7 +433,7 @@ class MiscCryptoPanel(tk.Frame):
         self.cipher_list.pack(fill=tk.BOTH, expand=True, pady=(0, 4))
         self.cipher_list.bind("<<ListboxSelect>>", self._on_cipher_select)
 
-        # Right: detail + io
+        # Right: detail + io + reference
         right = tk.Frame(panes, bg=BG)
         panes.add(right, width=550)
 
@@ -445,14 +446,24 @@ class MiscCryptoPanel(tk.Frame):
                                     wraplength=520)
         self.info_label.pack(fill=tk.X, pady=(0, 4))
 
-        # Reference image path
-        self.img_var = tk.StringVar(value="")
-        img_frame = tk.Frame(right, bg=BG)
-        img_frame.pack(fill=tk.X, pady=(2, 4))
-        tk.Label(img_frame, text="参考图:", bg=BG, fg=YELLOW,
-                 font=("Microsoft YaHei UI", 9)).pack(side=tk.LEFT)
-        tk.Label(img_frame, textvariable=self.img_var, bg=BG, fg=DARK,
-                 font=("Cascadia Code", 8)).pack(side=tk.LEFT, padx=4)
+        # Reference area (image button + text content)
+        ref_header = tk.Frame(right, bg=BG)
+        ref_header.pack(fill=tk.X, pady=(2, 2))
+        tk.Label(ref_header, text="参考内容:", bg=BG, fg=YELLOW,
+                 font=("Microsoft YaHei UI", 10, "bold")).pack(side=tk.LEFT)
+        self.view_img_btn = tk.Button(ref_header, text="🖼 查看原图",
+                                       command=self._open_image,
+                                       bg=INPUT_BG, fg=ACCENT,
+                                       activebackground=ACCENT, activeforeground=DARK,
+                                       relief="flat", padx=12, pady=3,
+                                       cursor="hand2",
+                                       font=("Microsoft YaHei UI", 9, "bold"))
+        self.img_path_var = tk.StringVar(value="")
+        tk.Label(ref_header, textvariable=self.img_path_var, bg=BG, fg=DARK,
+                 font=("Cascadia Code", 7)).pack(side=tk.RIGHT, padx=4)
+
+        # Reference text content
+        self.ref_frame, self.ref_text = _output_area(right, 10)
 
         # IO area
         io_bar = tk.Frame(right, bg=BG)
@@ -483,7 +494,11 @@ class MiscCryptoPanel(tk.Frame):
 
         # Output
         _label(right, "输出:", pady=4)
-        self.output_frame, self.output = _output_area(right, 8)
+        self.output_frame, self.output = _output_area(right, 6)
+
+        # Store state
+        self._selected_cid = None
+        self._current_image_path = ""
 
         # Load initial data
         self._ciphers = list_ciphers()
@@ -494,7 +509,7 @@ class MiscCryptoPanel(tk.Frame):
         self.cipher_list.delete(0, tk.END)
         for c in self._ciphers:
             tag = "🔧" if c.get("encode") else "📖"
-            self.cipher_list.insert(tk.END, f"{tag} {c['name']}")
+            self.cipher_list.insert(tk.END, tag + " " + c["name"])
 
     def _on_cat_change(self, event=None):
         cat = self.cat_var.get()
@@ -523,34 +538,70 @@ class MiscCryptoPanel(tk.Frame):
             return
         info = self._ciphers[idx]
         cid = info.get("id", "")
-        lines = [f"名称: {info['name']}",
-                 f"ID:   {cid}",
-                 f"分类: {info['category']}",
-                 f"别名: {', '.join(info.get('aliases', []))}",
-                 f"描述: {info['description']}"]
+        _clear_output(self.output)
+
+        # Build info lines
+        lines = [
+            "名称: " + info["name"],
+            "ID:   " + cid,
+            "分类: " + info["category"],
+            "别名: " + ", ".join(info.get("aliases", []) or ["无"]),
+            "描述: " + info["description"],
+        ]
         if info.get("features"):
-            lines.append(f"特征: {', '.join(info['features'])}")
+            lines.append("特征: " + ", ".join(info["features"]))
         if info.get("encode"):
             lines.append("状态: 支持编码/解码")
         else:
-            lines.append("状态: 仅提供参考图")
+            lines.append("状态: 仅提供参考图/说明")
         self.info_var.set("\n".join(lines))
+
+        # Show reference: image button + text content
         img = get_image_path(cid)
+        self._current_image_path = img if img else ""
+
         if img:
-            self.img_var.set(os.path.basename(img))
+            self.view_img_btn.configure(state="normal", bg=INPUT_BG, fg=ACCENT)
+            self.img_path_var.set(os.path.basename(img))
+            self.view_img_btn.pack(side=tk.LEFT, padx=(8, 0))
         else:
-            self.img_var.set("(无参考图)")
+            self.view_img_btn.pack_forget()
+            self.img_path_var.set("")
+
+        # Load and show text content
+        _clear_output(self.ref_text)
+        txt_content = get_text_content(cid)
+        if txt_content:
+            _append(self.ref_text, txt_content)
+        elif not img:
+            # No image, no text — show algorithm note
+            _append(self.ref_text, "[此密码为经典算法，无需参考图/说明文件]")
+        else:
+            _append(self.ref_text, "[点击 \"查看原图\" 按钮查看参考图片]")
+
         # Store selected cipher id
         self._selected_cid = cid
 
     def _clear_detail(self):
         self.info_var.set("")
-        self.img_var.set("")
+        self.img_path_var.set("")
+        self.view_img_btn.pack_forget()
+        _clear_output(self.ref_text)
         self._selected_cid = None
+        self._current_image_path = ""
+
+    def _open_image(self):
+        """Open reference image with system viewer."""
+        if self._current_image_path and os.path.exists(self._current_image_path):
+            try:
+                os.startfile(self._current_image_path)
+            except Exception as e:
+                _clear_output(self.ref_text)
+                _append(self.ref_text, "无法打开图片: " + str(e))
 
     def _do_encode(self):
         text = self.io_entry.get().strip()
-        cid = getattr(self, '_selected_cid', None)
+        cid = self._selected_cid
         if not cid:
             _clear_output(self.output)
             _append(self.output, "⚠ 请先选择密码类型")
@@ -563,13 +614,13 @@ class MiscCryptoPanel(tk.Frame):
         _clear_output(self.output)
         try:
             result = mc_encode(cid, text, key=key)
-            _append(self.output, f"🔒 {cid} 编码:\n{result}")
+            _append(self.output, "🔒 " + cid + " 编码:\n" + result)
         except Exception as e:
-            _append(self.output, f"❌ 错误: {e}")
+            _append(self.output, "❌ 错误: " + str(e))
 
     def _do_decode(self):
         text = self.io_entry.get().strip()
-        cid = getattr(self, '_selected_cid', None)
+        cid = self._selected_cid
         if not cid:
             _clear_output(self.output)
             _append(self.output, "⚠ 请先选择密码类型")
@@ -582,9 +633,9 @@ class MiscCryptoPanel(tk.Frame):
         _clear_output(self.output)
         try:
             result = mc_decode(cid, text, key=key)
-            _append(self.output, f"🔓 {cid} 解码:\n{result}")
+            _append(self.output, "🔓 " + cid + " 解码:\n" + result)
         except Exception as e:
-            _append(self.output, f"❌ 错误: {e}")
+            _append(self.output, "❌ 错误: " + str(e))
 
 
 class ScriptsPanel(tk.Frame):
