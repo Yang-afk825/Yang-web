@@ -1,8 +1,14 @@
 """Misc Crypto 知识库 — 常见密码类型编码/解码 + 参考图表.
 
-覆盖 CTF Misc 方向 20+ 种常见密码类型，提供编码/解码算法和视觉参考。
+覆盖 CTF Misc 方向 30+ 种常见密码/编码类型，提供编码/解码算法和视觉参考。
 """
 import os
+import re
+import base64 as b64
+import binascii
+import html as html_mod
+import codecs
+import urllib.parse
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "wordlists" / "data" / "misc_crypto"
@@ -319,6 +325,106 @@ CIPHER_TYPES = {
         "image": "Blue-punch-card-front-horiz.png",
         "description": "IBM 打孔卡编码参考图，二进制存储的早期形式",
         "features": ["IBM格式", "80列", "矩形孔"],
+    },
+    # ── 基础编码 ──
+    "base64": {
+        "name": "Base64 编码",
+        "aliases": ["base64", "b64"],
+        "category": "基础编码",
+        "encode": True, "decode": True,
+        "image": None,
+        "description": "最常见的二进制→文本编码，结尾常有=填充",
+        "features": ["A-Za-z0-9+/", "= 填充", "CTF 出场率最高"],
+    },
+    "base32": {
+        "name": "Base32 编码",
+        "aliases": ["base32", "b32"],
+        "category": "基础编码",
+        "encode": True, "decode": True,
+        "image": None,
+        "description": "A-Z2-7 字符集，每5bit一组",
+        "features": ["A-Z2-7", "= 填充到8的倍数", "全大写字母"],
+    },
+    "base16": {
+        "name": "Base16 / Hex 编码",
+        "aliases": ["hex", "base16", "十六进制"],
+        "category": "基础编码",
+        "encode": True, "decode": True,
+        "image": None,
+        "description": "每字节→两位十六进制数（00-FF）",
+        "features": ["0-9A-F", "偶数长度", "可0x前缀"],
+    },
+    "base58": {
+        "name": "Base58 编码",
+        "aliases": ["base58", "b58", "bitcoin"],
+        "category": "基础编码",
+        "encode": True, "decode": True,
+        "image": None,
+        "description": "去除了易混淆字符的编码（无0OIl），Bitcoin地址使用",
+        "features": ["无0OIl", "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"],
+    },
+    "base85": {
+        "name": "Base85 / ASCII85",
+        "aliases": ["base85", "b85", "ascii85"],
+        "category": "基础编码",
+        "encode": True, "decode": True,
+        "image": None,
+        "description": "Adobe PostScript/PDF 使用的编码，~>结尾",
+        "features": ["~> 结尾", "含特殊字符", "PDF/PostScript"],
+    },
+    "url_encode": {
+        "name": "URL 编码",
+        "aliases": ["url", "urlencode", "percent"],
+        "category": "基础编码",
+        "encode": True, "decode": True,
+        "image": None,
+        "description": "%xx 格式，常用于Web传参",
+        "features": ["% 百分号", "%xx 十六进制", "空格→%20或+"],
+    },
+    "html_entity": {
+        "name": "HTML 实体编码",
+        "aliases": ["html", "entity", "htmlentity"],
+        "category": "基础编码",
+        "encode": True, "decode": True,
+        "image": None,
+        "description": "&amp; &lt; &#x27; 等形式，用于HTML/XSS",
+        "features": ["& 开头 ; 结尾", "&#数字;", "&#x十六进制;"],
+    },
+    "unicode_escape": {
+        "name": "Unicode 转义",
+        "aliases": ["unicode", "uescape", "\\u"],
+        "category": "基础编码",
+        "encode": True, "decode": True,
+        "image": None,
+        "description": "\\uXXXX 或 \\UXXXXXXXX 格式",
+        "features": ["\\u 前缀", "4位/8位十六进制", "JSON/JS常用"],
+    },
+    "binary_str": {
+        "name": "二进制字符串",
+        "aliases": ["binary", "bin", "0101"],
+        "category": "基础编码",
+        "encode": True, "decode": True,
+        "image": None,
+        "description": "每8位一组 0/1 表示一个ASCII字符",
+        "features": ["0和1", "8位一组", "空格分隔"],
+    },
+    "octal_str": {
+        "name": "八进制字符串",
+        "aliases": ["octal", "oct", "八进制"],
+        "category": "基础编码",
+        "encode": True, "decode": True,
+        "image": None,
+        "description": "\\ooo 格式，每3位八进制表示一个字符",
+        "features": ["0-7 数字", "\\ 前缀", "3位一组"],
+    },
+    "decimal_str": {
+        "name": "十进制ASCII码",
+        "aliases": ["decimal", "dec", "ascii"],
+        "category": "基础编码",
+        "encode": True, "decode": True,
+        "image": None,
+        "description": "空格分隔的10进制数字，每个表示一个ASCII字符",
+        "features": ["数字 32-126", "空格分隔", "ASCII表"],
     },
 }
 
@@ -687,6 +793,207 @@ def morse_decode(cipher_text: str) -> str:
     return ''.join(result)
 
 
+# ═══════════════════════════════════════════
+#  基础编码 encode/decode (Base64/32/16/58/85/URL/HTML/Unicode/Binary/Octal)
+# ═══════════════════════════════════════════
+
+# ── Base64 ────────────────────────────────
+def base64_encode(text: str) -> str:
+    return b64.b64encode(text.encode('utf-8')).decode('ascii')
+
+def base64_decode(cipher_text: str) -> str:
+    t = cipher_text.strip()
+    missing = len(t) % 4
+    if missing:
+        t += '=' * (4 - missing)
+    try:
+        return b64.b64decode(t, validate=True).decode('utf-8', errors='replace')
+    except Exception:
+        return b64.b64decode(t).decode('utf-8', errors='replace')
+
+
+# ── Base32 ────────────────────────────────
+def base32_encode(text: str) -> str:
+    return b64.b32encode(text.encode('utf-8')).decode('ascii')
+
+def base32_decode(cipher_text: str) -> str:
+    t = cipher_text.strip().rstrip('=').upper()
+    missing = len(t) % 8
+    if missing:
+        t += '=' * (8 - missing)
+    try:
+        return b64.b32decode(t).decode('utf-8', errors='replace')
+    except Exception:
+        return ''
+
+
+# ── Base16 / Hex ──────────────────────────
+def base16_encode(text: str) -> str:
+    return text.encode('utf-8').hex()
+
+def base16_decode(cipher_text: str) -> str:
+    t = cipher_text.strip().replace(' ', '').replace('\n', '')
+    if t.lower().startswith('0x'):
+        t = t[2:]
+    try:
+        return bytes.fromhex(t).decode('utf-8', errors='replace')
+    except Exception:
+        return ''
+
+
+# ── Base58 ────────────────────────────────
+_B58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+
+def base58_encode(text: str) -> str:
+    data = text.encode('utf-8')
+    n = int.from_bytes(data, 'big')
+    res = []
+    while n > 0:
+        n, r = divmod(n, 58)
+        res.append(_B58_ALPHABET[r])
+    # Add leading zeros
+    for byte in data:
+        if byte == 0:
+            res.append(_B58_ALPHABET[0])
+        else:
+            break
+    return ''.join(reversed(res))
+
+def base58_decode(cipher_text: str) -> str:
+    t = cipher_text.strip()
+    n = 0
+    for c in t:
+        if c not in _B58_ALPHABET:
+            continue
+        n = n * 58 + _B58_ALPHABET.index(c)
+    # Leading zeros from alphabet[0]
+    leading_zeros = 0
+    for c in t:
+        if c == _B58_ALPHABET[0]:
+            leading_zeros += 1
+        else:
+            break
+    try:
+        result = n.to_bytes((n.bit_length() + 7) // 8, 'big')
+        return (b'\x00' * leading_zeros + result).decode('utf-8', errors='replace')
+    except Exception:
+        return ''
+
+
+# ── Base85 ────────────────────────────────
+def base85_encode(text: str) -> str:
+    try:
+        return b64.a85encode(text.encode('utf-8')).decode('ascii')
+    except Exception:
+        return b64.b85encode(text.encode('utf-8')).decode('ascii')
+
+def base85_decode(cipher_text: str) -> str:
+    t = cipher_text.strip()
+    try:
+        return b64.a85decode(t.encode('ascii'), adobe=True).decode('utf-8', errors='replace')
+    except Exception:
+        try:
+            return b64.a85decode(t.encode('ascii')).decode('utf-8', errors='replace')
+        except Exception:
+            try:
+                return b64.b85decode(t.encode('ascii')).decode('utf-8', errors='replace')
+            except Exception:
+                return ''
+
+
+# ── URL Encode ────────────────────────────
+def url_encode(text: str) -> str:
+    return urllib.parse.quote(text, safe='')
+
+def url_decode(cipher_text: str) -> str:
+    t = cipher_text.strip()
+    # Handle + → space
+    t = t.replace('+', '%20')
+    try:
+        return urllib.parse.unquote(t, encoding='utf-8')
+    except Exception:
+        return ''
+
+
+# ── HTML Entity ───────────────────────────
+def html_encode(text: str) -> str:
+    return html_mod.escape(text)
+
+def html_decode(cipher_text: str) -> str:
+    try:
+        return html_mod.unescape(cipher_text)
+    except Exception:
+        return cipher_text
+
+
+# ── Unicode Escape ────────────────────────
+def unicode_encode(text: str) -> str:
+    result = []
+    for c in text:
+        cp = ord(c)
+        if cp > 127:
+            result.append(f'\\u{cp:04x}')
+        else:
+            result.append(c)
+    return ''.join(result)
+
+def unicode_decode(cipher_text: str) -> str:
+    try:
+        return codecs.decode(cipher_text, 'unicode_escape')
+    except Exception:
+        return cipher_text
+
+
+# ── Binary String ─────────────────────────
+def binary_str_encode(text: str) -> str:
+    return ' '.join(format(ord(c), '08b') for c in text)
+
+def binary_str_decode(cipher_text: str) -> str:
+    cleaned = cipher_text.replace(' ', '').replace('\n', '')
+    result = []
+    for i in range(0, len(cleaned) - 7, 8):
+        try:
+            result.append(chr(int(cleaned[i:i+8], 2)))
+        except ValueError:
+            result.append('?')
+    return ''.join(result)
+
+
+# ── Octal String ──────────────────────────
+def octal_str_encode(text: str) -> str:
+    return ' '.join(f'\\{oct(ord(c))[2:].zfill(3)}' for c in text)
+
+def octal_str_decode(cipher_text: str) -> str:
+    parts = cipher_text.strip().split()
+    result = []
+    for p in parts:
+        p = p.strip('\\')
+        try:
+            result.append(chr(int(p, 8)))
+        except ValueError:
+            result.append('?')
+    return ''.join(result)
+
+
+# ── Decimal ASCII ─────────────────────────
+def decimal_str_encode(text: str) -> str:
+    return ' '.join(str(ord(c)) for c in text)
+
+def decimal_str_decode(cipher_text: str) -> str:
+    parts = cipher_text.strip().split()
+    result = []
+    for p in parts:
+        try:
+            n = int(p)
+            if 0 <= n <= 0x10FFFF:
+                result.append(chr(n))
+            else:
+                result.append('?')
+        except ValueError:
+            result.append('?')
+    return ''.join(result)
+
+
 # ── Keyboard Coordinate 键盘坐标 ────────────
 KEYBOARD_COORD_MAP = {
     'Q': '11', 'W': '12', 'E': '13', 'R': '14', 'T': '15',
@@ -902,6 +1209,19 @@ def encode(cipher_id: str, text: str, **kwargs) -> str:
     """通用编码入口。"""
     cid = cipher_id.lower().replace('-', '_').replace(' ', '_')
     funcs = {
+        # 基础编码
+        "base64": base64_encode,
+        "base32": base32_encode,
+        "base16": base16_encode, "hex": base16_encode,
+        "base58": base58_encode,
+        "base85": base85_encode,
+        "url_encode": url_encode, "url": url_encode, "urlencode": url_encode,
+        "html_entity": html_encode, "html": html_encode, "entity": html_encode,
+        "unicode_escape": unicode_encode, "unicode": unicode_encode, "uescape": unicode_encode,
+        "binary_str": binary_str_encode,
+        "octal_str": octal_str_encode, "octal": octal_str_encode, "oct": octal_str_encode,
+        "decimal_str": decimal_str_encode, "decimal": decimal_str_encode, "dec": decimal_str_encode,
+        # 经典密码
         "pigpen": pigpen_encode,
         "bacon": bacon_encode, "baconian": bacon_encode,
         "polybius": polybius_encode, "polybius_square": polybius_encode,
@@ -933,6 +1253,19 @@ def decode(cipher_id: str, cipher_text: str, **kwargs) -> str:
     """通用解码入口。"""
     cid = cipher_id.lower().replace('-', '_').replace(' ', '_')
     funcs = {
+        # 基础编码
+        "base64": base64_decode,
+        "base32": base32_decode,
+        "base16": base16_decode, "hex": base16_decode,
+        "base58": base58_decode,
+        "base85": base85_decode,
+        "url_encode": url_decode, "url": url_decode, "urlencode": url_decode,
+        "html_entity": html_decode, "html": html_decode, "entity": html_decode,
+        "unicode_escape": unicode_decode, "unicode": unicode_decode, "uescape": unicode_decode,
+        "binary_str": binary_str_decode,
+        "octal_str": octal_str_decode, "octal": octal_str_decode, "oct": octal_str_decode,
+        "decimal_str": decimal_str_decode, "decimal": decimal_str_decode, "dec": decimal_str_decode,
+        # 经典密码
         "pigpen": pigpen_decode,
         "bacon": bacon_decode, "baconian": bacon_decode,
         "polybius": polybius_decode, "polybius_square": polybius_decode,
