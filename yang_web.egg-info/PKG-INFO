@@ -1,7 +1,7 @@
 Metadata-Version: 2.4
 Name: yang-web
 Version: 1.0.0
-Summary: Yang Web Arsenal â ç¦»çº¿ CTF Web çå£«åå
+Summary: Yang Web Arsenal — 离线 CTF Web 瑞士军刀
 Author-email: XiaoYang <xiaoyang@example.com>
 License: MIT
 Project-URL: Homepage, https://github.com/XiaoYang/yang-web
@@ -25,9 +25,9 @@ Description-Content-Type: text/markdown
 License-File: LICENSE
 Dynamic: license-file
 
-# Yang-Web ð§
+# Yang-Web 🔧
 
-> **ç¦»çº¿ CTF Web çå£«åå** â é¶ä¾èµãçº¯ Python çå½ä»¤è¡ CTF å·¥å·ç®±
+> **离线 CTF Web 瑞士军刀** — 零依赖、纯 Python 的命令行 CTF 工具箱
 
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -35,34 +35,34 @@ Dynamic: license-file
 
 ---
 
-## ð ç®ä»
+## 📖 简介
 
-Yang-Web æ¯ä¸æ **CTF Web æ¹åççå£«åå**ï¼è¦çäºä»ä¿¡æ¯æ¢æµãç¼ç è§£ç ãPayload çæå°æ»å»å©ç¨çå®æ´æµç¨ãææåè½**å®å¨ç¦»çº¿**è¿è¡ï¼ä¸ä¾èµä»»ä½ç¬¬ä¸æ¹åºï¼æ·è´å° U çå°±è½å¨æ¯èµç¯å¢ç´æ¥ä½¿ç¨ã
+Yang-Web 是一把 **CTF Web 方向的瑞士军刀**，覆盖了从信息探测、编码解码、Payload 生成到攻击利用的完整流程。所有功能**完全离线**运行，不依赖任何第三方库，拷贝到 U 盘就能在比赛环境直接使用。
 
-**15 ä¸ªå­å½ä»¤ï¼600+ åç½® Payload + 41 ä¸ªååµ CTF èæ¬ï¼ä¸ä¸ªç»ç«¯æå®ææ Web é¢ã**
+**15 个子命令，600+ 内置 Payload + 41 个内嵌 CTF 脚本，一个终端搞定所有 Web 题。**
 
-## â¨ æ ¸å¿ä¼å¿
+## ✨ 核心优势
 
-- ð´ **å®å¨ç¦»çº¿** â é¶ pip ä¾èµï¼Python æ ååºä¸ææ¢­
-- ð§  **æºè½è§£ç ** â 14 ç§ç¼ç æ ¼å¼èªå¨è¯å« + éå½é¾å¼è§£ç 
-- ð¦ **ååµèæ¬åº** â 41 ä¸ª CTF èæ¬ï¼Crypto/Web/Misc/Reverseï¼ï¼ä¸é®è°ç¨
-- ð¯ **Payload å¨è¦ç** â SSTI/SQLi/LFI/SSRF/XSS/RCE/PHP/Upload å«å¤§æ»å»é¢
-- ð¡ï¸ **WAF ç»è¿** â 30+ ç§ SQL WAF ç»è¿ + 12 ç±» PHP RCE ç»è¿
-- ð **JWT æ»å»é¾** â è§£æâNone æ»å»âå¼±å¯é¥çç ´âä¼ªé ä»¤ç
-- ð¡ **ç¦»çº¿æ«æ** â 300+ ç®å½/æä»¶è¯åºï¼æ­ç½ç§æ ·æ«
+- 📴 **完全离线** — 零 pip 依赖，Python 标准库一把梭
+- 🧠 **智能解码** — 14 种编码格式自动识别 + 递归链式解码
+- 📦 **内嵌脚本库** — 41 个 CTF 脚本（Crypto/Web/Misc/Reverse），一键调用
+- 🎯 **Payload 全覆盖** — SSTI/SQLi/LFI/SSRF/XSS/RCE/PHP/Upload 八大攻击面
+- 🛡️ **WAF 绕过** — 30+ 种 SQL WAF 绕过 + 12 类 PHP RCE 绕过
+- 🔑 **JWT 攻击链** — 解析→None 攻击→弱密钥爆破→伪造令牌
+- 📡 **离线扫描** — 300+ 目录/文件词库，断网照样扫
 
 ---
 
-## ð¦ å®è£
+## 📦 安装
 
 ```bash
-# pip å®è£ï¼æ¨èï¼
+# pip 安装（推荐）
 pip install yang-web
 
-# æä» GitHub
+# 或从 GitHub
 pip install git+https://github.com/XiaoYang/yang-web.git
 
-# æç´æ¥è¿è¡ï¼æ éå®è£ï¼
+# 或直接运行（无需安装）
 git clone https://github.com/XiaoYang/yang-web.git
 cd Yang-web
 python -m yang_web
@@ -70,34 +70,34 @@ python -m yang_web
 
 ---
 
-## ð 14 ä¸ªå­å½ä»¤è¯¦è§£
+## 📋 14 个子命令详解
 
-### 1. æºè½è§£ç  `decode`
+### 1. 智能解码 `decode`
 
-èªå¨æ£æµç¼ç æ ¼å¼å¹¶é¾å¼è§£ç ï¼ç´å°è¿åææãæ¯æ **base64/32/16/58/85ãURL ç¼ç ãHTML å®ä½ãROT13ãäºè¿å¶/å«è¿å¶/åè¿å¶ ASCIIãUnicode è½¬ä¹ãæ©æ¯çµç **ã
+自动检测编码格式并链式解码，直到还原明文。支持 **base64/32/16/58/85、URL 编码、HTML 实体、ROT13、二进制/八进制/十进制 ASCII、Unicode 转义、摩斯电码**。
 
 ```bash
-# åå±è§£ç 
+# 单层解码
 $ yang-web decode "ZmxhZ3t0ZXN0fQ=="
-â flag{test}
+→ flag{test}
 
-# é¾å¼è§£ç ï¼èªå¨éå½ï¼
+# 链式解码（自动递归）
 $ yang-web decode "NTI2ZjYyNmY3NDIwNjU2MTczNzk="
-Step 1: base64  â 526f626f742065617379
-Step 2: base16  â Robot easy
-â æç»: Robot easy
+Step 1: base64  → 526f626f742065617379
+Step 2: base16  → Robot easy
+✅ 最终: Robot easy
 
-# æ´åå°è¯ææè§£ç å¨
+# 暴力尝试所有解码器
 $ yang-web decode --brute "dGVzdA=="
 ```
 
-**éç¨åºæ¯**ï¼ä½ æ¿å°ä¸æ®µä¹±ç /ç¼ç å­ç¬¦ä¸²ï¼ä¸ç¥éæ¯ä»ä¹ç¼ç  â ç´æ¥ä¸¢è¿æ¥
+**适用场景**：你拿到一段乱码/编码字符串，不知道是什么编码 → 直接丢进来
 
 ---
 
-### 2. ç¼ç  `encode`
+### 2. 编码 `encode`
 
-ååæä½ï¼æææç¼ç ææå®æ ¼å¼ã
+反向操作，把明文编码成指定格式。
 
 ```bash
 $ yang-web encode base64 "hello world"
@@ -105,288 +105,288 @@ $ yang-web encode url "admin' OR 1=1--"
 $ yang-web encode rot13 "flag"
 ```
 
-**éç¨åºæ¯**ï¼æé  Payload æ¶éè¦æç¹æ®å­ç¬¦ç¼ç ç»è¿ WAF
+**适用场景**：构造 Payload 时需要把特殊字符编码绕过 WAF
 
 ---
 
-### 3. SSTI æ¨¡æ¿æ³¨å¥ `ssti`
+### 3. SSTI 模板注入 `ssti`
 
-è¦ç **8 ç§æ¨¡æ¿å¼æ**ï¼Jinja2 (Flask)ãTwig (Symfony)ãSmarty (PHP)ãMako (Python)ãERB (Ruby)ãFreeMarker (Java)ãVelocity (Java)ãDjangoã
+覆盖 **8 种模板引擎**：Jinja2 (Flask)、Twig (Symfony)、Smarty (PHP)、Mako (Python)、ERB (Ruby)、FreeMarker (Java)、Velocity (Java)、Django。
 
 ```bash
-# ååºææå¼æ
+# 列出所有引擎
 $ yang-web ssti --list
 
-# æ£æµ Payloadï¼çåªä¸ªå¼ææååºï¼
+# 检测 Payload（看哪个引擎有反应）
 $ yang-web ssti --detect --engine "Jinja2"
 
-# å©ç¨ Payload â ç´æ¥ RCE
+# 利用 Payload — 直接 RCE
 $ yang-web ssti --exploit --engine "Jinja2"
-â¢ RCE: {{ cycler.__init__.__globals__.os.popen('id').read() }}
-â¢ æä»¶è¯»å: {{ ''.__class__.__mro__[1].__subclasses__()... }}
+• RCE: {{ cycler.__init__.__globals__.os.popen('id').read() }}
+• 文件读取: {{ ''.__class__.__mro__[1].__subclasses__()... }}
 
-# è¿æ»¤ç»è¿æå·§
+# 过滤绕过技巧
 $ yang-web ssti --bypass --engine "Twig"
 ```
 
-**éç¨åºæ¯**ï¼Web é¡µé¢è¾å¥ `{{7*7}}` è¿å `49` â ç¡®è®¤ SSTI â ç¨æ­¤å½ä»¤çæ RCE Payload
+**适用场景**：Web 页面输入 `{{7*7}}` 返回 `49` → 确认 SSTI → 用此命令生成 RCE Payload
 
 ---
 
-### 4. SQL æ³¨å¥ `sqli`
+### 4. SQL 注入 `sqli`
 
-è¦ç **MySQL/PostgreSQL/MSSQL/Oracle/SQLite** äºå¤§æ°æ®åºçå®æ´æ»å»é¾ã
+覆盖 **MySQL/PostgreSQL/MSSQL/Oracle/SQLite** 五大数据库的完整攻击链。
 
 ```bash
-# æ¥çæ¯æçæææ°æ®åº
+# 查看支持的所有数据库
 $ yang-web sqli --list
 
-# æ¾ç¤ºæ£æµ Payloadï¼é­åæ¢æµ/åæ°/åæ¾ä½/æçº¹ï¼
+# 显示检测 Payload（闭合探测/列数/回显位/指纹）
 $ yang-web sqli --detect
 
-# è·åæå®æ°æ®åºçå©ç¨ Payload
+# 获取指定数据库的利用 Payload
 $ yang-web sqli --db MySQL
-â¢ æ¥éæ³¨å¥: updatexml / extractvalue / floor / exp (10ç§)
-â¢ æ¶é´ç²æ³¨: sleep / benchmark / get_lock / ç¬å¡å°ç§¯
-â¢ å å æ³¨å¥: show / handler / é¢ç¼è¯
-â¢ æ ååæ³¨å¥: å«åæ³ / joinæ³ / åå¼å·ä¸æ 
-â¢ information_schema è¢«ç¦: innodb_table_stats / sys.schema
-â¢ INSERT/UPDATE/DELETE æ³¨å¥
+• 报错注入: updatexml / extractvalue / floor / exp (10种)
+• 时间盲注: sleep / benchmark / get_lock / 笛卡尔积
+• 堆叠注入: show / handler / 预编译
+• 无列名注入: 别名法 / join法 / 反引号下标
+• information_schema 被禁: innodb_table_stats / sys.schema
+• INSERT/UPDATE/DELETE 注入
 
-# æ¥çç²æ³¨éå­ç¬¦æåæ¨¡æ¿
+# 查看盲注逐字符提取模板
 $ yang-web sqli --blind
 
-# ð WAF ç»è¿æå·§ (30+ ç§)
-$ yang-web sqli --waf              # å¨é¨æ¾ç¤º
-$ yang-web sqli --waf ç©ºç½ç¬¦ç»è¿     # æåç±»æ¥ç
+# 🆕 WAF 绕过技巧 (30+ 种)
+$ yang-web sqli --waf              # 全部显示
+$ yang-web sqli --waf 空白符绕过     # 按分类查看
 ```
 
-**WAF ç»è¿æå·§ä¸è§**ï¼
+**WAF 绕过技巧一览**：
 
-| åç±» | ææ³æ° | ç¤ºä¾ |
+| 分类 | 手法数 | 示例 |
 |------|:---:|------|
-| å³é®å­åå½¢ | 6ç§ | ååãå¤§å°åãåå¼å·ãæ³¨éç©¿æãåèçæ¬æ³¨é |
-| é»è¾ç­ä»· | 6ç§ | orâ\|\|ãandâ&&ãæµ®ç¹ç»è¿ãç§å­¦è®¡æ°æ³ |
-| ç¼ç ç»è¿ | 8ç§ | URL/åéURL/Unicode/HTMLå®ä½/hex/char/base64/unhex |
-| ç©ºç½ç¬¦ç»è¿ | 7ç§ | %09/%0a/%0b/%0c/%0d/%a0/æ¬å·æ¿ä»£ |
-| å½æ°æ¿æ¢ | 8ç§ | substrâmidãifâcase whenãstrcmp/greatest/coalesce |
-| å®½å­èæ³¨å¥ | 3ç§ | %df%27ã%81%27ãé«é¶å®½å­è |
+| 关键字变形 | 6种 | 双写、大小写、反引号、注释穿插、内联版本注释 |
+| 逻辑等价 | 6种 | or→\|\|、and→&&、浮点绕过、科学计数法 |
+| 编码绕过 | 8种 | URL/双重URL/Unicode/HTML实体/hex/char/base64/unhex |
+| 空白符绕过 | 7种 | %09/%0a/%0b/%0c/%0d/%a0/括号替代 |
+| 函数替换 | 8种 | substr→mid、if→case when、strcmp/greatest/coalesce |
+| 宽字节注入 | 3种 | %df%27、%81%27、高阶宽字节 |
 
-**éç¨åºæ¯**ï¼ä»åç°æ³¨å¥ç¹å°æ¿å°æ°æ®ä¸æ­¥å°ä½
+**适用场景**：从发现注入点到拿到数据一步到位
 
 ---
 
-### 5. LFI / æä»¶åå« `lfi`
+### 5. LFI / 文件包含 `lfi`
 
-è·¯å¾éå Payload å PHP ä¼ªåè®®å©ç¨ã
+路径遍历 Payload 和 PHP 伪协议利用。
 
 ```bash
-# è·¯å¾éå Payload
+# 路径遍历 Payload
 $ yang-web lfi --traversal
 
-# Linux æææä»¶
+# Linux 敏感文件
 $ yang-web lfi --linux
 
-# Windows æææä»¶
+# Windows 敏感文件
 $ yang-web lfi --windows
 
-# PHP ä¼ªåè®®ï¼filter/wrapper/data/input/expectï¼
+# PHP 伪协议（filter/wrapper/data/input/expect）
 $ yang-web lfi --php
 
-# PHP filter chain çæå¨
+# PHP filter chain 生成器
 $ yang-web lfi --filter-chain
 ```
 
-**éç¨åºæ¯**ï¼`?page=index.php` â LFI æ¼æ´ â è¯»æºç  / æ¥å¿æ±¡æâRCE
+**适用场景**：`?page=index.php` → LFI 漏洞 → 读源码 / 日志污染→RCE
 
 ---
 
 ### 6. SSRF `ssrf`
 
-äºåæ°æ®å°å + åç½æ¢æµ + åè®®å©ç¨ã
+云元数据地址 + 内网探测 + 协议利用。
 
 ```bash
-# äºå¹³å°åæ°æ®ï¼AWS/GCP/Azure/é¿éäº/è¾è®¯äº/DigitalOceanï¼
+# 云平台元数据（AWS/GCP/Azure/阿里云/腾讯云/DigitalOcean）
 $ yang-web ssrf --cloud aws
 
-# åç½å°åæ®µ
+# 内网地址段
 $ yang-web ssrf --internal
 
-# åè®®å©ç¨ï¼gopher/dict/fileï¼
+# 协议利用（gopher/dict/file）
 $ yang-web ssrf --protocol
 
-# Bypass æå·§
+# Bypass 技巧
 $ yang-web ssrf --bypass
 ```
 
-**éç¨åºæ¯**ï¼`?url=http://xxx` â SSRF â æåç½ / è¯»äºåæ°æ®
+**适用场景**：`?url=http://xxx` → SSRF → 打内网 / 读云元数据
 
 ---
 
 ### 7. XSS `xss`
 
-åå°å XSS æ£æµ / çªå / ç»è¿ã
+反射型 XSS 检测 / 窃取 / 绕过。
 
 ```bash
-# æ£æµ Payload
+# 检测 Payload
 $ yang-web xss --detect
 
-# Cookie çªåå¨
+# Cookie 窃取器
 $ yang-web xss --steal cookie
 
-# å¤ç»´åº¦ç»è¿
+# 多维度绕过
 $ yang-web xss --bypass
 
-# æ¨¡æ¿æ³¨å¥ï¼AngularJS / Vueï¼
+# 模板注入（AngularJS / Vue）
 $ yang-web xss --template
 ```
 
 ---
 
-### 8. å½ä»¤æ³¨å¥ RCE `rce`
+### 8. 命令注入 RCE `rce`
 
-å½ä»¤æ³¨å¥ Payload + 7 ç§åå¼¹ Shell èªå¨çæã
+命令注入 Payload + 7 种反弹 Shell 自动生成。
 
 ```bash
-# å½ä»¤æ³¨å¥ Payloadï¼é¾æ¥ç¬¦/ç©ºæ ¼/å³é®å­ç»è¿ï¼
+# 命令注入 Payload（链接符/空格/关键字绕过）
 $ yang-web rce --inject
 
-# åå¼¹ Shellï¼Bash/NC/Python/PHP/Perl/Ruby/PowerShellï¼
+# 反弹 Shell（Bash/NC/Python/PHP/Perl/Ruby/PowerShell）
 $ yang-web rce --shell bash --ip 10.0.0.1 --port 4444
 
-# çæå®å¶åå¼¹ Shell
+# 生成定制反弹 Shell
 $ yang-web rce --custom
 ```
 
-**éç¨åºæ¯**ï¼`?cmd=ping` â RCE â ä¸é®çæåå¼¹ Shell
+**适用场景**：`?cmd=ping` → RCE → 一键生成反弹 Shell
 
 ---
 
-### 9. PHP æå·§ `php`
+### 9. PHP 技巧 `php`
 
-Magic Hash Ã 27ä¸ªãå¼±ç±»åæ¯è¾ Ã 14ç±»ãååºååã**WAF ç»è¿ Ã 12ç±»**ã
+Magic Hash × 27个、弱类型比较 × 14类、反序列化、**WAF 绕过 × 12类**。
 
 ```bash
-# Magic Hashï¼MD5/SHA-1 ç 0e å¼å¤´å¼ï¼
+# Magic Hash（MD5/SHA-1 的 0e 开头值）
 $ yang-web php --magic
 
-# å¼±ç±»åæ¯è¾æå·§
+# 弱类型比较技巧
 $ yang-web php --type-juggle
 
-# ååºåå Payload
+# 反序列化 Payload
 $ yang-web php --deserialize
 
-# RCE Bypass æå·§
+# RCE Bypass 技巧
 $ yang-web php --rce
 
-# ð PHP WAF ç»è¿ï¼12ç±»ï¼
+# 🆕 PHP WAF 绕过（12类）
 $ yang-web php --waf-php
 ```
 
-**PHP WAF ç»è¿ä¸è§**ï¼
+**PHP WAF 绕过一览**：
 
-| ç»è¿ç±»å | ç¤ºä¾ |
+| 绕过类型 | 示例 |
 |----------|------|
-| åå | `eval â evaleval` |
-| å¤§å°å | `Eval / eVaL` |
-| å½æ°æ¿æ¢ | `eval â assert / preg_replace` |
-| å¯åå½æ° | `$_GET['a']($_GET['b'])` |
-| å­ç¬¦ä¸²æ¼æ¥ | `$a='sy'.'stem'` |
-| ç¼ç æ§è¡ | `base64_decode / str_rot13` |
-| åææ åå² | `\s\y\s\t\e\m('id')` |
+| 双写 | `eval → evaleval` |
+| 大小写 | `Eval / eVaL` |
+| 函数替换 | `eval → assert / preg_replace` |
+| 可变函数 | `$_GET['a']($_GET['b'])` |
+| 字符串拼接 | `$a='sy'.'stem'` |
+| 编码执行 | `base64_decode / str_rot13` |
+| 反斜杠分割 | `\s\y\s\t\e\m('id')` |
 | create_function | `create_function('',$_GET['c'])` |
 | call_user_func | `call_user_func('system','id')` |
-| æ°ç»ç»è¿ | `$a[0]($a[1])` |
-| disable_functions ç»è¿ | LD_PRELOAD / FFI / PHP-FPM |
-| æ å­æ¯æ°å­ | ä½è¿ç®æé å­ç¬¦ä¸² |
+| 数组绕过 | `$a[0]($a[1])` |
+| disable_functions 绕过 | LD_PRELOAD / FFI / PHP-FPM |
+| 无字母数字 | 位运算构造字符串 |
 
 ---
 
-### 10. ð æä»¶ä¸ä¼  `upload`
+### 10. 🆕 文件上传 `upload`
 
-å¨æ°æ¨¡åï¼è¦çæä»¶ä¸ä¼ æ»å»çå®æ´é¢ã
+全新模块！覆盖文件上传攻击的完整面。
 
 ```bash
-# åç¼åç»è¿ï¼é»åå/ç©ºæ ¼ç¹/NTFSæµ/æªæ­/è¶é¿åç¼ï¼
+# 后缀名绕过（黑名单/空格点/NTFS流/截断/超长后缀）
 $ yang-web upload --ext
 
-# Content-Type & æä»¶å¤´ä¼ªé 
+# Content-Type & 文件头伪造
 $ yang-web upload --mime
 
-# å¾çé©¬åå®¹ç»è¿ï¼æ³¨é/ç­æ ç­¾/ç¼ç /æ¼æ¥/æ å½æ°ï¼
+# 图片马内容绕过（注释/短标签/编码/拼接/无函数）
 $ yang-web upload --content
 
-# æå¡ç«¯è§£ææ¼æ´ï¼Nginx/Apache/IISï¼
+# 服务端解析漏洞（Nginx/Apache/IIS）
 $ yang-web upload --parse nginx
 
-# .htaccess / .user.ini å©ç¨
+# .htaccess / .user.ini 利用
 $ yang-web upload --htaccess
 $ yang-web upload --userini
 
-# é«çº§æå·§ï¼æ¡ä»¶ç«äº/äºæ¬¡æ¸²æ/SVG XXEï¼
+# 高级技巧（条件竞争/二次渲染/SVG XXE）
 $ yang-web upload --advanced
 ```
 
-**éç¨åºæ¯**ï¼ä¸ä¼ å¤´å/éä»¶å¤ â æç¤º "åªè½ä¸ä¼ å¾ç" â ä¸é®è·ååç»´åº¦ç»è¿æ¹æ¡
+**适用场景**：上传头像/附件处 → 提示 "只能上传图片" → 一键获取各维度绕过方案
 
 ---
 
-### 11. Hash è¯å« `hashid`
+### 11. Hash 识别 `hashid`
 
-èªå¨è¯å« **40+ ç§ Hash ç®æ³**ï¼ç»åºç®æ³ååæ ¼å¼ç±»å«ã
+自动识别 **40+ 种 Hash 算法**，给出算法名和格式类别。
 
 ```bash
 $ yang-web hashid "e10adc3949ba59abbe56e057f20f883e"
-ð é¿åº¦: 32 å­ç¬¦
-ð å¯è½: MD5 (3ç§) / NTLM / MD4 / Domain Cached Credentials
+🔍 长度: 32 字符
+📊 可能: MD5 (3种) / NTLM / MD4 / Domain Cached Credentials
 
 $ yang-web hashid "$2y$10$..."
-ð å¯è½: bcrypt
+📊 可能: bcrypt
 ```
 
 ---
 
-### 12. JWT åææ»å» `jwt`
+### 12. JWT 分析攻击 `jwt`
 
-ä¸æ¡å½ä»¤å®æ JWT å®å¨åæã
+一条命令完成 JWT 安全分析。
 
 ```bash
-# è§£æ JWTï¼ä¸éªè¯ç­¾åï¼
+# 解析 JWT（不验证签名）
 $ yang-web jwt "eyJhbGciOiJSUzI1NiIs..."
 
-# None ç®æ³æ»å»
+# None 算法攻击
 $ yang-web jwt "eyJ..." --none
 
-# å¼±å¯é¥çç ´
+# 弱密钥爆破
 $ yang-web jwt "eyJ..." --brute
 
-# å·²ç¥å¯é¥ä¼ªé ï¼éæä¾ secretï¼
+# 已知密钥伪造（需提供 secret）
 $ yang-web jwt "eyJ..." --forge --secret "mykey" --claim '{"admin":true}'
 ```
 
 ---
 
-### 13. ç¦»çº¿ç®å½æ«æ `scan`
+### 13. 离线目录扫描 `scan`
 
-åç½® 300+ CTF å¸¸ç¨ç®å½/æä»¶è¯åºï¼å®å¨ç¦»çº¿ã
+内置 300+ CTF 常用目录/文件词库，完全离线。
 
 ```bash
-# ç®å½æ«æ
+# 目录扫描
 $ yang-web scan dir --search flag
 $ yang-web scan dir --search config
 
-# æä»¶æ«æ
+# 文件扫描
 $ yang-web scan file --search backup
 
-# ååºææè¯åº
+# 列出所有词库
 $ yang-web scan --list
 ```
 
 ---
 
-### 14. ç¼ç  `encode`
+### 14. 编码 `encode`
 
-ååæä½ï¼ææ â ç¼ç ã
+反向操作，明文 → 编码。
 
 ```bash
 $ yang-web encode base64 "admin' OR 1=1-- "
@@ -396,144 +396,144 @@ $ yang-web encode rot13 "flag"
 
 ---
 
-### 15. ååµ CTF èæ¬åº `scripts`
+### 15. 内嵌 CTF 脚本库 `scripts`
 
-ð åç½® **41 ä¸ª CTF å¸¸ç¨èæ¬**ï¼åç±»è¦ç CryptoãWebãMiscãReverse åå¤§æ¹åã
+🆕 内置 **41 个 CTF 常用脚本**，分类覆盖 Crypto、Web、Misc、Reverse 四大方向。
 
 ```bash
-# ååºææ 41 ä¸ªèæ¬
+# 列出所有 41 个脚本
 $ yang-web scripts
 
-# æåç±»æ¥ç
-$ yang-web scripts --category crypto      # å¯ç /ç¼ç  (17ä¸ª)
-$ yang-web scripts --category web          # Web æ»å» (9ä¸ª)
-$ yang-web scripts --category misc         # æé¡¹/Misc (14ä¸ª)
-$ yang-web scripts --category reverse      # éå (1ä¸ª)
+# 按分类查看
+$ yang-web scripts --category crypto      # 密码/编码 (17个)
+$ yang-web scripts --category web          # Web 攻击 (9个)
+$ yang-web scripts --category misc         # 杂项/Misc (14个)
+$ yang-web scripts --category reverse      # 逆向 (1个)
 
-# æç´¢èæ¬
+# 搜索脚本
 $ yang-web scripts --search rsa
 $ yang-web scripts --search aes
 
-# è¿è¡èæ¬
+# 运行脚本
 $ yang-web scripts --run rsa_toolkit
 $ yang-web scripts --run classic_crypto
-$ yang-web scripts --run 'Baseå®¶æå è§£å¯'
+$ yang-web scripts --run 'Base家族加解密'
 
-# ä¾èµæ£æ¥ & å®è£
+# 依赖检查 & 安装
 $ yang-web scripts --check-deps
 $ yang-web scripts --install-deps
 ```
 
-**èæ¬ä¸è§**ï¼
+**脚本一览**：
 
-| åç±» | æ°é | ä»£è¡¨èæ¬ |
+| 分类 | 数量 | 代表脚本 |
 |------|:---:|------|
-| ð å¯ç /ç¼ç  | 17 | AESå è§£å¯ãRSAæ»å»å·¥å·ç®±ãBase64éåãCRC32ç¢°æãMD5çç ´ãSM2ãå¤å¸å¯ç  |
-| ð Web | 9 | å¸å°ç²æ³¨ãæ¶é´ç²æ³¨ãæ å­ç¬¦RCEç»è¿ãPHPInfoæ¡ä»¶ç«äºLFIãSSHå¼±å£ä»¤æ«æ |
-| ð¦ æé¡¹/Misc | 14 | å¾çéååæãQRç å·¥å·ãPCAPæµéåæãZIPåæãæä»¶å¤´åæå¨ |
-| ð§ éå | 1 | APK éå Solver (SCM time-capsule â SHA256 â RC4) |
+| 🔐 密码/编码 | 17 | AES加解密、RSA攻击工具箱、Base64隐写、CRC32碰撞、MD5爆破、SM2、古典密码 |
+| 🌐 Web | 9 | 布尔盲注、时间盲注、无字符RCE绕过、PHPInfo条件竞争LFI、SSH弱口令扫描 |
+| 📦 杂项/Misc | 14 | 图片隐写分析、QR码工具、PCAP流量分析、ZIP分析、文件头分析器 |
+| 🔧 逆向 | 1 | APK 逆向 Solver (SCM time-capsule → SHA256 → RC4) |
 
 ---
 
-## ð å·¥ä½æµç¤ºä¾
+## 🔗 工作流示例
 
-### åºæ¯ä¸ï¼æ¿å°ä¸æ®µå¯æ
+### 场景一：拿到一段密文
 
 ```bash
 $ yang-web decode "NTI2ZjYyNmY3NDIwNjU2MTczNzk="
-# èªå¨æ£æµâé¾å¼è§£ç âå¾å°ææ
+# 自动检测→链式解码→得到明文
 ```
 
-### åºæ¯äºï¼åç° SQL æ³¨å¥
+### 场景二：发现 SQL 注入
 
 ```bash
-# 1. æ¢æµ
+# 1. 探测
 $ yang-web sqli --detect
-# 2. å¤æ­æ°æ®åº â è·å Payload
+# 2. 判断数据库 → 获取 Payload
 $ yang-web sqli --db MySQL
-# 3. éå° WAF â æ¥ç»è¿
-$ yang-web sqli --waf å³é®å­åå½¢
-$ yang-web sqli --waf ç©ºç½ç¬¦ç»è¿
-# 4. æ³¨å¥åºæ°æ® â
+# 3. 遇到 WAF → 查绕过
+$ yang-web sqli --waf 关键字变形
+$ yang-web sqli --waf 空白符绕过
+# 4. 注入出数据 ✅
 ```
 
-### åºæ¯ä¸ï¼æä»¶ä¸ä¼ ç¹
+### 场景三：文件上传点
 
 ```bash
-# 1. åçåç¼ç»è¿
+# 1. 先看后缀绕过
 $ yang-web upload --ext
-# 2. éååå®¹ç»è¿
+# 2. 配合内容绕过
 $ yang-web upload --content
-# 3. çæå¡å¨è§£ææ¼æ´
+# 3. 看服务器解析漏洞
 $ yang-web upload --parse apache
-# 4. é½è¯è¿äº â ä¸é«çº§æå·§
+# 4. 都试过了 → 上高级技巧
 $ yang-web upload --advanced
 ```
 
-### åºæ¯åï¼PHP ä»£ç å®¡è®¡ç»è¿
+### 场景四：PHP 代码审计绕过
 
 ```bash
 $ yang-web php --waf-php
-# æåºæ¯éï¼åå/å¤§å°å/å¯åå½æ°/åææ ...
+# 按场景选：双写/大小写/可变函数/反斜杠...
 $ yang-web php --rce
-# ç»å disable_functions ç»è¿
+# 组合 disable_functions 绕过
 ```
 
 ---
 
-## ð é¡¹ç®ç»æ
+## 📂 项目结构
 
 ```
 Yang-web/
-âââ pyproject.toml              # é¡¹ç®éç½®
-âââ README.md                   # æ¬ææ¡£
-âââ LICENSE                     # MIT
-âââ yang_web/
-â   âââ __init__.py
-â   âââ __main__.py             # python -m å¥å£
-â   âââ cli.py                  # å½ä»¤è¡çé¢ï¼15ä¸ªå­å½ä»¤ï¼
-â   âââ gui.py                  # ð å¾å½¢çé¢ (GUI â CLI ä¸é®åæ¢)
-â   âââ core/
-â   â   âââ decoder.py          # æºè½è§£ç å¼æï¼14ç§ç¼ç ï¼
-â   â   âââ hashid.py           # Hash ç±»åè¯å«
-â   â   âââ jwt.py              # JWT è§£æä¸æ»å»
-â   â   âââ utils.py            # å¬å±å·¥å·
-â   âââ payloads/
-â   â   âââ ssti.py             # SSTI Payloadï¼8ç§å¼æï¼
-â   â   âââ sqli.py             # SQL æ³¨å¥ï¼5ç§æ°æ®åº + 30ç§WAFç»è¿ï¼
-â   â   âââ lfi.py              # LFI / æä»¶åå« / PHPä¼ªåè®®
-â   â   âââ ssrf.py             # SSRFï¼äºåæ°æ® + åè®®å©ç¨ï¼
-â   â   âââ xss.py              # XSS Payload
-â   â   âââ rce.py              # å½ä»¤æ³¨å¥ / åå¼¹Shell
-â   â   âââ php.py              # PHP æå·§ï¼Magic Hash / å¼±ç±»å / WAFç»è¿ï¼
-â   â   âââ upload.py           # ð æä»¶ä¸ä¼ æ»å»
-â   âââ scripts/                # ð ååµ CTF èæ¬åºï¼41ä¸ªèæ¬ï¼
-â   â   âââ registry.py         # èæ¬æ³¨åè¡¨
-â   â   âââ runner.py           # èæ¬æ§è¡å¼æ
-â   â   âââ deps.py             # ä¾èµç®¡ç
-â   â   âââ solver.py           # ä¸é®è§£é¢å¼æ
-â   â   âââ *.py                # 41 ä¸ª CTF èæ¬
-â   âââ wordlists/
-â       âââ data/
-â           âââ dirs.txt        # 300+ CTF å¸¸ç¨ç®å½
-â           âââ files.txt       # 100+ CTF å¸¸ç¨æä»¶
-âââ tests/                      # æµè¯ç®å½
+├── pyproject.toml              # 项目配置
+├── README.md                   # 本文档
+├── LICENSE                     # MIT
+├── yang_web/
+│   ├── __init__.py
+│   ├── __main__.py             # python -m 入口
+│   ├── cli.py                  # 命令行界面（15个子命令）
+│   ├── gui.py                  # 🆕 图形界面 (GUI ↔ CLI 一键切换)
+│   ├── core/
+│   │   ├── decoder.py          # 智能解码引擎（14种编码）
+│   │   ├── hashid.py           # Hash 类型识别
+│   │   ├── jwt.py              # JWT 解析与攻击
+│   │   └── utils.py            # 公共工具
+│   ├── payloads/
+│   │   ├── ssti.py             # SSTI Payload（8种引擎）
+│   │   ├── sqli.py             # SQL 注入（5种数据库 + 30种WAF绕过）
+│   │   ├── lfi.py              # LFI / 文件包含 / PHP伪协议
+│   │   ├── ssrf.py             # SSRF（云元数据 + 协议利用）
+│   │   ├── xss.py              # XSS Payload
+│   │   ├── rce.py              # 命令注入 / 反弹Shell
+│   │   ├── php.py              # PHP 技巧（Magic Hash / 弱类型 / WAF绕过）
+│   │   └── upload.py           # 🆕 文件上传攻击
+│   ├── scripts/                # 🆕 内嵌 CTF 脚本库（41个脚本）
+│   │   ├── registry.py         # 脚本注册表
+│   │   ├── runner.py           # 脚本执行引擎
+│   │   ├── deps.py             # 依赖管理
+│   │   ├── solver.py           # 一键解题引擎
+│   │   └── *.py                # 41 个 CTF 脚本
+│   └── wordlists/
+│       └── data/
+│           ├── dirs.txt        # 300+ CTF 常用目录
+│           └── files.txt       # 100+ CTF 常用文件
+└── tests/                      # 测试目录
 ```
 
 ---
 
-## ð¤ è´¡ç®
+## 🤝 贡献
 
-æ¬¢è¿æäº¤ PRï¼å¸¸è§è´¡ç®æ¹åï¼
-- æ´å¤ Payload åç¼ç æ ¼å¼
-- æ°æ»å»æ¨¡å
-- è¯åºæ©å
-- Bug ä¿®å¤
+欢迎提交 PR！常见贡献方向：
+- 更多 Payload 和编码格式
+- 新攻击模块
+- 词库扩充
+- Bug 修复
 
-## ð® èç³»
+## 📮 联系
 
-ææ³æ³çå¸åå¯ä»¥èç³»æï¼3303257524@qq.com
+有想法的师傅可以联系我：3303257524@qq.com
 
-## ð License
+## 📄 License
 
-MIT License â è¯¦è§ [LICENSE](LICENSE)
+MIT License — 详见 [LICENSE](LICENSE)

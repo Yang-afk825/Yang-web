@@ -1,11 +1,11 @@
-"""Yang-Web GUI å¯å¨å¨ (.pyw = æ æ§å¶å°çªå£)
+"""Yang-Web GUI 启动器 (.pyw = 无控制台窗口)
 
-åå»ç´æ¥å¯å¨ GUIãä¸ python -m yang_web --gui ç­æã
+双击直接启动 GUI。与 python -m yang_web --gui 等效。
 """
 import sys
 import os
 
-# ç¡®ä¿é¡¹ç®æ ¹ç®å½å¨ sys.path ä¸­
+# 确保项目根目录在 sys.path 中
 _project_root = os.path.dirname(os.path.abspath(__file__))
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)

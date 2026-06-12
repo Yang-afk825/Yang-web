@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""PCAP/Wireshark helpers â extract data from packet captures (zero-deps)."""
+"""PCAP/Wireshark helpers — extract data from packet captures (zero-deps)."""
 
 from __future__ import annotations
 import struct
@@ -11,7 +11,7 @@ PCAP_PACKET_HEADER = struct.Struct("<IIII")
 
 
 def read_pcap(path: str) -> list:
-    """Simple PCAP reader â extracts raw packet data."""
+    """Simple PCAP reader — extracts raw packet data."""
     packets = []
     with open(path, "rb") as f:
         header = f.read(24)

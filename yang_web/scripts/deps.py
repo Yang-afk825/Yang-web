@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ä¾èµç®¡ç â æ£æµ / å®è£èæ¬æéç¬¬ä¸æ¹åº."""
+"""依赖管理 — 检测 / 安装脚本所需第三方库."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from .registry import SCRIPTS
 
 
 def collect_all_deps() -> Set[str]:
-    """æ¶éææèæ¬éè¦çä¾èµåå."""
+    """收集所有脚本需要的依赖包名."""
     deps = set()
     for meta in SCRIPTS.values():
         for dep in meta["deps"]:

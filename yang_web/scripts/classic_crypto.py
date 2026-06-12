@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Morse code & other classic ciphers â encode / decode / auto-detect."""
+"""Morse code & other classic ciphers — encode / decode / auto-detect."""
 
 MORSE_ENCODE = {
     'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',

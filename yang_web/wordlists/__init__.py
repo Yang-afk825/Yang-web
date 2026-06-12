@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
-"""åå»º CTF Web è¯åº."""
+"""内建 CTF Web 词库."""
 import os
 
 
 def get_wordlist_path(name: str) -> str:
-    """è·åè¯åºæä»¶è·¯å¾.
+    """获取词库文件路径.
 
     Args:
-        name: è¯åºå (dirs / files)
+        name: 词库名 (dirs / files)
     """
     data_dir = os.path.join(os.path.dirname(__file__), "data")
     return os.path.join(data_dir, f"{name}.txt")
 
 
 def load_wordlist(name: str) -> list:
-    """å è½½è¯åº.
+    """加载词库.
 
     Args:
-        name: è¯åºå (dirs / files)
+        name: 词库名 (dirs / files)
     """
     path = get_wordlist_path(name)
     if not os.path.exists(path):

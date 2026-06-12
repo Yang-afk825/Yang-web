@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Boolean-based blind SQL injection â complement to time-based."""
+"""Boolean-based blind SQL injection — complement to time-based."""
 
 from __future__ import annotations
 import sys

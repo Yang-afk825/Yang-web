@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""PHPInfo LFI Race Condition â PHP 5.x file upload + LFI via /tmp.
+"""PHPInfo LFI Race Condition — PHP 5.x file upload + LFI via /tmp.
 
 Classic CTF technique: when you have LFI but no file upload,
 use PHP's phpinfo() page which lists temporary uploaded files.

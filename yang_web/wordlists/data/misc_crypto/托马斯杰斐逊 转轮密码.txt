@@ -1,29 +1,29 @@
-ç¹å¾ï¼ç»ä½ ä¸ä¸ªå¯ç è¡¨ï¼nè¡ç26ä¸ªå­æ¯ï¼keyæ¯ 1 - n çæ°åï¼ å¯ææ¯ n ä¸ªè±æå­æ¯
+特征：给你一个密码表，n行的26个字母，key是 1 - n 的数列， 密文是 n 个英文字母
 
-æ ¹æ® key æ¾å¯¹åºè¡çå¯ç è¡¨ï¼ç¶åå¨å¯ç è¡¨ä¸æ¾å¯æå­æ¯ï¼ä»¥è¿ä¸ªå­æ¯ä¸ºå¼å¤´ï¼éæ°æåºã
+根据 key 找对应行的密码表，然后在密码表上找密文字母，以这个字母为开头，重新排序。
 
 e.g. 
 
-1ï¼ <ZWAXJGDLUBVIQHKYPNTCRMOSFE <
-2ï¼ <KPBELNACZDTRXMJQOYHGVSFUWI <
-3ï¼ <BDMAIZVRNSJUWFHTEQGYXPLOCK <
-4ï¼ <RPLNDVHGFCUKTEBSXQYIZMJWAO <
-5ï¼ <IHFRLABEUOTSGJVDKCPMNZQWXY <
-6ï¼ <AMKGHIWPNYCJBFZDRUSLOQXVET <
-7ï¼ <GWTHSPYBXIZULVKMRAFDCEONJQ <
-8ï¼ <NOZUTWDCVRJLXKISEFAPMYGHBQ <
-9ï¼ <QWATDSRFHENYVUBMCOIKZGJXPL <
-10ï¼ <WABMCXPLTDSRJQZGOIKFHENYVU <
-11ï¼ <XPLTDAOIKFZGHENYSRUBMCQWVJ <
-12ï¼ <TDSWAYXPLVUBOIKZGJRFHENMCQ <
-13ï¼ <BMCSRFHLTDENQWAOXPYVUIKZGJ <
-14ï¼ <XPHKZGJTDSENYVUBMLAOIRFCQW <
+1： <ZWAXJGDLUBVIQHKYPNTCRMOSFE <
+2： <KPBELNACZDTRXMJQOYHGVSFUWI <
+3： <BDMAIZVRNSJUWFHTEQGYXPLOCK <
+4： <RPLNDVHGFCUKTEBSXQYIZMJWAO <
+5： <IHFRLABEUOTSGJVDKCPMNZQWXY <
+6： <AMKGHIWPNYCJBFZDRUSLOQXVET <
+7： <GWTHSPYBXIZULVKMRAFDCEONJQ <
+8： <NOZUTWDCVRJLXKISEFAPMYGHBQ <
+9： <QWATDSRFHENYVUBMCOIKZGJXPL <
+10： <WABMCXPLTDSRJQZGOIKFHENYVU <
+11： <XPLTDAOIKFZGHENYSRUBMCQWVJ <
+12： <TDSWAYXPLVUBOIKZGJRFHENMCQ <
+13： <BMCSRFHLTDENQWAOXPYVUIKZGJ <
+14： <XPHKZGJTDSENYVUBMLAOIRFCQW <
 
-å¯é¥ï¼ 2,5,1,3,6,4,9,7,8,14,10,13,11,12
+密钥： 2,5,1,3,6,4,9,7,8,14,10,13,11,12
 
-å¯æï¼HCBTSXWCRQGL ES
+密文：HCBTSXWCRQGL ES
 
-å¨ç¬¬ 2 è¡å¯ç è¡¨ä¸­æ¾Hå¼å¤´çå­æ¯ï¼ç¶åä»¥Hå¼å¤´åå°å°¾è¿ä¸éï¼ä»¥æ­¤ç±»æ¨ï¼æ´çåºå¦ä¸ä¸ªå¯ç è¡¨ï¼
+在第 2 行密码表中找H开头的字母，然后以H开头再到尾过一遍，以此类推，整理出另一个密码表：
 
 HGVSFUWIKPBELNACZDTR X MJQOY
 CPMNZQWXYIHFRLABEUOT S GJVDK
@@ -40,12 +40,12 @@ LTDENQWAOXPYVUIKZGJB M CSRFH
 ENYSRUBMCQWVJXPLTDAO I KFZGH
 SWAYXPLVUBOIKZGJRFHE N MCQTD
 
-ç¶åå¨è¿éæ¾ä¸äºæ¯è¾ææ¾çï¼è¯­å¥éé¡ºçï¼è¯ï¼å°±æ¯flagã
+然后在这里找一些比较明显的（语句通顺的）话，就是flag。
 
 XSXSBUGKUADMIN
-æäº¤ä¸å¯¹çè¯å°±å¤§å°åæ¢ä¸ä¸ï¼xsxsbugkuadmin
+提交不对的话就大小写换一下：xsxsbugkuadmin
 
-è¿ä¸ªå¶å®å¯ä»¥åä¸ªç¨åºåºæ¥ï¼éåå¯ç è¡¨å³å¯ã
+这个其实可以写个程序出来，遍历密码表即可。
 # Rotor cipher decoder
 # parameter input
 rotor = [

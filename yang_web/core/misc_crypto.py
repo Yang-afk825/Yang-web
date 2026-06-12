@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Misc Crypto ç¥è¯åº â å¸¸è§å¯ç ç±»åç¼ç /è§£ç  + åèå¾è¡¨.
+"""Misc Crypto 知识库 — 常见密码类型编码/解码 + 参考图表.
 
-è¦ç CTF Misc æ¹å 30+ ç§å¸¸è§å¯ç /ç¼ç ç±»åï¼æä¾ç¼ç /è§£ç ç®æ³åè§è§åèã
+覆盖 CTF Misc 方向 30+ 种常见密码/编码类型，提供编码/解码算法和视觉参考。
 """
 import os
 import re
@@ -14,20 +14,20 @@ from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "wordlists" / "data" / "misc_crypto"
 
-# âââââââââââââââââââââââââââââââââââââââââââ
-# æ°æ®è¡¨ / å¸¸é
-# âââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════
+# 数据表 / 常量
+# ═══════════════════════════════════════════
 
-# çªåå¯ç  (Pigpen) â 4 å®«æ ¼åä½
+# 猪圈密码 (Pigpen) — 4 宫格变体
 PIGPEN_ENCODE = {
-    'A': 'ð', 'B': 'ð', 'C': 'ð', 'D': 'ð', 'E': 'â',
-    'F': 'â', 'G': 'â ', 'H': 'â¡', 'I': 'ð¥', 'J': 'ð§',
-    'K': 'ð¤', 'L': 'â', 'M': 'â ', 'N': 'â¡', 'O': 'ð¢',
-    'P': 'ð£', 'Q': 'ð¦', 'R': 'â', 'S': 'â', 'T': 'â¡',
-    'U': 'â»ð­', 'V': 'â»â', 'W': 'â»â', 'X': 'â»â¡', 'Y': 'â»ð¤', 'Z': 'â»ð§',
+    'A': '🞟', 'B': '🞞', 'C': '🞜', 'D': '🞝', 'E': '⊞',
+    'F': '⊟', 'G': '⊠', 'H': '⊡', 'I': '🞥', 'J': '🞧',
+    'K': '🞤', 'L': '⊟', 'M': '⊠', 'N': '⊡', 'O': '🞢',
+    'P': '🞣', 'Q': '🞦', 'R': '⊞', 'S': '⊟', 'T': '⊡',
+    'U': '≻🞭', 'V': '≻⊞', 'W': '≻⊟', 'X': '≻⊡', 'Y': '≻🞤', 'Z': '≻🞧',
 }
 
-# å¹æ ¹å¯ç  (Bacon) â 24 å­æ¯ A/B ç¼ç 
+# 培根密码 (Bacon) — 24 字母 A/B 编码
 BACON_24 = {
     'A': 'AAAAA', 'B': 'AAAAB', 'C': 'AAABA', 'D': 'AAABB', 'E': 'AABAA',
     'F': 'AABAB', 'G': 'AABBA', 'H': 'AABBB', 'I': 'ABAAA', 'J': 'ABAAB',
@@ -37,7 +37,7 @@ BACON_24 = {
     'Z': 'BBAAB',
 }
 
-# Polybius æ¹éµ (5x5, I/J merged)
+# Polybius 方阵 (5x5, I/J merged)
 POLYBIUS_GRID = [
     ['A', 'B', 'C', 'D', 'E'],
     ['F', 'G', 'H', 'I', 'K'],
@@ -46,20 +46,20 @@ POLYBIUS_GRID = [
     ['V', 'W', 'X', 'Y', 'Z'],
 ]
 
-# é®çåæ  (æ å QWERTY è¡)
+# 键盘坐标 (标准 QWERTY 行)
 KEYBOARD_ROWS = {
     'row1': 'QWERTYUIOP',
     'row2': 'ASDFGHJKL',
     'row3': 'ZXCVBNM',
 }
 
-# QWE å å¯æ³ (Q=A, W=B, E=C...)
+# QWE 加密法 (Q=A, W=B, E=C...)
 _QWE_ORDER = "QWERTYUIOPASDFGHJKLZXCVBNM"
 _ABC_ORDER  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 QWE_ENCODE = dict(zip(_ABC_ORDER, _QWE_ORDER))
 QWE_DECODE = dict(zip(_QWE_ORDER, _ABC_ORDER))
 
-# é®çæ£çå¯ç  (1-9å®«æ ¼æ å°)
+# 键盘棋盘密码 (1-9宫格映射)
 KEYBOARD_CHESSBOARD = {
     'Q': '11', 'W': '12', 'E': '13', 'R': '14', 'T': '15', 'Y': '16', 'U': '17', 'I': '18', 'O': '19', 'P': '10',
     'A': '21', 'S': '22', 'D': '23', 'F': '24', 'G': '25', 'H': '26', 'J': '27', 'K': '28', 'L': '29',
@@ -67,7 +67,7 @@ KEYBOARD_CHESSBOARD = {
 }
 CHESSBOARD_DECODE = {v: k for k, v in KEYBOARD_CHESSBOARD.items()}
 
-# ææºé®çå¯ç  (T9)
+# 手机键盘密码 (T9)
 PHONE_KEYPAD = {
     'A': '21', 'B': '22', 'C': '23', 'D': '31', 'E': '32', 'F': '33',
     'G': '41', 'H': '42', 'I': '43', 'J': '51', 'K': '52', 'L': '53',
@@ -76,18 +76,18 @@ PHONE_KEYPAD = {
 }
 PHONE_DECODE = {v: k for k, v in PHONE_KEYPAD.items()}
 
-# æ åé¶æ²³å­æ¯ (SGA) â Minecraft éé­å°
+# 标准银河字母 (SGA) — Minecraft 附魔台
 SGA_CHARS = {
-    'A': 'á', 'B': 'Ê', 'C': 'áµ', 'D': 'â¸', 'E': 'á·',
-    'F': 'â', 'G': 'â£', 'H': 'â', 'I': 'â', 'J': 'â®',
-    'K': 'ê', 'L': 'ê', 'M': 'á²', 'N': 'ãª', 'O': 'ð¹',
-    'P': '!',  'Q': 'á', 'R': 'â·', 'S': 'á­', 'T': 'â¸',
-    'U': 'â', 'V': 'â', 'W': 'â´', 'X': '/', 'Y': 'â',
-    'Z': 'â',
+    'A': 'ᔑ', 'B': 'ʖ', 'C': 'ᓵ', 'D': '↸', 'E': 'ᒷ',
+    'F': '⎓', 'G': '⊣', 'H': '⍑', 'I': '╎', 'J': '⋮',
+    'K': 'ꖌ', 'L': 'ꖎ', 'M': 'ᒲ', 'N': 'リ', 'O': '𝙹',
+    'P': '!',  'Q': 'ᑑ', 'R': '∷', 'S': 'ᓭ', 'T': 'ℸ',
+    'U': '⚍', 'V': '⍊', 'W': '∴', 'X': '/', 'Y': '‖',
+    'Z': '⋃',
 }
 SGA_DECODE = {v: k for k, v in SGA_CHARS.items() if len(v) == 1}
 
-# ADFGX å¯ç è¡¨ (5x5)
+# ADFGX 密码表 (5x5)
 ADFGX_TABLE = {
     'A': 'AA', 'B': 'AF', 'C': 'AD', 'D': 'AD', 'E': 'FG',
     'F': 'AX', 'G': 'AG', 'H': 'FV', 'I': 'FX', 'J': 'FX',
@@ -97,14 +97,14 @@ ADFGX_TABLE = {
     'Z': 'VX',
 }
 
-# å½éºå¯ç  â ä¸­æç¬ç»æ°æ å°æ°å­
+# 当铺密码 — 中文笔画数映射数字
 PAWNSHOP_MAP = {
-    'å£': 0, 'ç±': 1, 'ä¸­': 2, 'äºº': 3, 'å·¥': 4,
-    'å¤§': 5, 'ç': 6, 'å¤«': 7, 'äº': 8, 'ç¾': 9,
+    '口': 0, '由': 1, '中': 2, '人': 3, '工': 4,
+    '大': 5, '王': 6, '夫': 7, '井': 8, '羊': 9,
 }
 PAWNSHOP_REV = {v: k for k, v in PAWNSHOP_MAP.items()}
 
-# æé©¬æ¯Â·æ°æéè½¬è½®å¯ç ï¼é»è®¤è½®å­ï¼
+# 托马斯·杰斐逊转轮密码（默认轮子）
 JEFFERSON_ROTORS = [
     "ZWAXJGDLUBVIQHKYPNTCRMOSFE", "KPBELNACZDTRXMJQOYHGVSFUWI",
     "BDMAIZVRNSJUWFHTEQGYXPLOCK", "RPLNDVHGFCUKTEBSXQYIZMJWAO",
@@ -115,331 +115,331 @@ JEFFERSON_ROTORS = [
     "BMCSRFHLTDENQWAOXPYVUIKZGJ", "XPHKZGJTDSENYVUBMLAOIRFCQW",
 ]
 
-# âââââââââââââââââââââââââââââââââââââââââââ
-# å¯ç ç±»ååæ°æ®
-# âââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════
+# 密码类型元数据
+# ═══════════════════════════════════════════
 
 CIPHER_TYPES = {
     "pigpen": {
-        "name": "çªåå¯ç ",
-        "aliases": ["pigpen", "çªå", "masonic", "pigpen_cipher"],
-        "category": "å¾å½¢æ¿æ¢",
+        "name": "猪圈密码",
+        "aliases": ["pigpen", "猪圈", "masonic", "pigpen_cipher"],
+        "category": "图形替换",
         "encode": True, "decode": True,
-        "image": "çªåå¯ç .png",
-        "description": "å±æµä¼å¯ç åä½ï¼ç¨äºå­æ ¼+ç¹æ ç¬¦å·è¡¨ç¤ºå­æ¯",
-        "features": ["äºå­æ ¼å¾æ¡", "å¸¦ç¹/ä¸å¸¦ç¹", "4å®«æ ¼åä½"],
+        "image": "猪圈密码.png",
+        "description": "共济会密码变体，用井字格+点标符号表示字母",
+        "features": ["井字格图案", "带点/不带点", "4宫格变体"],
     },
     "bacon": {
-        "name": "å¹æ ¹å¯ç ",
-        "aliases": ["bacon", "å¹æ ¹", "baconian"],
-        "category": "äºè¿å¶æ¿æ¢",
+        "name": "培根密码",
+        "aliases": ["bacon", "培根", "baconian"],
+        "category": "二进制替换",
         "encode": True, "decode": True,
-        "image": "å¹æ ¹å¯ç .jpg",
-        "description": "ç¨ A/B 5 ä½åºåè¡¨ç¤ºå­æ¯ï¼å¯éèå¨å¤§å°åä¸­",
-        "features": ["AAAAA-ZZZZZ", "å¯éèå¨å¤§å°å/ç²ä½ä¸­", "24/26å­æ¯çæ¬"],
+        "image": "培根密码.jpg",
+        "description": "用 A/B 5 位序列表示字母，可隐藏在大小写中",
+        "features": ["AAAAA-ZZZZZ", "可隐藏在大小写/粗体中", "24/26字母版本"],
     },
     "polybius": {
-        "name": "æ³¢å©æ¯å¥¥æ¯æ£ç",
-        "aliases": ["polybius", "æ³¢å©æ¯å¥¥æ¯", "polybius_square"],
-        "category": "åæ æ¿æ¢",
+        "name": "波利比奥斯棋盘",
+        "aliases": ["polybius", "波利比奥斯", "polybius_square"],
+        "category": "坐标替换",
         "encode": True, "decode": True,
-        "image": "æ³¢å©æ¯å¥¥æ¯æ£ç.png",
-        "description": "5Ã5 æ¹éµè¡ååæ è¡¨ç¤ºå­æ¯ï¼I=Jï¼",
-        "features": ["11-55è¡ååæ ", "I/Jåå¹¶", "å¯æ©å±6x6å«æ°å­"],
+        "image": "波利比奥斯棋盘.png",
+        "description": "5×5 方阵行列坐标表示字母（I=J）",
+        "features": ["11-55行列坐标", "I/J合并", "可扩展6x6含数字"],
     },
     "vigenere": {
-        "name": "ç»´åå°¼äºå¯ç ",
-        "aliases": ["vigenere", "ç»´åå°¼äº", "vig"],
-        "category": "å¤è¡¨æ¿æ¢",
+        "name": "维吉尼亚密码",
+        "aliases": ["vigenere", "维吉尼亚", "vig"],
+        "category": "多表替换",
         "encode": True, "decode": True,
-        "image": "ç»´åå°¼äºå¯ç .png", "image2": "ç»´åå°¼äºå¯.png",
-        "description": "ä½¿ç¨å¯é¥è¯çå¯æå¯ç åä½ï¼å¤è¡¨æ¿æ¢",
-        "features": ["å¯é¥å¾ªç¯", "ç»´åå°¼äºæ¹éµ", "26Ã26è¡¨æ ¼"],
+        "image": "维吉尼亚密码.png", "image2": "维吉尼亚密.png",
+        "description": "使用密钥词的凯撒密码变体，多表替换",
+        "features": ["密钥循环", "维吉尼亚方阵", "26×26表格"],
     },
     "caesar": {
-        "name": "å¯æå¯ç ",
-        "aliases": ["caesar", "å¯æ", "caesar_shift"],
-        "category": "åè¡¨æ¿æ¢",
+        "name": "凯撒密码",
+        "aliases": ["caesar", "凯撒", "caesar_shift"],
+        "category": "单表替换",
         "encode": True, "decode": True,
-        "image": "å¯æå¯ç å å¯.jpg",
-        "description": "åºå®åç§»å­æ¯è¡¨ï¼æå¤èçå å¯æ¹å¼",
-        "features": ["ROT13æ¯å¶ç¹ä¾", "åç§»é1-25", "å¯æ´åæä¸¾"],
+        "image": "凯撒密码加密.jpg",
+        "description": "固定偏移字母表，最古老的加密方式",
+        "features": ["ROT13是其特例", "偏移量1-25", "可暴力枚举"],
     },
     "adfgx": {
-        "name": "ADFGX å å¯æ³",
+        "name": "ADFGX 加密法",
         "aliases": ["adfgx", "adfgvx"],
-        "category": "WWI åäºå¯ç ",
+        "category": "WWI 军事密码",
         "encode": True, "decode": True,
-        "image": "ADFGXå å¯æ³.png",
-        "description": "ä¸æå¾·åä½¿ç¨çåæ­¥å å¯ï¼Polybius + åç½®æ¢",
-        "features": ["ä»ç¨ADFGXå­æ¯", "5Ã5 Polybius", "éè¦å¯é¥è¯"],
+        "image": "ADFGX加密法.png",
+        "description": "一战德军使用的双步加密：Polybius + 列置换",
+        "features": ["仅用ADFGX字母", "5×5 Polybius", "需要密钥词"],
     },
     "qwe_keyboard": {
-        "name": "QWE é®çå å¯æ³",
-        "aliases": ["qwe", "é®çQWE"],
-        "category": "é®çæ å°",
+        "name": "QWE 键盘加密法",
+        "aliases": ["qwe", "键盘QWE"],
+        "category": "键盘映射",
         "encode": True, "decode": True,
-        "image": "çµèé®çQWEå å¯æ³.jpg",
-        "description": "QWERTYé®çé¡ºåºæ å°ABCD...",
-        "features": ["Q=A, W=B, E=C...", "é®çå¸å±", "ç®åæ¿æ¢"],
+        "image": "电脑键盘QWE加密法.jpg",
+        "description": "QWERTY键盘顺序映射ABCD...",
+        "features": ["Q=A, W=B, E=C...", "键盘布局", "简单替换"],
     },
     "keyboard_chessboard": {
-        "name": "çµèé®çæ£çå¯ç ",
-        "aliases": ["é®çæ£ç", "keyboard_chess"],
-        "category": "é®çæ å°",
+        "name": "电脑键盘棋盘密码",
+        "aliases": ["键盘棋盘", "keyboard_chess"],
+        "category": "键盘映射",
         "encode": True, "decode": True,
-        "image": "çµèé®çæ£çå å¯.jpg",
-        "description": "é®ç3è¡å¸å±ï¼è¡å·+åå·è¡¨ç¤ºæ¯ä¸ªé®",
-        "features": ["Q=11, W=12...", "æ°å­åæ ", "3è¡é®çæ å°"],
+        "image": "电脑键盘棋盘加密.jpg",
+        "description": "键盘3行布局，行号+列号表示每个键",
+        "features": ["Q=11, W=12...", "数字坐标", "3行键盘映射"],
     },
     "keyboard_coordinate": {
-        "name": "çµèé®çåæ å å¯",
-        "aliases": ["é®çåæ ", "keyboard_coord"],
-        "category": "é®çæ å°",
+        "name": "电脑键盘坐标加密",
+        "aliases": ["键盘坐标", "keyboard_coord"],
+        "category": "键盘映射",
         "encode": True, "decode": True,
-        "image": "çµèé®çåæ å å¯.jpg",
-        "description": "ç¨é®çç©éµè¡ååæ è¡¨ç¤ºå­æ¯",
-        "features": ["è¡å·+åå·", "åæ°å­åæ ", "åèå¾"],
+        "image": "电脑键盘坐标加密.jpg",
+        "description": "用键盘矩阵行列坐标表示字母",
+        "features": ["行号+列号", "双数字坐标", "参考图"],
     },
     "phone_keypad": {
-        "name": "ææºé®çå¯ç ",
-        "aliases": ["phone", "ææºé®ç", "T9", "nokia"],
-        "category": "æ°å­æ å°",
+        "name": "手机键盘密码",
+        "aliases": ["phone", "手机键盘", "T9", "nokia"],
+        "category": "数字映射",
         "encode": True, "decode": True,
-        "image": "ææºé®çå å¯è§£å¯.jpg",
-        "description": "ä¼ ç»ææºä¹å®«æ ¼é®çï¼æ°å­é®+æé®æ¬¡æ°",
-        "features": ["A=21, B=22...", "ä¹å®«æ ¼æ°å­", "åä½æ°å­"],
+        "image": "手机键盘加密解密.jpg",
+        "description": "传统手机九宫格键盘，数字键+按键次数",
+        "features": ["A=21, B=22...", "九宫格数字", "双位数字"],
     },
     "atbash": {
-        "name": "åç¹å·´ä»ç ",
-        "aliases": ["atbash", "åç¹å·´ä»"],
-        "category": "åè¡¨æ¿æ¢",
+        "name": "埃特巴什码",
+        "aliases": ["atbash", "埃特巴什"],
+        "category": "单表替换",
         "encode": True, "decode": True,
         "image": None,
-        "description": "å­æ¯è¡¨åè½¬ï¼AâZ, BâY...ï¼ï¼èªåå¯ç ",
-        "features": ["èªåæ§", "A=Z, B=Y...", "æç®åæ¿æ¢"],
+        "description": "字母表反转（A↔Z, B↔Y...），自反密码",
+        "features": ["自反性", "A=Z, B=Y...", "最简单替换"],
     },
     "rail_fence": {
-        "name": "æ æ å¯ç ",
-        "aliases": ["rail_fence", "æ æ ", "railfence"],
-        "category": "ç½®æ¢",
+        "name": "栅栏密码",
+        "aliases": ["rail_fence", "栅栏", "railfence"],
+        "category": "置换",
         "encode": True, "decode": True,
         "image": None,
-        "description": "ä¹å­å½¢æååæè¡è¯»å",
-        "features": ["ä¹å­å½¢", "å¤å±æ æ ", "Wååä½"],
+        "description": "之字形排列后按行读取",
+        "features": ["之字形", "多层栅栏", "W型变体"],
     },
     "rot13": {
         "name": "ROT13",
         "aliases": ["rot13", "rot"],
-        "category": "åè¡¨æ¿æ¢",
+        "category": "单表替换",
         "encode": True, "decode": True,
         "image": None,
-        "description": "å¯æå¯ç åç§»13ä½ç¹ä¾ï¼å å¯=è§£å¯",
-        "features": ["èªåæ§", "ROT5(æ°å­)", "ROT47(ASCII)"],
+        "description": "凯撒密码偏移13位特例，加密=解密",
+        "features": ["自反性", "ROT5(数字)", "ROT47(ASCII)"],
     },
     "morse": {
-        "name": "æ©å°å¯ç ",
-        "aliases": ["morse", "æ©å°", "æ©å°æ¯"],
-        "category": "ä¿¡å·ç¼ç ",
+        "name": "摩尔密码",
+        "aliases": ["morse", "摩尔", "摩尔斯"],
+        "category": "信号编码",
         "encode": True, "decode": True,
-        "image": "æ©å°å¯ç å å¯ä¸è§£å¯.jpg",
-        "description": "ç¹åä¿¡å·ç¼ç ï¼å¯è¡¨ç°ä¸ºé³é¢/ç¯å/æå­",
-        "features": [".- é¿ç­ä¿¡å·", "å¯éèä¸ºé³é¢", "ç©ºæ ¼/ææ åé"],
+        "image": "摩尔密码加密与解密.jpg",
+        "description": "点划信号编码，可表现为音频/灯光/文字",
+        "features": [".- 长短信号", "可隐藏为音频", "空格/斜杠分隔"],
     },
     "pawnshat": {
-        "name": "å½éºå¯ç ",
-        "aliases": ["å½éº", "pawnshop", "pawn"],
-        "category": "ä¸­æç¼ç ",
+        "name": "当铺密码",
+        "aliases": ["当铺", "pawnshop", "pawn"],
+        "category": "中文编码",
         "encode": True, "decode": True,
-        "image": "å½éºå¯ç .jpg",
-        "description": "æ±å­åºå¤´é¡¶é¨ç¬ç»æ°æ å°æ°å­0-9",
-        "features": ["ç¬ç»å¤´æ°", "å£=0 ç±=1", "åæ°å­ç¼ç "],
+        "image": "当铺密码.jpg",
+        "description": "汉字出头顶部笔画数映射数字0-9",
+        "features": ["笔画头数", "口=0 由=1", "单数字编码"],
     },
     "number_coordinate": {
-        "name": "æ°å­åæ å å¯å­æ¯",
-        "aliases": ["æ°å­åæ ", "number_coord"],
-        "category": "åæ æ¿æ¢",
+        "name": "数字坐标加密字母",
+        "aliases": ["数字坐标", "number_coord"],
+        "category": "坐标替换",
         "encode": True, "decode": True,
-        "image": "æ°å­åæ å å¯å­æ¯.png",
-        "description": "å­æ¯ç½æ ¼åæ è¡¨ç¤ºæ³ï¼è¡å·+åå·",
-        "features": ["XYåæ ", "æ°å­å¯¹", "åèå¾"],
+        "image": "数字坐标加密字母.png",
+        "description": "字母网格坐标表示法，行号+列号",
+        "features": ["XY坐标", "数字对", "参考图"],
     },
     "alphabet_order": {
-        "name": "å­æ¯è¡¨é¡ºåºå å¯",
-        "aliases": ["å­æ¯é¡ºåº", "alphabet_order"],
-        "category": "æ°å­æ å°",
+        "name": "字母表顺序加密",
+        "aliases": ["字母顺序", "alphabet_order"],
+        "category": "数字映射",
         "encode": True, "decode": True,
-        "image": "å­æ¯è¡¨é¡ºåºå å¯æ³ååå­æ¯è¡¨å å¯æ³åå°é®çå å¯æ³.jpg",
-        "description": "A=1, B=2...çç®åæ°å­å¯¹åº",
-        "features": ["A=1 B=2...", "åå­æ¯A=26", "å°é®çæ å°"],
+        "image": "字母表顺序加密法和反字母表加密法和小键盘加密法.jpg",
+        "description": "A=1, B=2...的简单数字对应",
+        "features": ["A=1 B=2...", "反字母A=26", "小键盘映射"],
     },
     "standard_galactic": {
-        "name": "æ åé¶æ²³å­æ¯",
-        "aliases": ["SGA", "æ åé¶æ²³", "galactic", "enchanting_table"],
-        "category": "ç¬¦å·æ¿æ¢",
+        "name": "标准银河字母",
+        "aliases": ["SGA", "标准银河", "galactic", "enchanting_table"],
+        "category": "符号替换",
         "encode": True, "decode": True,
-        "image": "æ åé¶æ²³å­æ¯.png",
-        "description": "Minecraft éé­å°æå­ï¼é£æ ¼åå­æ¯æ¿æ¢",
-        "features": ["Minecrafté£æ ¼", "ç¹æ®ç¬¦å·å­ç¬¦", "Unicode"],
+        "image": "标准银河字母.png",
+        "description": "Minecraft 附魔台文字，风格化字母替换",
+        "features": ["Minecraft风格", "特殊符号字符", "Unicode"],
     },
     "binary": {
-        "name": "äºè¿å¶å å¯",
-        "aliases": ["binary", "äºè¿å¶", "2è¿å¶"],
-        "category": "è¿å¶ç¼ç ",
+        "name": "二进制加密",
+        "aliases": ["binary", "二进制", "2进制"],
+        "category": "进制编码",
         "encode": True, "decode": True,
-        "image": "äºè¿å¶å å¯è§£å¯.png",
-        "description": "ASCII/Unicode å­ç¬¦çäºè¿å¶è¡¨ç¤º",
-        "features": ["7ä½/8ä½", "ç©ºæ ¼åé", "å¯éåå¶ä»ç¼ç "],
+        "image": "二进制加密解密.png",
+        "description": "ASCII/Unicode 字符的二进制表示",
+        "features": ["7位/8位", "空格分隔", "可配合其他编码"],
     },
     "reverse": {
-        "name": "ååºå å¯",
-        "aliases": ["reverse", "ååº", "åå", "åè½¬"],
-        "category": "ç½®æ¢",
+        "name": "倒序加密",
+        "aliases": ["reverse", "倒序", "倒叙", "反转"],
+        "category": "置换",
         "encode": True, "decode": True,
-        "image": "ååå å¯è§£å¯.png",
-        "description": "å­ç¬¦ä¸²ç´æ¥åè½¬ï¼æç®åçç½®æ¢æä½",
-        "features": ["ABCâCBA", "å¯åè¯/å¥å­", "éå¨åè½¬æ³¨æ"],
+        "image": "倒叙加密解密.png",
+        "description": "字符串直接反转，最简单的置换操作",
+        "features": ["ABC→CBA", "可单词/句子", "非全反转注意"],
     },
     "jefferson_wheel": {
-        "name": "æé©¬æ¯Â·æ°æéè½¬è½®å¯ç ",
-        "aliases": ["jefferson", "è½¬è½®", "rotor", "è½®è½¬"],
-        "category": "å¤è¡¨æ¿æ¢",
+        "name": "托马斯·杰斐逊转轮密码",
+        "aliases": ["jefferson", "转轮", "rotor", "轮转"],
+        "category": "多表替换",
         "encode": True, "decode": True,
         "image": None,
-        "description": "å¤è½®çå¯ç æºï¼å¯é¥æ¯è½®çä½¿ç¨é¡ºåº",
-        "features": ["14ä¸ªè½®ç", "å¯é¥æ§å¶é¡ºåº", "ç ´è§£ééå"],
+        "description": "多轮盘密码机，密钥是轮盘使用顺序",
+        "features": ["14个轮盘", "密钥控制顺序", "破解需遍历"],
     },
     "fes_hieroglyph": {
-        "name": "è²æ¯è±¡å½¢æå­",
-        "aliases": ["è²æ¯", "fes", "hieroglyph"],
-        "category": "ç¬¦å·æ¿æ¢",
+        "name": "菲斯象形文字",
+        "aliases": ["菲斯", "fes", "hieroglyph"],
+        "category": "符号替换",
         "encode": False, "decode": False,
-        "image": "éæ¯çè±¡å½¢æå­ç¿»è¯å¾.png",
-        "description": "å¾å½¢ç¬¦å·å¯¹åºå­æ¯çæ¿æ¢å¯ç ï¼ä»åèå¾ï¼",
-        "features": ["è±¡å½¢å¾âå­æ¯", "è§è§åè", "éæå¨å¯¹ç§"],
+        "image": "非斯的象形文字翻译图.png",
+        "description": "图形符号对应字母的替换密码（仅参考图）",
+        "features": ["象形图→字母", "视觉参考", "需手动对照"],
     },
     "blue_punch_card": {
-        "name": "èè²æå­å¡",
-        "aliases": ["punchcard", "æå­å¡", "blue_punch"],
-        "category": "ç¼ç åè",
+        "name": "蓝色打孔卡",
+        "aliases": ["punchcard", "打孔卡", "blue_punch"],
+        "category": "编码参考",
         "encode": False, "decode": False,
         "image": "Blue-punch-card-front-horiz.png",
-        "description": "IBM æå­å¡ç¼ç åèå¾ï¼äºè¿å¶å­å¨çæ©æå½¢å¼",
-        "features": ["IBMæ ¼å¼", "80å", "ç©å½¢å­"],
+        "description": "IBM 打孔卡编码参考图，二进制存储的早期形式",
+        "features": ["IBM格式", "80列", "矩形孔"],
     },
-    # ââ åºç¡ç¼ç  ââ
+    # ── 基础编码 ──
     "base64": {
-        "name": "Base64 ç¼ç ",
+        "name": "Base64 编码",
         "aliases": ["base64", "b64"],
-        "category": "åºç¡ç¼ç ",
+        "category": "基础编码",
         "encode": True, "decode": True,
         "image": None,
-        "description": "æå¸¸è§çäºè¿å¶âææ¬ç¼ç ï¼ç»å°¾å¸¸æ=å¡«å",
-        "features": ["A-Za-z0-9+/", "= å¡«å", "CTF åºåºçæé«"],
+        "description": "最常见的二进制→文本编码，结尾常有=填充",
+        "features": ["A-Za-z0-9+/", "= 填充", "CTF 出场率最高"],
     },
     "base32": {
-        "name": "Base32 ç¼ç ",
+        "name": "Base32 编码",
         "aliases": ["base32", "b32"],
-        "category": "åºç¡ç¼ç ",
+        "category": "基础编码",
         "encode": True, "decode": True,
         "image": None,
-        "description": "A-Z2-7 å­ç¬¦éï¼æ¯5bitä¸ç»",
-        "features": ["A-Z2-7", "= å¡«åå°8çåæ°", "å¨å¤§åå­æ¯"],
+        "description": "A-Z2-7 字符集，每5bit一组",
+        "features": ["A-Z2-7", "= 填充到8的倍数", "全大写字母"],
     },
     "base16": {
-        "name": "Base16 / Hex ç¼ç ",
-        "aliases": ["hex", "base16", "åå­è¿å¶"],
-        "category": "åºç¡ç¼ç ",
+        "name": "Base16 / Hex 编码",
+        "aliases": ["hex", "base16", "十六进制"],
+        "category": "基础编码",
         "encode": True, "decode": True,
         "image": None,
-        "description": "æ¯å­èâä¸¤ä½åå­è¿å¶æ°ï¼00-FFï¼",
-        "features": ["0-9A-F", "å¶æ°é¿åº¦", "å¯0xåç¼"],
+        "description": "每字节→两位十六进制数（00-FF）",
+        "features": ["0-9A-F", "偶数长度", "可0x前缀"],
     },
     "base58": {
-        "name": "Base58 ç¼ç ",
+        "name": "Base58 编码",
         "aliases": ["base58", "b58", "bitcoin"],
-        "category": "åºç¡ç¼ç ",
+        "category": "基础编码",
         "encode": True, "decode": True,
         "image": None,
-        "description": "å»é¤äºææ··æ·å­ç¬¦çç¼ç ï¼æ 0OIlï¼ï¼Bitcoinå°åä½¿ç¨",
-        "features": ["æ 0OIl", "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"],
+        "description": "去除了易混淆字符的编码（无0OIl），Bitcoin地址使用",
+        "features": ["无0OIl", "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"],
     },
     "base85": {
         "name": "Base85 / ASCII85",
         "aliases": ["base85", "b85", "ascii85"],
-        "category": "åºç¡ç¼ç ",
+        "category": "基础编码",
         "encode": True, "decode": True,
         "image": None,
-        "description": "Adobe PostScript/PDF ä½¿ç¨çç¼ç ï¼~>ç»å°¾",
-        "features": ["~> ç»å°¾", "å«ç¹æ®å­ç¬¦", "PDF/PostScript"],
+        "description": "Adobe PostScript/PDF 使用的编码，~>结尾",
+        "features": ["~> 结尾", "含特殊字符", "PDF/PostScript"],
     },
     "url_encode": {
-        "name": "URL ç¼ç ",
+        "name": "URL 编码",
         "aliases": ["url", "urlencode", "percent"],
-        "category": "åºç¡ç¼ç ",
+        "category": "基础编码",
         "encode": True, "decode": True,
         "image": None,
-        "description": "%xx æ ¼å¼ï¼å¸¸ç¨äºWebä¼ å",
-        "features": ["% ç¾åå·", "%xx åå­è¿å¶", "ç©ºæ ¼â%20æ+"],
+        "description": "%xx 格式，常用于Web传参",
+        "features": ["% 百分号", "%xx 十六进制", "空格→%20或+"],
     },
     "html_entity": {
-        "name": "HTML å®ä½ç¼ç ",
+        "name": "HTML 实体编码",
         "aliases": ["html", "entity", "htmlentity"],
-        "category": "åºç¡ç¼ç ",
+        "category": "基础编码",
         "encode": True, "decode": True,
         "image": None,
-        "description": "&amp; &lt; &#x27; ç­å½¢å¼ï¼ç¨äºHTML/XSS",
-        "features": ["& å¼å¤´ ; ç»å°¾", "&#æ°å­;", "&#xåå­è¿å¶;"],
+        "description": "&amp; &lt; &#x27; 等形式，用于HTML/XSS",
+        "features": ["& 开头 ; 结尾", "&#数字;", "&#x十六进制;"],
     },
     "unicode_escape": {
-        "name": "Unicode è½¬ä¹",
+        "name": "Unicode 转义",
         "aliases": ["unicode", "uescape", "\\u"],
-        "category": "åºç¡ç¼ç ",
+        "category": "基础编码",
         "encode": True, "decode": True,
         "image": None,
-        "description": "\\uXXXX æ \\UXXXXXXXX æ ¼å¼",
-        "features": ["\\u åç¼", "4ä½/8ä½åå­è¿å¶", "JSON/JSå¸¸ç¨"],
+        "description": "\\uXXXX 或 \\UXXXXXXXX 格式",
+        "features": ["\\u 前缀", "4位/8位十六进制", "JSON/JS常用"],
     },
     "binary_str": {
-        "name": "äºè¿å¶å­ç¬¦ä¸²",
+        "name": "二进制字符串",
         "aliases": ["binary", "bin", "0101"],
-        "category": "åºç¡ç¼ç ",
+        "category": "基础编码",
         "encode": True, "decode": True,
         "image": None,
-        "description": "æ¯8ä½ä¸ç» 0/1 è¡¨ç¤ºä¸ä¸ªASCIIå­ç¬¦",
-        "features": ["0å1", "8ä½ä¸ç»", "ç©ºæ ¼åé"],
+        "description": "每8位一组 0/1 表示一个ASCII字符",
+        "features": ["0和1", "8位一组", "空格分隔"],
     },
     "octal_str": {
-        "name": "å«è¿å¶å­ç¬¦ä¸²",
-        "aliases": ["octal", "oct", "å«è¿å¶"],
-        "category": "åºç¡ç¼ç ",
+        "name": "八进制字符串",
+        "aliases": ["octal", "oct", "八进制"],
+        "category": "基础编码",
         "encode": True, "decode": True,
         "image": None,
-        "description": "\\ooo æ ¼å¼ï¼æ¯3ä½å«è¿å¶è¡¨ç¤ºä¸ä¸ªå­ç¬¦",
-        "features": ["0-7 æ°å­", "\\ åç¼", "3ä½ä¸ç»"],
+        "description": "\\ooo 格式，每3位八进制表示一个字符",
+        "features": ["0-7 数字", "\\ 前缀", "3位一组"],
     },
     "decimal_str": {
-        "name": "åè¿å¶ASCIIç ",
+        "name": "十进制ASCII码",
         "aliases": ["decimal", "dec", "ascii"],
-        "category": "åºç¡ç¼ç ",
+        "category": "基础编码",
         "encode": True, "decode": True,
         "image": None,
-        "description": "ç©ºæ ¼åéç10è¿å¶æ°å­ï¼æ¯ä¸ªè¡¨ç¤ºä¸ä¸ªASCIIå­ç¬¦",
-        "features": ["æ°å­ 32-126", "ç©ºæ ¼åé", "ASCIIè¡¨"],
+        "description": "空格分隔的10进制数字，每个表示一个ASCII字符",
+        "features": ["数字 32-126", "空格分隔", "ASCII表"],
     },
 }
 
-# âââââââââââââââââââââââââââââââââââââââââââ
-# ç¼ç /è§£ç å½æ°
-# âââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════
+# 编码/解码函数
+# ═══════════════════════════════════════════
 
 def _clean_text(text: str) -> str:
     return text.upper().replace(' ', '').replace('\n', '').replace('\r', '')
 
 
-# ââ çªåå¯ç  ââââââââââââââââââââââââââââââ
+# ── 猪圈密码 ──────────────────────────────
 def pigpen_encode(text: str) -> str:
-    """å°å­æ¯ç¼ç ä¸ºçªåå¯ç ç¬¦å·ï¼ç¨ ASCII è¿ä¼¼è¡¨ç¤ºï¼ã"""
+    """将字母编码为猪圈密码符号（用 ASCII 近似表示）。"""
     result = []
     for c in _clean_text(text):
         if c in PIGPEN_ENCODE:
@@ -450,7 +450,7 @@ def pigpen_encode(text: str) -> str:
 
 
 def pigpen_decode(symbols: str) -> str:
-    """çªåå¯ç ç¬¦å· â å­æ¯ï¼ä»æ¯æé¢å®ä¹å­ç¬¦ï¼ã"""
+    """猪圈密码符号 → 字母（仅支持预定义字符）。"""
     rev = {v: k for k, v in PIGPEN_ENCODE.items()}
     # Try splitting by common separators
     for sep in [' ', '|', '/']:
@@ -460,7 +460,7 @@ def pigpen_decode(symbols: str) -> str:
     return symbols  # can't auto-parse
 
 
-# ââ å¹æ ¹å¯ç  ââââââââââââââââââââââââââââââ
+# ── 培根密码 ──────────────────────────────
 def bacon_encode(text: str) -> str:
     return ' '.join(BACON_24.get(c, c) for c in _clean_text(text))
 
@@ -475,7 +475,7 @@ def bacon_decode(cipher_text: str) -> str:
     return ''.join(result)
 
 
-# ââ Polybius æ£ç âââââââââââââââââââââââââ
+# ── Polybius 棋盘 ─────────────────────────
 def polybius_encode(text: str) -> str:
     result = []
     for c in _clean_text(text):
@@ -499,7 +499,7 @@ def polybius_decode(cipher_text: str) -> str:
     return ''.join(result)
 
 
-# ââ ç»´åå°¼äºå¯ç  âââââââââââââââââââââââââ
+# ── 维吉尼亚密码 ─────────────────────────
 def vigenere_encode(text: str, key: str) -> str:
     text, key = text.upper(), key.upper()
     result = []
@@ -528,7 +528,7 @@ def vigenere_decode(cipher_text: str, key: str) -> str:
     return ''.join(result)
 
 
-# ââ QWE é®ç ââââââââââââââââââââââââââââââ
+# ── QWE 键盘 ──────────────────────────────
 def qwe_encode(text: str) -> str:
     return ''.join(QWE_ENCODE.get(c, c) for c in _clean_text(text))
 
@@ -537,7 +537,7 @@ def qwe_decode(cipher_text: str) -> str:
     return ''.join(QWE_DECODE.get(c, c) for c in _clean_text(cipher_text))
 
 
-# ââ é®çæ£ç ââââââââââââââââââââââââââââââ
+# ── 键盘棋盘 ──────────────────────────────
 def keyboard_chess_encode(text: str) -> str:
     return ' '.join(KEYBOARD_CHESSBOARD.get(c, '??') for c in _clean_text(text))
 
@@ -547,7 +547,7 @@ def keyboard_chess_decode(cipher_text: str) -> str:
     return ''.join(CHESSBOARD_DECODE.get(p, '?') for p in parts)
 
 
-# ââ ææºé®ç ââââââââââââââââââââââââââââââ
+# ── 手机键盘 ──────────────────────────────
 def phone_encode(text: str) -> str:
     return ' '.join(PHONE_KEYPAD.get(c, '??') for c in _clean_text(text))
 
@@ -557,7 +557,7 @@ def phone_decode(cipher_text: str) -> str:
     return ''.join(PHONE_DECODE.get(p, '?') for p in parts)
 
 
-# ââ å½éºå¯ç  âââââââââââââââââââââââââââââ
+# ── 当铺密码 ─────────────────────────────
 def pawnshat_encode(text: str) -> str:
     result = []
     for c in text:
@@ -575,7 +575,7 @@ def pawnshat_decode(cipher_text: str) -> str:
     return ''.join(result)
 
 
-# ââ å­æ¯è¡¨é¡ºåº ââââââââââââââââââââââââââââ
+# ── 字母表顺序 ────────────────────────────
 def alphabet_order_encode(text: str) -> str:
     return ' '.join(str(ord(c) - 64) for c in _clean_text(text) if c.isalpha())
 
@@ -590,7 +590,7 @@ def alphabet_order_decode(cipher_text: str) -> str:
     return ''.join(result)
 
 
-# ââ æ åé¶æ²³å­æ¯ âââââââââââââââââââââââââ
+# ── 标准银河字母 ─────────────────────────
 def sga_encode(text: str) -> str:
     return ''.join(SGA_CHARS.get(c, c) for c in _clean_text(text))
 
@@ -599,7 +599,7 @@ def sga_decode(cipher_text: str) -> str:
     return ''.join(SGA_DECODE.get(c, c) for c in cipher_text)
 
 
-# ââ äºè¿å¶ ââââââââââââââââââââââââââââââââ
+# ── 二进制 ────────────────────────────────
 def binary_encode(text: str) -> str:
     return ' '.join(f"{ord(c):08b}" for c in text)
 
@@ -639,7 +639,7 @@ def binary_decode(cipher_text: str) -> str:
     return cipher_text
 
 
-# ââ ååº ââââââââââââââââââââââââââââââââââ
+# ── 倒序 ──────────────────────────────────
 def reverse_encode(text: str) -> str:
     return text[::-1]
 
@@ -648,7 +648,7 @@ def reverse_decode(cipher_text: str) -> str:
     return cipher_text[::-1]  # self-inverse
 
 
-# ââ Caesar å¯æ ââââââââââââââââââââââââââââ
+# ── Caesar 凯撒 ────────────────────────────
 def caesar_encode(text: str, key: str = "3") -> str:
     try:
         shift = int(key) % 26
@@ -673,7 +673,7 @@ def caesar_decode(cipher_text: str, key: str = "3") -> str:
     return caesar_encode(cipher_text, str(26 - shift))
 
 
-# ââ ROT13 ââââââââââââââââââââââââââââââââââ
+# ── ROT13 ──────────────────────────────────
 def rot13_encode(text: str) -> str:
     return caesar_encode(text, "13")
 
@@ -682,7 +682,7 @@ def rot13_decode(cipher_text: str) -> str:
     return caesar_encode(cipher_text, "13")
 
 
-# ââ Atbash åç¹å·´ä» âââââââââââââââââââââââââ
+# ── Atbash 埃特巴什 ─────────────────────────
 def atbash_encode(text: str) -> str:
     result = []
     for c in text:
@@ -699,7 +699,7 @@ def atbash_decode(cipher_text: str) -> str:
     return atbash_encode(cipher_text)  # self-inverse
 
 
-# ââ Rail Fence æ æ  ââââââââââââââââââââââââ
+# ── Rail Fence 栅栏 ────────────────────────
 def rail_fence_encode(text: str, key: str = "3") -> str:
     try:
         rails = max(2, int(key))
@@ -752,7 +752,7 @@ def rail_fence_decode(cipher_text: str, key: str = "3") -> str:
     return ''.join(result)
 
 
-# ââ Morse æ©æ¯å¯ç  âââââââââââââââââââââââââ
+# ── Morse 摩斯密码 ─────────────────────────
 MORSE_ENCODE_MAP = {
     'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.',
     'F': '..-.', 'G': '--.', 'H': '....', 'I': '..', 'J': '.---',
@@ -794,11 +794,11 @@ def morse_decode(cipher_text: str) -> str:
     return ''.join(result)
 
 
-# âââââââââââââââââââââââââââââââââââââââââââ
-#  åºç¡ç¼ç  encode/decode (Base64/32/16/58/85/URL/HTML/Unicode/Binary/Octal)
-# âââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════
+#  基础编码 encode/decode (Base64/32/16/58/85/URL/HTML/Unicode/Binary/Octal)
+# ═══════════════════════════════════════════
 
-# ââ Base64 ââââââââââââââââââââââââââââââââ
+# ── Base64 ────────────────────────────────
 def base64_encode(text: str) -> str:
     return b64.b64encode(text.encode('utf-8')).decode('ascii')
 
@@ -813,7 +813,7 @@ def base64_decode(cipher_text: str) -> str:
         return b64.b64decode(t).decode('utf-8', errors='replace')
 
 
-# ââ Base32 ââââââââââââââââââââââââââââââââ
+# ── Base32 ────────────────────────────────
 def base32_encode(text: str) -> str:
     return b64.b32encode(text.encode('utf-8')).decode('ascii')
 
@@ -828,7 +828,7 @@ def base32_decode(cipher_text: str) -> str:
         return ''
 
 
-# ââ Base16 / Hex ââââââââââââââââââââââââââ
+# ── Base16 / Hex ──────────────────────────
 def base16_encode(text: str) -> str:
     return text.encode('utf-8').hex()
 
@@ -842,7 +842,7 @@ def base16_decode(cipher_text: str) -> str:
         return ''
 
 
-# ââ Base58 ââââââââââââââââââââââââââââââââ
+# ── Base58 ────────────────────────────────
 _B58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 def base58_encode(text: str) -> str:
@@ -881,7 +881,7 @@ def base58_decode(cipher_text: str) -> str:
         return ''
 
 
-# ââ Base85 ââââââââââââââââââââââââââââââââ
+# ── Base85 ────────────────────────────────
 def base85_encode(text: str) -> str:
     try:
         return b64.a85encode(text.encode('utf-8')).decode('ascii')
@@ -902,13 +902,13 @@ def base85_decode(cipher_text: str) -> str:
                 return ''
 
 
-# ââ URL Encode ââââââââââââââââââââââââââââ
+# ── URL Encode ────────────────────────────
 def url_encode(text: str) -> str:
     return urllib.parse.quote(text, safe='')
 
 def url_decode(cipher_text: str) -> str:
     t = cipher_text.strip()
-    # Handle + â space
+    # Handle + → space
     t = t.replace('+', '%20')
     try:
         return urllib.parse.unquote(t, encoding='utf-8')
@@ -916,7 +916,7 @@ def url_decode(cipher_text: str) -> str:
         return ''
 
 
-# ââ HTML Entity âââââââââââââââââââââââââââ
+# ── HTML Entity ───────────────────────────
 def html_encode(text: str) -> str:
     return html_mod.escape(text)
 
@@ -927,7 +927,7 @@ def html_decode(cipher_text: str) -> str:
         return cipher_text
 
 
-# ââ Unicode Escape ââââââââââââââââââââââââ
+# ── Unicode Escape ────────────────────────
 def unicode_encode(text: str) -> str:
     result = []
     for c in text:
@@ -945,7 +945,7 @@ def unicode_decode(cipher_text: str) -> str:
         return cipher_text
 
 
-# ââ Binary String âââââââââââââââââââââââââ
+# ── Binary String ─────────────────────────
 def binary_str_encode(text: str) -> str:
     return ' '.join(format(ord(c), '08b') for c in text)
 
@@ -960,7 +960,7 @@ def binary_str_decode(cipher_text: str) -> str:
     return ''.join(result)
 
 
-# ââ Octal String ââââââââââââââââââââââââââ
+# ── Octal String ──────────────────────────
 def octal_str_encode(text: str) -> str:
     return ' '.join(f'\\{oct(ord(c))[2:].zfill(3)}' for c in text)
 
@@ -976,7 +976,7 @@ def octal_str_decode(cipher_text: str) -> str:
     return ''.join(result)
 
 
-# ââ Decimal ASCII âââââââââââââââââââââââââ
+# ── Decimal ASCII ─────────────────────────
 def decimal_str_encode(text: str) -> str:
     return ' '.join(str(ord(c)) for c in text)
 
@@ -995,7 +995,7 @@ def decimal_str_decode(cipher_text: str) -> str:
     return ''.join(result)
 
 
-# ââ Keyboard Coordinate é®çåæ  ââââââââââââ
+# ── Keyboard Coordinate 键盘坐标 ────────────
 KEYBOARD_COORD_MAP = {
     'Q': '11', 'W': '12', 'E': '13', 'R': '14', 'T': '15',
     'Y': '16', 'U': '17', 'I': '18', 'O': '19', 'P': '10',
@@ -1029,7 +1029,7 @@ def keyboard_coordinate_decode(cipher_text: str) -> str:
     return ''.join(result)
 
 
-# ââ Number Coordinate æ°å­åæ  ââââââââââââââ
+# ── Number Coordinate 数字坐标 ──────────────
 NUMBER_COORD_MAP = {c: f"{i}" for i, c in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ')}
 NUMBER_COORD_REV = {v: k for k, v in NUMBER_COORD_MAP.items()}
 
@@ -1055,10 +1055,10 @@ def number_coordinate_decode(cipher_text: str) -> str:
     return ''.join(result)
 
 
-# ââ ADFGX âââââââââââââââââââââââââââââââââ
+# ── ADFGX ─────────────────────────────────
 def _adfgx_polybius(text: str, keyword: str = "") -> str:
     """ADFGX Polybius substitution phase."""
-    letters = 'ABCDEFGHIKLMNOPQRSTUVWXYZ'  # J â I
+    letters = 'ABCDEFGHIKLMNOPQRSTUVWXYZ'  # J → I
     result = []
     for c in text.upper().replace('J', 'I'):
         if c in letters:
@@ -1121,9 +1121,9 @@ def adfgx_decode(cipher_text: str, keyword: str) -> str:
     return ''.join(plain)
 
 
-# ââ æ°æéè½¬è½® âââââââââââââââââââââââââââ
+# ── 杰斐逊转轮 ───────────────────────────
 def jefferson_decode(cipher_text: str, key: list, rotors: list = None) -> list:
-    """æé©¬æ¯Â·æ°æéè½¬è½®å¯ç è§£ç ï¼è¿åææå¯è½çææã"""
+    """托马斯·杰斐逊转轮密码解码，返回所有可能的明文。"""
     if rotors is None:
         rotors = JEFFERSON_ROTORS
     tmp_list = []
@@ -1145,12 +1145,12 @@ def jefferson_decode(cipher_text: str, key: list, rotors: list = None) -> list:
     return messages
 
 
-# âââââââââââââââââââââââââââââââââââââââââââ
-# æ¥è¯¢ & å·¥å·å½æ°
-# âââââââââââââââââââââââââââââââââââââââââââ
+# ═══════════════════════════════════════════
+# 查询 & 工具函数
+# ═══════════════════════════════════════════
 
 def list_ciphers(category: str = None) -> list:
-    """ååºææå·²æ³¨åçå¯ç ç±»åã"""
+    """列出所有已注册的密码类型。"""
     result = []
     for cid, info in CIPHER_TYPES.items():
         if category and info.get("category") != category:
@@ -1163,12 +1163,12 @@ def list_ciphers(category: str = None) -> list:
 
 
 def get_cipher(cipher_id: str) -> dict:
-    """è¿åæå®å¯ç ç±»åçå®æ´ä¿¡æ¯ã"""
+    """返回指定密码类型的完整信息。"""
     return CIPHER_TYPES.get(cipher_id.lower())
 
 
 def search_ciphers(query: str) -> list:
-    """æåç§°/å«åæç´¢å¯ç ç±»åã"""
+    """按名称/别名搜索密码类型。"""
     q = query.lower()
     results = []
     for cid, info in CIPHER_TYPES.items():
@@ -1179,7 +1179,7 @@ def search_ciphers(query: str) -> list:
 
 
 def get_image_path(cipher_id: str) -> str:
-    """è¿åå¯ç ç±»åå¯¹åºçåèå¾ä¸»å¾è·¯å¾ã"""
+    """返回密码类型对应的参考图主图路径。"""
     info = CIPHER_TYPES.get(cipher_id.lower())
     if info and info.get("image"):
         img_path = DATA_DIR / info["image"]
@@ -1189,7 +1189,7 @@ def get_image_path(cipher_id: str) -> str:
 
 
 def get_image2_path(cipher_id: str) -> str:
-    """è¿åå¯ç ç±»åå¯¹åºçåèå¾è¾å¾è·¯å¾ï¼å¦æï¼ã"""
+    """返回密码类型对应的参考图辅图路径（如有）。"""
     info = CIPHER_TYPES.get(cipher_id.lower())
     if info and info.get("image2"):
         img_path = DATA_DIR / info["image2"]
@@ -1199,7 +1199,7 @@ def get_image2_path(cipher_id: str) -> str:
 
 
 def get_categories() -> list:
-    """è¿åææç±»å«ã"""
+    """返回所有类别。"""
     cats = set()
     for info in CIPHER_TYPES.values():
         cats.add(info["category"])
@@ -1207,10 +1207,10 @@ def get_categories() -> list:
 
 
 def encode(cipher_id: str, text: str, **kwargs) -> str:
-    """éç¨ç¼ç å¥å£ã"""
+    """通用编码入口。"""
     cid = cipher_id.lower().replace('-', '_').replace(' ', '_')
     funcs = {
-        # åºç¡ç¼ç 
+        # 基础编码
         "base64": base64_encode,
         "base32": base32_encode,
         "base16": base16_encode, "hex": base16_encode,
@@ -1222,7 +1222,7 @@ def encode(cipher_id: str, text: str, **kwargs) -> str:
         "binary_str": binary_str_encode,
         "octal_str": octal_str_encode, "octal": octal_str_encode, "oct": octal_str_encode,
         "decimal_str": decimal_str_encode, "decimal": decimal_str_encode, "dec": decimal_str_encode,
-        # ç»å¸å¯ç 
+        # 经典密码
         "pigpen": pigpen_encode,
         "bacon": bacon_encode, "baconian": bacon_encode,
         "polybius": polybius_encode, "polybius_square": polybius_encode,
@@ -1247,14 +1247,14 @@ def encode(cipher_id: str, text: str, **kwargs) -> str:
     }
     if cid in funcs:
         return funcs[cid](text)
-    return f"[!] ä¸æ¯æç¼ç : {cipher_id}"
+    return f"[!] 不支持编码: {cipher_id}"
 
 
 def decode(cipher_id: str, cipher_text: str, **kwargs) -> str:
-    """éç¨è§£ç å¥å£ã"""
+    """通用解码入口。"""
     cid = cipher_id.lower().replace('-', '_').replace(' ', '_')
     funcs = {
-        # åºç¡ç¼ç 
+        # 基础编码
         "base64": base64_decode,
         "base32": base32_decode,
         "base16": base16_decode, "hex": base16_decode,
@@ -1266,7 +1266,7 @@ def decode(cipher_id: str, cipher_text: str, **kwargs) -> str:
         "binary_str": binary_str_decode,
         "octal_str": octal_str_decode, "octal": octal_str_decode, "oct": octal_str_decode,
         "decimal_str": decimal_str_decode, "decimal": decimal_str_decode, "dec": decimal_str_decode,
-        # ç»å¸å¯ç 
+        # 经典密码
         "pigpen": pigpen_decode,
         "bacon": bacon_decode, "baconian": bacon_decode,
         "polybius": polybius_decode, "polybius_square": polybius_decode,
@@ -1291,11 +1291,11 @@ def decode(cipher_id: str, cipher_text: str, **kwargs) -> str:
     }
     if cid in funcs:
         return funcs[cid](cipher_text)
-    return f"[!] ä¸æ¯æè§£ç : {cipher_id}"
+    return f"[!] 不支持解码: {cipher_id}"
 
 
 def get_text_path(cipher_id: str) -> str:
-    """è¿åå¯ç ç±»åå¯¹åºçè¯´æææ¬æä»¶è·¯å¾ï¼å¦æï¼ã"""
+    """返回密码类型对应的说明文本文件路径（如有）。"""
     info = CIPHER_TYPES.get(cipher_id.lower())
     if not info:
         return ""
@@ -1303,16 +1303,16 @@ def get_text_path(cipher_id: str) -> str:
     # Try common text file patterns
     candidates = [
         name + ".txt",
-        name + "å å¯è§£å¯.txt",
-        name + "å å¯è§£å¯æ³.txt",
-        name + "ç¼ç .txt",
+        name + "加密解密.txt",
+        name + "加密解密法.txt",
+        name + "编码.txt",
         name + ".txt",
     ]
-    # Also try: binary -> äºè¿å¶, reverse -> åå, etc.
+    # Also try: binary -> 二进制, reverse -> 倒叙, etc.
     txt_map = {
-        "jefferson_wheel": "æé©¬æ¯æ°æé è½¬è½®å¯ç .txt",
-        "vigenere": "ç»´åå°¼äº.txt",
-        "morse": "æ©å°å¯ç å å¯ä¸è§£å¯.jpg",  # no txt, just image
+        "jefferson_wheel": "托马斯杰斐逊 转轮密码.txt",
+        "vigenere": "维吉尼亚.txt",
+        "morse": "摩尔密码加密与解密.jpg",  # no txt, just image
     }
     if cipher_id.lower() in txt_map:
         target = DATA_DIR / txt_map[cipher_id.lower()]
@@ -1326,7 +1326,7 @@ def get_text_path(cipher_id: str) -> str:
 
 
 def get_text_content(cipher_id: str) -> str:
-    """è¯»åå¯ç ç±»åçè¯´æææ¬åå®¹ã"""
+    """读取密码类型的说明文本内容。"""
     path = get_text_path(cipher_id)
     if path and path.endswith('.txt'):
         try:

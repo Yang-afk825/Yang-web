@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Time-based blind SQL injection (advanced) â zero deps."""
+"""Time-based blind SQL injection (advanced) — zero deps."""
 
 from __future__ import annotations
 import sys

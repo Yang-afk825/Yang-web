@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """
 Generic solver for this SCM time-capsule APK family.
 

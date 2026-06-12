@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
-"""Yang-Web å¥å£ â æ¯æ GUI / CLI åæ¨¡å¼.
+"""Yang-Web 入口 — 支持 GUI / CLI 双模式.
 
-ç¨æ³:
-    python -m yang_web              # GUI æ¨¡å¼
-    python -m yang_web --cli        # CLI æ¨¡å¼
-    python -m yang_web <command>    # CLI æ¨¡å¼ (å¸¦åæ°èªå¨è¯å¥)
+用法:
+    python -m yang_web              # GUI 模式
+    python -m yang_web --cli        # CLI 模式
+    python -m yang_web <command>    # CLI 模式 (带参数自动识別)
 """
 import sys
 
 
 def main_gui():
-    """å¯å¨å¾å½¢çé¢."""
+    """启动图形界面."""
     from yang_web.gui import run_gui
     run_gui()
 
 
 def main_cli():
-    """å¯å¨å½ä»¤è¡."""
+    """启动命令行."""
     from yang_web.cli import main
     main()
 

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-"""æ ¸å¿å·¥å·å½æ° â é¢è²è¾åºãå­ç¬¦æ£æµãéç¨è¾å©ã"""
+"""核心工具函数 — 颜色输出、字符检测、通用辅助。"""
 import re
 import os
 import sys
 
 
-# ââ ANSI é¢è² ââââââââââââââââââââââââââââââââââââââââââââââ
+# ── ANSI 颜色 ──────────────────────────────────────────────
 class Color:
-    """ANSI ç»ç«¯é¢è²ç ."""
+    """ANSI 终端颜色码."""
     RESET = "\033[0m"
     BOLD = "\033[1m"
     DIM = "\033[2m"
@@ -18,14 +18,14 @@ class Color:
     MAGENTA = "\033[95m"
     CYAN = "\033[96m"
     WHITE = "\033[97m"
-    # èæ¯
+    # 背景
     BG_RED = "\033[41m"
     BG_GREEN = "\033[42m"
     BG_YELLOW = "\033[43m"
 
 
 def supports_color() -> bool:
-    """æ£æµç»ç«¯æ¯å¦æ¯æé¢è²è¾åº."""
+    """检测终端是否支持颜色输出."""
     if os.environ.get("NO_COLOR"):
         return False
     if os.environ.get("FORCE_COLOR"):
@@ -34,7 +34,7 @@ def supports_color() -> bool:
 
 
 def color(text: str, *styles: str) -> str:
-    """ä¸ºææ¬æ·»å  ANSI é¢è²æ ·å¼."""
+    """为文本添加 ANSI 颜色样式."""
     if not supports_color():
         return text
     prefix = "".join(styles)
@@ -52,21 +52,21 @@ def dim(text: str) -> str: return color(text, Color.DIM)
 
 
 def banner():
-    """æå°å·¥å·æ¨ªå¹."""
+    """打印工具横幅."""
     lines = [
         r"   ____  _____  ______          __     __",
         r"  / __ \/ __/ |/_/ __/      ___/ /__  / /",
         r" / /_/ / _//>  </ _/  _    / _  / _ \/ / ",
         r" \____/_/ /_/|_/_/  (_)   \_,_/\___/_/  ",
         "",
-        f"  {bold('CTF-Web Arsenal')}  v1.0.0  |  {dim('ç¦»çº¿ CTF Web çå£«åå')}",
+        f"  {bold('CTF-Web Arsenal')}  v1.0.0  |  {dim('离线 CTF Web 瑞士军刀')}",
         "",
     ]
     return "\n".join(lines)
 
 
 def is_printable(text: str) -> bool:
-    """å¤æ­å­ç¬¦ä¸²æ¯å¦å¨é¨å¯æå°."""
+    """判断字符串是否全部可打印."""
     if not text:
         return False
     printable = sum(1 for c in text if c.isprintable() or c in "\n\r\t")
@@ -74,7 +74,7 @@ def is_printable(text: str) -> bool:
 
 
 def entropy(data: bytes) -> float:
-    """è®¡ç®å­èæ°æ®çé¦åçµ (0-8)."""
+    """计算字节数据的香农熵 (0-8)."""
     if not data:
         return 0.0
     from collections import Counter

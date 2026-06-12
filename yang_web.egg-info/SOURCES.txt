@@ -25,30 +25,30 @@ yang_web/payloads/ssrf.py
 yang_web/payloads/ssti.py
 yang_web/payloads/upload.py
 yang_web/payloads/xss.py
-yang_web/scripts/2è¿å¶ææ¬è½¬æ¢ascii.py
-yang_web/scripts/4å­è16è¿å¶è½¬æµ®ç¹.py
-yang_web/scripts/APK éå Solver.py
-yang_web/scripts/Baseå®¶æå è§£å¯.py
+yang_web/scripts/2进制文本转换ascii.py
+yang_web/scripts/4字节16进制转浮点.py
+yang_web/scripts/APK 逆向 Solver.py
+yang_web/scripts/Base家族加解密.py
 yang_web/scripts/ICMP.py
-yang_web/scripts/ICMPæ°æ®ådataé¿åº¦æå.py
-yang_web/scripts/IISæä»¶ä¸ä¼ .py
-yang_web/scripts/TLLéå.py
+yang_web/scripts/ICMP数据包data长度提取.py
+yang_web/scripts/IIS文件上传.py
+yang_web/scripts/TLL隐写.py
 yang_web/scripts/__init__.py
 yang_web/scripts/aes_crypto.py
-yang_web/scripts/base64å¼æ.py
-yang_web/scripts/base64æ¹éå è§£å¯.py
-yang_web/scripts/base64ç¬è«.py
-yang_web/scripts/base64éå.py
-yang_web/scripts/baseèªå¨è¿ç»­è§£å¯èæ¬.py
+yang_web/scripts/base64异或.py
+yang_web/scripts/base64批量加解密.py
+yang_web/scripts/base64爬虫.py
+yang_web/scripts/base64隐写.py
+yang_web/scripts/base自动连续解密脚本.py
 yang_web/scripts/bool_inject.py
 yang_web/scripts/classic_crypto.py
 yang_web/scripts/crc32.py
-yang_web/scripts/crcçç ´.py
+yang_web/scripts/crc爆破.py
 yang_web/scripts/deps.py
 yang_web/scripts/file_analyzer.py
 yang_web/scripts/img_stego.py
 yang_web/scripts/md5.py
-yang_web/scripts/md5çç ´.py
+yang_web/scripts/md5爆破.py
 yang_web/scripts/pcap_tools.py
 yang_web/scripts/phpinfo_lfi.py
 yang_web/scripts/qr_tools.py
@@ -58,16 +58,16 @@ yang_web/scripts/rsa_toolkit.py
 yang_web/scripts/runner.py
 yang_web/scripts/sm2.py
 yang_web/scripts/solver.py
-yang_web/scripts/sshå¼±å£ä»¤å æåflag.py
+yang_web/scripts/ssh弱口令加提取flag.py
 yang_web/scripts/string_convert.py
 yang_web/scripts/time_sqli.py
 yang_web/scripts/wordlist_helper.py
 yang_web/scripts/zip_tools.py
 yang_web/scripts/zlib_tools.py
-yang_web/scripts/ä¸åäºæ¬¡æ¹ç¨.py
-yang_web/scripts/å­ç¬¦ä¸²ç»è®¡.py
-yang_web/scripts/å­é¢ç»è®¡.py
-yang_web/scripts/æ­£å¸¸ç²æ³¨.py
-yang_web/scripts/èªå¨æäº¤flag.py
-yang_web/scripts/é®é¼ æ§å¶.py
+yang_web/scripts/一元二次方程.py
+yang_web/scripts/字符串统计.py
+yang_web/scripts/字频统计.py
+yang_web/scripts/正常盲注.py
+yang_web/scripts/自动提交flag.py
+yang_web/scripts/键鼠控制.py
 yang_web/wordlists/__init__.py
