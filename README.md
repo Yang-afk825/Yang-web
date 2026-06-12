@@ -1,24 +1,28 @@
 # Yang-Web 🔧
 
-> **离线 CTF Web 瑞士军刀** — 零依赖、纯 Python 的命令行 CTF 工具箱
+> **离线 CTF Web 瑞士军刀** — 零依赖、纯 Python 的命令行 + 图形界面 CTF 工具箱
 
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-green.svg)]()
+[![GUI](https://img.shields.io/badge/GUI-tkinter-purple.svg)]()
+[![Ciphers](https://img.shields.io/badge/ciphers-23-orange.svg)]()
 
 ---
 
 ## 📖 简介
 
-Yang-Web 是一把 **CTF Web 方向的瑞士军刀**，覆盖了从信息探测、编码解码、Payload 生成到攻击利用的完整流程。所有功能**完全离线**运行，不依赖任何第三方库，拷贝到 U 盘就能在比赛环境直接使用。
+Yang-Web 是一把 **CTF Web 方向的瑞士军刀**，覆盖了从信息探测、编码解码、Payload 生成到攻击利用的完整流程。内置 **图形界面 (GUI)**，支持 CLI ↔ GUI 一键切换。所有功能**完全离线**运行，不依赖任何第三方库，拷贝到 U 盘就能在比赛环境直接使用。
 
-**15 个子命令，600+ 内置 Payload + 41 个内嵌 CTF 脚本，一个终端搞定所有 Web 题。**
+**15 个子命令，600+ 内置 Payload + 41 个内嵌 CTF 脚本 + 23 种 Misc 密码类型，一个终端搞定所有 Web 题。**
 
 ## ✨ 核心优势
 
 - 📴 **完全离线** — 零 pip 依赖，Python 标准库一把梭
 - 🧠 **智能解码** — 14 种编码格式自动识别 + 递归链式解码
 - 📦 **内嵌脚本库** — 41 个 CTF 脚本（Crypto/Web/Misc/Reverse），一键调用
+- 🔐 **Misc Crypto 密码面板** — 23 种经典密码编码/解码 + 参考图片 + 说明文档
+- 🖥️ **图形界面** — GUI ↔ CLI 一键切换，即看即用的密码参考图轮播
 - 🎯 **Payload 全覆盖** — SSTI/SQLi/LFI/SSRF/XSS/RCE/PHP/Upload 八大攻击面
 - 🛡️ **WAF 绕过** — 30+ 种 SQL WAF 绕过 + 12 类 PHP RCE 绕过
 - 🔑 **JWT 攻击链** — 解析→None 攻击→弱密钥爆破→伪造令牌
@@ -454,6 +458,53 @@ $ yang-web php --rce
 
 ---
 
+## 🔐 Misc Crypto 密码面板 `gui`
+
+🆕 GUI 专属功能：内置 **23 种** CTF Misc 常见密码类型，支持编码/解码 + 参考图片 + 说明文档。
+
+```bash
+# 启动图形界面
+yang-web gui
+```
+
+### 密码类型一览
+
+| 分类 | 密码 | 编码 | 解码 | 参考图 |
+|------|------|:--:|:--:|:--:|
+| 古典替换 | 凯撒密码 | ✅ | ✅ | 🖼 |
+| | 埃特巴什码 | ✅ | ✅ | — |
+| | ROT13 | ✅ | ✅ | — |
+| | 维吉尼亚密码 | ✅ | ✅ | 🖼×2 |
+| | ADFGX 加密法 | ✅ | ✅ | 🖼 |
+| 棋盘/坐标 | 波利比奥斯棋盘 | ✅ | ✅ | 🖼 |
+| | 猪圈密码 | ✅ | ✅ | 🖼 |
+| | 培根密码 | ✅ | ✅ | 🖼 |
+| | 栅栏密码 | ✅ | ✅ | — |
+| 键盘布局 | 电脑键盘 QWE 加密 | ✅ | ✅ | 🖼 |
+| | 电脑键盘棋盘加密 | ✅ | ✅ | 🖼 |
+| | 电脑键盘坐标加密 | ✅ | ✅ | 🖼 |
+| | 手机键盘加密解密 | ✅ | ✅ | 🖼 |
+| 中文编码 | 当铺密码 | ✅ | ✅ | 🖼 |
+| | 杰斐逊转轮密码 | ✅ | ✅ | 📄 |
+| 特殊编码 | 摩斯密码 | ✅ | ✅ | 🖼 |
+| | 二进制加密 | ✅ | ✅ | 🖼 |
+| | 倒序加密 | ✅ | ✅ | 🖼 |
+| | 字母表顺序加密 | ✅ | ✅ | 🖼 |
+| | 数字坐标加密 | ✅ | ✅ | 🖼 |
+| | 标准银河字母 | ✅ | ✅ | 🖼 |
+| | 非斯象形文字 | ✅ | ✅ | 🖼 |
+| | 蓝孔打卡 | ✅ | ✅ | 🖼 |
+
+**界面功能**：
+- 🔍 分类筛选 + 关键字搜索
+- 🖼 一键查看参考图片（系统图片查看器）
+- 📋 当前密码详情/特征提示
+- ⚡ 实时编码/解码（选择即用）
+
+**适用场景**：拿到一段奇怪密文 → 打开 GUI → 选对应密码类型 → 一键解码
+
+---
+
 ## 📂 项目结构
 
 ```
@@ -465,11 +516,12 @@ Yang-web/
 │   ├── __init__.py
 │   ├── __main__.py             # python -m 入口
 │   ├── cli.py                  # 命令行界面（15个子命令）
-│   ├── gui.py                  # 🆕 图形界面 (GUI ↔ CLI 一键切换)
+│   ├── gui.py                  # 🖥️ 图形界面（GUI ↔ CLI 一键切换 + Misc Crypto 23 种密码面板）
 │   ├── core/
 │   │   ├── decoder.py          # 智能解码引擎（14种编码）
 │   │   ├── hashid.py           # Hash 类型识别
 │   │   ├── jwt.py              # JWT 解析与攻击
+│   │   ├── misc_crypto.py      # 🔐 Misc Crypto 密码引擎（23种密码编码/解码）
 │   │   └── utils.py            # 公共工具
 │   ├── payloads/
 │   │   ├── ssti.py             # SSTI Payload（8种引擎）
@@ -489,7 +541,8 @@ Yang-web/
 │   └── wordlists/
 │       └── data/
 │           ├── dirs.txt        # 300+ CTF 常用目录
-│           └── files.txt       # 100+ CTF 常用文件
+│           ├── files.txt       # 100+ CTF 常用文件
+│           └── misc_crypto/    # 🔐 23 种密码参考图片 + 说明文档
 └── tests/                      # 测试目录
 ```
 
