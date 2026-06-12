@@ -1,4 +1,4 @@
-"""CTF 脚本运行器 — 动态加载执行脚本."""
+"""CTF èæ¬è¿è¡å¨ â å¨æå è½½æ§è¡èæ¬."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def run_script(key: str, args: Optional[list] = None) -> Dict[str, Any]:
-    """执行指定脚本并返回结果.
+    """æ§è¡æå®èæ¬å¹¶è¿åç»æ.
 
     Returns:
         {"success": bool, "stdout": str, "stderr": str, "exit_code": int}
@@ -27,13 +27,13 @@ def run_script(key: str, args: Optional[list] = None) -> Dict[str, Any]:
             return {
                 "success": False,
                 "stdout": "",
-                "stderr": f"脚本 '{key}' 是 zip 压缩包，请先解压到 scripts/ 目录",
+                "stderr": f"èæ¬ '{key}' æ¯ zip åç¼©åï¼è¯·åè§£åå° scripts/ ç®å½",
                 "exit_code": 1,
             }
         return {
             "success": False,
             "stdout": "",
-            "stderr": f"未找到脚本: {key}",
+            "stderr": f"æªæ¾å°èæ¬: {key}",
             "exit_code": 1,
         }
 
@@ -61,23 +61,23 @@ def run_script(key: str, args: Optional[list] = None) -> Dict[str, Any]:
         return {
             "success": False,
             "stdout": "",
-            "stderr": f"脚本执行超时 (300s): {key}",
+            "stderr": f"èæ¬æ§è¡è¶æ¶ (300s): {key}",
             "exit_code": -1,
         }
     except Exception as e:
         return {
             "success": False,
             "stdout": "",
-            "stderr": f"执行异常: {e}",
+            "stderr": f"æ§è¡å¼å¸¸: {e}",
             "exit_code": -1,
         }
 
 
 def run_script_live(key: str, args: Optional[list] = None):
-    """直接在前台执行脚本（输出到终端）."""
+    """ç´æ¥å¨åå°æ§è¡èæ¬ï¼è¾åºå°ç»ç«¯ï¼."""
     path = get_script_path(key)
     if not path:
-        print(f"未找到脚本: {key}")
+        print(f"æªæ¾å°èæ¬: {key}")
         sys.exit(1)
 
     cmd = [sys.executable, path]
@@ -88,11 +88,11 @@ def run_script_live(key: str, args: Optional[list] = None):
 
 
 def auto_solve(input_data: str, input_type: str = "text") -> Dict[str, Any]:
-    """一键智能解题: 根据输入类型自动尝试相关脚本.
+    """ä¸é®æºè½è§£é¢: æ ¹æ®è¾å¥ç±»åèªå¨å°è¯ç¸å³èæ¬.
 
     Args:
-        input_data: 输入数据 (文本内容或文件路径)
-        input_type: 输入类型 (text / file / apk)
+        input_data: è¾å¥æ°æ® (ææ¬åå®¹ææä»¶è·¯å¾)
+        input_type: è¾å¥ç±»å (text / file / apk)
 
     Returns:
         {"results": [...], "tried": int, "successes": int}
@@ -101,9 +101,9 @@ def auto_solve(input_data: str, input_type: str = "text") -> Dict[str, Any]:
     tried = 0
     successes = 0
 
-    # 根据输入类型筛选脚本
+    # æ ¹æ®è¾å¥ç±»åç­éèæ¬
     if input_type == "text":
-        # 先尝试所有解码类脚本
+        # åå°è¯ææè§£ç ç±»èæ¬
         priority_categories = ["crypto"]
         for key, meta in SCRIPTS.items():
             if meta["input_type"] != "text":
@@ -123,7 +123,7 @@ def auto_solve(input_data: str, input_type: str = "text") -> Dict[str, Any]:
                 successes += 1
             results.append(entry)
     elif input_type == "file":
-        # 文件类：尝试隐写、取证相关脚本
+        # æä»¶ç±»ï¼å°è¯éåãåè¯ç¸å³èæ¬
         for key, meta in SCRIPTS.items():
             if meta["input_type"] not in ("file", "pcap"):
                 continue

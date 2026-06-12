@@ -1,4 +1,4 @@
-"""ZIP analysis & password recovery — CRC-based & known-plaintext."""
+"""ZIP analysis & password recovery â CRC-based & known-plaintext."""
 
 from __future__ import annotations
 import struct

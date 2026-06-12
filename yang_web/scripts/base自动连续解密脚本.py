@@ -4,8 +4,8 @@ import base64
 
 def get_continuous_asciis(ranges: list):
     """
-    取连续的ASCII文本
-    :param ranges: 范围数组, 例[['A', 'B']]
+    åè¿ç»­çASCIIææ¬
+    :param ranges: èå´æ°ç», ä¾[['A', 'B']]
     :return: 
     """
     return ''.join([''.join(map(chr, range(ord(r[0]), ord(r[1]) + 1))) for r in ranges])

@@ -1,4 +1,4 @@
-"""AES 加密/解密工具 — 支持 ECB / CBC 模式 (zero-dependency)."""
+"""AES å å¯/è§£å¯å·¥å· â æ¯æ ECB / CBC æ¨¡å¼ (zero-dependency)."""
 
 from __future__ import annotations
 
@@ -200,7 +200,7 @@ def aes_decrypt_cbc(key: bytes, iv: bytes, ciphertext: bytes) -> bytes:
     return _pkcs7_unpad(bytes(result))
 
 
-# ════ CLI ════
+# ââââ CLI ââââ
 if __name__ == "__main__":
     import sys
     import base64

@@ -1,5 +1,5 @@
-"""CTF 专用敏感文件字典."""
-# ── 常见 Flag 位置 ──
+"""CTF ä¸ç¨æææä»¶å­å¸."""
+# ââ å¸¸è§ Flag ä½ç½® ââ
 /flag
 /flag.txt
 /flag.php
@@ -14,7 +14,7 @@
 /var/flag
 /opt/flag
 
-# ── Linux 敏感文件 ──
+# ââ Linux æææä»¶ ââ
 /etc/passwd
 /etc/shadow
 /etc/group
@@ -61,7 +61,7 @@
 /etc/redis/redis.conf
 /etc/ssh/sshd_config
 
-# ── Windows 敏感文件 ──
+# ââ Windows æææä»¶ ââ
 C:\Windows\win.ini
 C:\Windows\System32\drivers\etc\hosts
 C:\boot.ini
@@ -72,7 +72,7 @@ C:\inetpub\wwwroot\web.config
 C:\xampp\htdocs\config.php
 C:\xampp\htdocs\wp-config.php
 
-# ── Web 应用文件 ──
+# ââ Web åºç¨æä»¶ ââ
 robots.txt
 sitemap.xml
 .well-known/security.txt
@@ -81,7 +81,7 @@ clientaccesspolicy.xml
 security.txt
 humans.txt
 
-# ── 开发泄露 ──
+# ââ å¼åæ³é² ââ
 .env
 .env.local
 .env.production
@@ -117,7 +117,7 @@ tsconfig.json
 .eslintrc
 .prettierrc
 
-# ── 数据库 ──
+# ââ æ°æ®åº ââ
 dump.sql
 dump.sql.gz
 backup.sql
@@ -129,7 +129,7 @@ schema.sql
 migrations/
 migrate/
 
-# ── API / Token ──
+# ââ API / Token ââ
 api/
 api/v1/
 graphql
@@ -144,7 +144,7 @@ private.key
 public.key
 .pem
 
-# ── 配置文件其他 ──
+# ââ éç½®æä»¶å¶ä» ââ
 config.js
 config.json
 config.yml

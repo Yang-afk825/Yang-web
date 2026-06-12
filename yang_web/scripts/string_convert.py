@@ -1,4 +1,4 @@
-"""Advanced string/number conversion — 128-bit, float, modular arithmetic, diff."""
+"""Advanced string/number conversion â 128-bit, float, modular arithmetic, diff."""
 
 from __future__ import annotations
 import struct

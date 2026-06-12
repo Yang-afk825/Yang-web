@@ -1,4 +1,4 @@
-"""File analyzer — magic bytes detection, file type identification, hex dump."""
+"""File analyzer â magic bytes detection, file type identification, hex dump."""
 
 from __future__ import annotations
 import sys

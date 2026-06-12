@@ -1,4 +1,4 @@
-"""CTF 脚本注册表 — 元数据、分类、依赖信息."""
+"""CTF èæ¬æ³¨åè¡¨ â åæ°æ®ãåç±»ãä¾èµä¿¡æ¯."""
 
 from __future__ import annotations
 from typing import Dict, List, TypedDict, Optional
@@ -7,284 +7,284 @@ import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class ScriptMeta(TypedDict):
-    name: str           # 脚本文件名
-    title: str          # 中文名
-    category: str       # 分类: crypto / web / reverse / misc / forensics
-    description: str    # 功能简述
-    usage: str          # 使用示例
-    deps: List[str]     # 依赖库 (非标准库)
-    input_type: str     # 输入类型: text / file / apk / pcap / url
-    output_type: str    # 输出类型: text / flag / decode
+    name: str           # èæ¬æä»¶å
+    title: str          # ä¸­æå
+    category: str       # åç±»: crypto / web / reverse / misc / forensics
+    description: str    # åè½ç®è¿°
+    usage: str          # ä½¿ç¨ç¤ºä¾
+    deps: List[str]     # ä¾èµåº (éæ ååº)
+    input_type: str     # è¾å¥ç±»å: text / file / apk / pcap / url
+    output_type: str    # è¾åºç±»å: text / flag / decode
 
 
-# ── 脚本注册表 ──
+# ââ èæ¬æ³¨åè¡¨ ââ
 
 SCRIPTS: Dict[str, ScriptMeta] = {
-    # ═══ Crypto / 编码 ═══
-    "Base家族加解密": {
-        "name": "Base家族加解密.py",
-        "title": "Base家族加解密",
+    # âââ Crypto / ç¼ç  âââ
+    "Baseå®¶æå è§£å¯": {
+        "name": "Baseå®¶æå è§£å¯.py",
+        "title": "Baseå®¶æå è§£å¯",
         "category": "crypto",
-        "description": "一站式 base16/32/36/58/62/64/85/91/92 编解码，支持批量操作",
-        "usage": 'python scripts/Base家族加解密.py',
+        "description": "ä¸ç«å¼ base16/32/36/58/62/64/85/91/92 ç¼è§£ç ï¼æ¯ææ¹éæä½",
+        "usage": 'python scripts/Baseå®¶æå è§£å¯.py',
         "deps": ["base36", "base58", "base62", "base91", "py3base92"],
         "input_type": "text",
         "output_type": "text",
     },
-    "base64批量加解密": {
-        "name": "base64批量加解密.py",
-        "title": "Base64 批量加解密",
+    "base64æ¹éå è§£å¯": {
+        "name": "base64æ¹éå è§£å¯.py",
+        "title": "Base64 æ¹éå è§£å¯",
         "category": "crypto",
-        "description": "批量 base64 编解码，彩色 ASCII 艺术输出",
-        "usage": 'echo "sometext" | python scripts/base64批量加解密.py',
+        "description": "æ¹é base64 ç¼è§£ç ï¼å½©è² ASCII èºæ¯è¾åº",
+        "usage": 'echo "sometext" | python scripts/base64æ¹éå è§£å¯.py',
         "deps": [],
         "input_type": "text",
         "output_type": "text",
     },
-    "base64异或": {
-        "name": "base64异或.py",
-        "title": "Base64 + XOR 爆破",
+    "base64å¼æ": {
+        "name": "base64å¼æ.py",
+        "title": "Base64 + XOR çç ´",
         "category": "crypto",
-        "description": "base64 解码后逐字节异或爆破 (0-199) 找出明文",
-        "usage": 'python scripts/base64异或.py',
+        "description": "base64 è§£ç åéå­èå¼æçç ´ (0-199) æ¾åºææ",
+        "usage": 'python scripts/base64å¼æ.py',
         "deps": [],
         "input_type": "text",
         "output_type": "decode",
     },
-    "base64隐写": {
-        "name": "base64隐写.py",
-        "title": "Base64 隐写提取",
+    "base64éå": {
+        "name": "base64éå.py",
+        "title": "Base64 éåæå",
         "category": "crypto",
-        "description": "从 base64 编码的 '=' 填充位中提取隐写数据",
-        "usage": 'python scripts/base64隐写.py',
+        "description": "ä» base64 ç¼ç ç '=' å¡«åä½ä¸­æåéåæ°æ®",
+        "usage": 'python scripts/base64éå.py',
         "deps": [],
         "input_type": "text",
         "output_type": "text",
     },
-    "base64爬虫": {
-        "name": "base64爬虫.py",
-        "title": "Base64 爬虫爆破",
+    "base64ç¬è«": {
+        "name": "base64ç¬è«.py",
+        "title": "Base64 ç¬è«çç ´",
         "category": "web",
-        "description": "base64 编码参数遍历请求 URL（适合 CTF 爬虫题）",
-        "usage": 'python scripts/base64爬虫.py',
+        "description": "base64 ç¼ç åæ°éåè¯·æ± URLï¼éå CTF ç¬è«é¢ï¼",
+        "usage": 'python scripts/base64ç¬è«.py',
         "deps": ["requests"],
         "input_type": "url",
         "output_type": "text",
     },
-    "base自动连续解密脚本": {
-        "name": "base自动连续解密脚本.py",
-        "title": "Base 自动连续解密",
+    "baseèªå¨è¿ç»­è§£å¯èæ¬": {
+        "name": "baseèªå¨è¿ç»­è§£å¯èæ¬.py",
+        "title": "Base èªå¨è¿ç»­è§£å¯",
         "category": "crypto",
-        "description": "自动检测 base16/32/64 格式并连续解码至明文",
-        "usage": 'python scripts/base自动连续解密脚本.py',
+        "description": "èªå¨æ£æµ base16/32/64 æ ¼å¼å¹¶è¿ç»­è§£ç è³ææ",
+        "usage": 'python scripts/baseèªå¨è¿ç»­è§£å¯èæ¬.py',
         "deps": [],
         "input_type": "text",
         "output_type": "decode",
     },
-    "2进制文本转换ascii": {
-        "name": "2进制文本转换ascii.py",
-        "title": "二进制转 ASCII",
+    "2è¿å¶ææ¬è½¬æ¢ascii": {
+        "name": "2è¿å¶ææ¬è½¬æ¢ascii.py",
+        "title": "äºè¿å¶è½¬ ASCII",
         "category": "crypto",
-        "description": "二进制字符串转 ASCII，支持 7/8bit、位翻转、字节倒序",
-        "usage": 'python scripts/2进制文本转换ascii.py',
+        "description": "äºè¿å¶å­ç¬¦ä¸²è½¬ ASCIIï¼æ¯æ 7/8bitãä½ç¿»è½¬ãå­èååº",
+        "usage": 'python scripts/2è¿å¶ææ¬è½¬æ¢ascii.py',
         "deps": [],
         "input_type": "text",
         "output_type": "decode",
     },
-    "4字节16进制转浮点": {
-        "name": "4字节16进制转浮点.py",
-        "title": "Hex 转浮点数",
+    "4å­è16è¿å¶è½¬æµ®ç¹": {
+        "name": "4å­è16è¿å¶è½¬æµ®ç¹.py",
+        "title": "Hex è½¬æµ®ç¹æ°",
         "category": "crypto",
-        "description": "4 字节 hex ↔ float 互转（大端/小端）",
-        "usage": 'python scripts/4字节16进制转浮点.py',
+        "description": "4 å­è hex â float äºè½¬ï¼å¤§ç«¯/å°ç«¯ï¼",
+        "usage": 'python scripts/4å­è16è¿å¶è½¬æµ®ç¹.py',
         "deps": [],
         "input_type": "text",
         "output_type": "decode",
     },
-    "TLL隐写": {
-        "name": "TLL隐写.py",
-        "title": "TLL 像素隐写",
+    "TLLéå": {
+        "name": "TLLéå.py",
+        "title": "TLL åç´ éå",
         "category": "misc",
-        "description": "像素值(63→00,127→01,191→10,255→11)映射提取隐写数据",
-        "usage": 'python scripts/TLL隐写.py',
+        "description": "åç´ å¼(63â00,127â01,191â10,255â11)æ å°æåéåæ°æ®",
+        "usage": 'python scripts/TLLéå.py',
         "deps": [],
         "input_type": "file",
         "output_type": "text",
     },
-    "字符串统计": {
-        "name": "字符串统计.py",
-        "title": "字符串统计对比",
+    "å­ç¬¦ä¸²ç»è®¡": {
+        "name": "å­ç¬¦ä¸²ç»è®¡.py",
+        "title": "å­ç¬¦ä¸²ç»è®¡å¯¹æ¯",
         "category": "crypto",
-        "description": "两字符串逐字节统计/对比差异",
-        "usage": 'python scripts/字符串统计.py',
+        "description": "ä¸¤å­ç¬¦ä¸²éå­èç»è®¡/å¯¹æ¯å·®å¼",
+        "usage": 'python scripts/å­ç¬¦ä¸²ç»è®¡.py',
         "deps": [],
         "input_type": "text",
         "output_type": "text",
     },
-    "字频统计": {
-        "name": "字频统计.py",
-        "title": "字母频率统计",
+    "å­é¢ç»è®¡": {
+        "name": "å­é¢ç»è®¡.py",
+        "title": "å­æ¯é¢çç»è®¡",
         "category": "crypto",
-        "description": "字母频率统计排序，按频次降序拼接输出",
-        "usage": 'python scripts/字频统计.py',
+        "description": "å­æ¯é¢çç»è®¡æåºï¼æé¢æ¬¡éåºæ¼æ¥è¾åº",
+        "usage": 'python scripts/å­é¢ç»è®¡.py',
         "deps": [],
         "input_type": "text",
         "output_type": "text",
     },
 
-    # ═══ Hash / 爆破 ═══
+    # âââ Hash / çç ´ âââ
     "md5": {
         "name": "md5.py",
-        "title": "MD5 爆破",
+        "title": "MD5 çç ´",
         "category": "crypto",
-        "description": "5 层嵌套循环爆破 MD5（模板字符串匹配部分 hash）",
+        "description": "5 å±åµå¥å¾ªç¯çç ´ MD5ï¼æ¨¡æ¿å­ç¬¦ä¸²å¹éé¨å hashï¼",
         "usage": 'python scripts/md5.py',
         "deps": [],
         "input_type": "text",
         "output_type": "decode",
     },
-    "md5爆破": {
-        "name": "md5爆破.py",
-        "title": "MD5 爆破 (v2)",
+    "md5çç ´": {
+        "name": "md5çç ´.py",
+        "title": "MD5 çç ´ (v2)",
         "category": "crypto",
-        "description": "与 md5.py 逻辑一致，针对不同格式模板",
-        "usage": 'python scripts/md5爆破.py',
+        "description": "ä¸ md5.py é»è¾ä¸è´ï¼éå¯¹ä¸åæ ¼å¼æ¨¡æ¿",
+        "usage": 'python scripts/md5çç ´.py',
         "deps": [],
         "input_type": "text",
         "output_type": "decode",
     },
     "crc32": {
         "name": "crc32.py",
-        "title": "CRC32 碰撞",
+        "title": "CRC32 ç¢°æ",
         "category": "crypto",
-        "description": "给定 CRC32 集合爆破 4 字节可打印字符明文",
+        "description": "ç»å® CRC32 éåçç ´ 4 å­èå¯æå°å­ç¬¦ææ",
         "usage": 'python scripts/crc32.py',
         "deps": [],
         "input_type": "text",
         "output_type": "decode",
     },
-    "crc爆破": {
-        "name": "crc爆破.py",
-        "title": "PNG CRC 修复",
+    "crcçç ´": {
+        "name": "crcçç ´.py",
+        "title": "PNG CRC ä¿®å¤",
         "category": "misc",
-        "description": "PNG 宽高 CRC 爆破：给定 CRC32 恢复正确图片宽高",
-        "usage": 'python scripts/crc爆破.py',
+        "description": "PNG å®½é« CRC çç ´ï¼ç»å® CRC32 æ¢å¤æ­£ç¡®å¾çå®½é«",
+        "usage": 'python scripts/crcçç ´.py',
         "deps": [],
         "input_type": "file",
         "output_type": "text",
     },
     "sm2": {
         "name": "sm2.py",
-        "title": "国密 SM2",
+        "title": "å½å¯ SM2",
         "category": "crypto",
-        "description": "国密 SM2 加密/解密模板（需 gmssl）",
+        "description": "å½å¯ SM2 å å¯/è§£å¯æ¨¡æ¿ï¼é gmsslï¼",
         "usage": 'python scripts/sm2.py',
         "deps": ["gmssl"],
         "input_type": "text",
         "output_type": "text",
     },
 
-    # ═══ Web ═══
-    "正常盲注": {
-        "name": "正常盲注.py",
-        "title": "SQL 盲注模板",
+    # âââ Web âââ
+    "æ­£å¸¸ç²æ³¨": {
+        "name": "æ­£å¸¸ç²æ³¨.py",
+        "title": "SQL ç²æ³¨æ¨¡æ¿",
         "category": "web",
-        "description": "SQL 盲注 Payload 模板，二分法逐字符注入（库名/表名/列名/数据）",
-        "usage": 'python scripts/正常盲注.py',
+        "description": "SQL ç²æ³¨ Payload æ¨¡æ¿ï¼äºåæ³éå­ç¬¦æ³¨å¥ï¼åºå/è¡¨å/åå/æ°æ®ï¼",
+        "usage": 'python scripts/æ­£å¸¸ç²æ³¨.py',
         "deps": ["requests"],
         "input_type": "url",
         "output_type": "text",
     },
-    "IIS文件上传": {
-        "name": "IIS文件上传.py",
-        "title": "IIS PUT 上传利用",
+    "IISæä»¶ä¸ä¼ ": {
+        "name": "IISæä»¶ä¸ä¼ .py",
+        "title": "IIS PUT ä¸ä¼ å©ç¨",
         "category": "web",
-        "description": "IIS PUT 文件上传漏洞利用（httplib 实现）",
-        "usage": 'python scripts/IIS文件上传.py',
+        "description": "IIS PUT æä»¶ä¸ä¼ æ¼æ´å©ç¨ï¼httplib å®ç°ï¼",
+        "usage": 'python scripts/IISæä»¶ä¸ä¼ .py',
         "deps": [],
         "input_type": "url",
         "output_type": "text",
     },
-    "ssh弱口令加提取flag": {
-        "name": "ssh弱口令加提取flag.py",
-        "title": "SSH 弱口令 + 提取 Flag",
+    "sshå¼±å£ä»¤å æåflag": {
+        "name": "sshå¼±å£ä»¤å æåflag.py",
+        "title": "SSH å¼±å£ä»¤ + æå Flag",
         "category": "web",
-        "description": "SSH 弱口令扫描 + 远程执行 cat flag（paramiko）",
-        "usage": 'python scripts/ssh弱口令加提取flag.py',
+        "description": "SSH å¼±å£ä»¤æ«æ + è¿ç¨æ§è¡ cat flagï¼paramikoï¼",
+        "usage": 'python scripts/sshå¼±å£ä»¤å æåflag.py',
         "deps": ["paramiko"],
         "input_type": "url",
         "output_type": "flag",
     },
-    "自动提交flag": {
-        "name": "自动提交flag.py",
-        "title": "自动提交 Flag",
+    "èªå¨æäº¤flag": {
+        "name": "èªå¨æäº¤flag.py",
+        "title": "èªå¨æäº¤ Flag",
         "category": "web",
-        "description": "CTF 比赛自动获取 flag 并提交到计分平台（requests session）",
-        "usage": 'python scripts/自动提交flag.py',
+        "description": "CTF æ¯èµèªå¨è·å flag å¹¶æäº¤å°è®¡åå¹³å°ï¼requests sessionï¼",
+        "usage": 'python scripts/èªå¨æäº¤flag.py',
         "deps": ["requests"],
         "input_type": "url",
         "output_type": "text",
     },
 
-    # ═══ Reverse ═══
-    "APK逆向Solver": {
-        "name": "APK 逆向 Solver.py",
-        "title": "APK 逆向 Solver",
+    # âââ Reverse âââ
+    "APKéåSolver": {
+        "name": "APK éå Solver.py",
+        "title": "APK éå Solver",
         "category": "reverse",
-        "description": "通用 SCM time-capsule APK 求解器：4段6字节可打印key → SHA256 → RC4 解密 flag.enc",
-        "usage": 'python "scripts/APK 逆向 Solver.py" attachment.apk',
+        "description": "éç¨ SCM time-capsule APK æ±è§£å¨ï¼4æ®µ6å­èå¯æå°key â SHA256 â RC4 è§£å¯ flag.enc",
+        "usage": 'python "scripts/APK éå Solver.py" attachment.apk',
         "deps": [],
         "input_type": "apk",
         "output_type": "flag",
     },
 
-    # ═══ Misc / 流量 ═══
+    # âââ Misc / æµé âââ
     "ICMP": {
         "name": "ICMP.py",
-        "title": "ICMP Ping 扫描",
+        "title": "ICMP Ping æ«æ",
         "category": "misc",
-        "description": "ICMP Ping 扫描（scapy, 多线程, 支持 IP 段和文件输入）",
+        "description": "ICMP Ping æ«æï¼scapy, å¤çº¿ç¨, æ¯æ IP æ®µåæä»¶è¾å¥ï¼",
         "usage": 'python scripts/ICMP.py',
         "deps": ["scapy"],
         "input_type": "url",
         "output_type": "text",
     },
-    "ICMP数据包data长度提取": {
-        "name": "ICMP数据包data长度提取.py",
-        "title": "ICMP Data 提取",
+    "ICMPæ°æ®ådataé¿åº¦æå": {
+        "name": "ICMPæ°æ®ådataé¿åº¦æå.py",
+        "title": "ICMP Data æå",
         "category": "misc",
-        "description": "从 PDML 提取 ICMP data.len → base64 解码隐写信息",
-        "usage": 'python scripts/ICMP数据包data长度提取.py',
+        "description": "ä» PDML æå ICMP data.len â base64 è§£ç éåä¿¡æ¯",
+        "usage": 'python scripts/ICMPæ°æ®ådataé¿åº¦æå.py',
         "deps": [],
         "input_type": "file",
         "output_type": "decode",
     },
-    "一元二次方程": {
-        "name": "一元二次方程.py",
-        "title": "一元二次方程求解",
+    "ä¸åäºæ¬¡æ¹ç¨": {
+        "name": "ä¸åäºæ¬¡æ¹ç¨.py",
+        "title": "ä¸åäºæ¬¡æ¹ç¨æ±è§£",
         "category": "misc",
-        "description": "解一元二次方程（CTF 自动化流程辅助）",
-        "usage": 'python scripts/一元二次方程.py',
+        "description": "è§£ä¸åäºæ¬¡æ¹ç¨ï¼CTF èªå¨åæµç¨è¾å©ï¼",
+        "usage": 'python scripts/ä¸åäºæ¬¡æ¹ç¨.py',
         "deps": [],
         "input_type": "text",
         "output_type": "text",
     },
-    "键鼠控制": {
-        "name": "键鼠控制.py",
-        "title": "pyautogui 参考大全",
+    "é®é¼ æ§å¶": {
+        "name": "é®é¼ æ§å¶.py",
+        "title": "pyautogui åèå¤§å¨",
         "category": "misc",
-        "description": "pyautogui 操作参考：鼠标/键盘/截图/图像定位等完整 API",
-        "usage": 'python scripts/键鼠控制.py',
+        "description": "pyautogui æä½åèï¼é¼ æ /é®ç/æªå¾/å¾åå®ä½ç­å®æ´ API",
+        "usage": 'python scripts/é®é¼ æ§å¶.py',
         "deps": ["pyautogui"],
         "input_type": "text",
         "output_type": "text",
     },
-    "竞赛脚本": {
-        "name": "竞赛脚本.zip",
-        "title": "竞赛脚本合集",
+    "ç«èµèæ¬": {
+        "name": "ç«èµèæ¬.zip",
+        "title": "ç«èµèæ¬åé",
         "category": "misc",
-        "description": "额外的未分类 CTF 竞赛脚本打包（需解压使用）",
-        "usage": "解压 scripts/竞赛脚本.zip 后查看",
+        "description": "é¢å¤çæªåç±» CTF ç«èµèæ¬æåï¼éè§£åä½¿ç¨ï¼",
+        "usage": "è§£å scripts/ç«èµèæ¬.zip åæ¥ç",
         "deps": [],
         "input_type": "file",
         "output_type": "text",
@@ -292,9 +292,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     # === v1.3 new scripts ===
     "aes_crypto": {
         "name": "aes_crypto.py",
-        "title": "AES 加解密",
+        "title": "AES å è§£å¯",
         "category": "crypto",
-        "description": "AES ECB/CBC 加解密 零依赖",
+        "description": "AES ECB/CBC å è§£å¯ é¶ä¾èµ",
         "usage": "python aes_crypto.py [mode] [text]",
         "deps": [],
         "input_type": "text",
@@ -302,9 +302,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     },
     "classic_crypto": {
         "name": "classic_crypto.py",
-        "title": "古典密码工具箱",
+        "title": "å¤å¸å¯ç å·¥å·ç®±",
         "category": "crypto",
-        "description": "Morse/ROT/Atbash/Caesar/Bacon 编解码+自动识别",
+        "description": "Morse/ROT/Atbash/Caesar/Bacon ç¼è§£ç +èªå¨è¯å«",
         "usage": "python classic_crypto.py <text>",
         "deps": [],
         "input_type": "text",
@@ -312,9 +312,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     },
     "time_sqli": {
         "name": "time_sqli.py",
-        "title": "时间盲注 SQLi",
+        "title": "æ¶é´ç²æ³¨ SQLi",
         "category": "web",
-        "description": "时间盲注SQL注入 支持MySQL/PG/MSSQL/SQLite",
+        "description": "æ¶é´ç²æ³¨SQLæ³¨å¥ æ¯æMySQL/PG/MSSQL/SQLite",
         "usage": "python time_sqli.py <URL> <QUERY>",
         "deps": [],
         "input_type": "url",
@@ -322,9 +322,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     },
     "qr_tools": {
         "name": "qr_tools.py",
-        "title": "QR 码工具",
+        "title": "QR ç å·¥å·",
         "category": "misc",
-        "description": "QR码生成/修复/解析 零依赖",
+        "description": "QRç çæ/ä¿®å¤/è§£æ é¶ä¾èµ",
         "usage": "python qr_tools.py gen <text> | read <img>",
         "deps": [],
         "input_type": "text",
@@ -332,9 +332,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     },
     "zip_tools": {
         "name": "zip_tools.py",
-        "title": "ZIP 分析工具",
+        "title": "ZIP åæå·¥å·",
         "category": "misc",
-        "description": "ZIP结构/CRC爆破/PKCRACK指南",
+        "description": "ZIPç»æ/CRCçç ´/PKCRACKæå",
         "usage": "python zip_tools.py <zip> | --crc CRC LEN",
         "deps": [],
         "input_type": "file",
@@ -342,9 +342,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     },
     "zlib_tools": {
         "name": "zlib_tools.py",
-        "title": "压缩解压工具箱",
+        "title": "åç¼©è§£åå·¥å·ç®±",
         "category": "misc",
-        "description": "zlib/gzip/bzip2/lzma 自动解压+base64",
+        "description": "zlib/gzip/bzip2/lzma èªå¨è§£å+base64",
         "usage": "python zlib_tools.py <base64> [--auto]",
         "deps": [],
         "input_type": "text",
@@ -352,9 +352,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     },
     "pcap_tools": {
         "name": "pcap_tools.py",
-        "title": "PCAP 流量分析",
+        "title": "PCAP æµéåæ",
         "category": "misc",
-        "description": "提取ICMP/HTTP/DNS数据 零依赖",
+        "description": "æåICMP/HTTP/DNSæ°æ® é¶ä¾èµ",
         "usage": "python pcap_tools.py <file.pcap>",
         "deps": [],
         "input_type": "file",
@@ -362,9 +362,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     },
     "string_convert": {
         "name": "string_convert.py",
-        "title": "高级字符串转换",
+        "title": "é«çº§å­ç¬¦ä¸²è½¬æ¢",
         "category": "crypto",
-        "description": "128位/浮点/XOR/进制转换/差异对比",
+        "description": "128ä½/æµ®ç¹/XOR/è¿å¶è½¬æ¢/å·®å¼å¯¹æ¯",
         "usage": "python string_convert.py <cmd> <args>",
         "deps": [],
         "input_type": "text",
@@ -374,9 +374,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     # === v1.3.1 new scripts ===
     "bool_inject": {
         "name": "bool_inject.py",
-        "title": "布尔盲注 SQLi",
+        "title": "å¸å°ç²æ³¨ SQLi",
         "category": "web",
-        "description": "布尔盲注SQL注入 自动提取数据",
+        "description": "å¸å°ç²æ³¨SQLæ³¨å¥ èªå¨æåæ°æ®",
         "usage": "python bool_inject.py <URL> <QUERY>",
         "deps": [],
         "input_type": "url",
@@ -384,9 +384,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     },
     "rce_bypass": {
         "name": "rce_bypass.py",
-        "title": "无字符RCE绕过",
+        "title": "æ å­ç¬¦RCEç»è¿",
         "category": "web",
-        "description": "OR/XOR/NOT 无数字字母RCE payload生成器",
+        "description": "OR/XOR/NOT æ æ°å­å­æ¯RCE payloadçæå¨",
         "usage": "python rce_bypass.py <cmd> [--or|--xor|--not]",
         "deps": [],
         "input_type": "text",
@@ -394,9 +394,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     },
     "phpinfo_lfi": {
         "name": "phpinfo_lfi.py",
-        "title": "PHPInfo条件竞争LFI",
+        "title": "PHPInfoæ¡ä»¶ç«äºLFI",
         "category": "web",
-        "description": "PHPInfo race condition LFI→RCE",
+        "description": "PHPInfo race condition LFIâRCE",
         "usage": "python phpinfo_lfi.py <phpinfo> <lfi_url>",
         "deps": [],
         "input_type": "url",
@@ -404,9 +404,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     },
     "wordlist_helper": {
         "name": "wordlist_helper.py",
-        "title": "CTF 内置字典",
+        "title": "CTF åç½®å­å¸",
         "category": "misc",
-        "description": "常用密码/用户名/目录/文件名 内置字典",
+        "description": "å¸¸ç¨å¯ç /ç¨æ·å/ç®å½/æä»¶å åç½®å­å¸",
         "usage": "python wordlist_helper.py <type>",
         "deps": [],
         "input_type": "text",
@@ -416,9 +416,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     # === v1.3.2 search-optimized ===
     "rsa_toolkit": {
         "name": "rsa_toolkit.py",
-        "title": "RSA 攻击工具箱",
+        "title": "RSA æ»å»å·¥å·ç®±",
         "category": "crypto",
-        "description": "RSA攻击:低指数/共模/Wiener/Fermat/广播 零依赖",
+        "description": "RSAæ»å»:ä½ææ°/å±æ¨¡/Wiener/Fermat/å¹¿æ­ é¶ä¾èµ",
         "usage": "python rsa_toolkit.py --mode low_e --n N --e E --c C",
         "deps": [],
         "input_type": "text",
@@ -426,9 +426,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     },
     "img_stego": {
         "name": "img_stego.py",
-        "title": "图片隐写分析",
+        "title": "å¾çéååæ",
         "category": "misc",
-        "description": "LSB提取/PNG分块/EOF隐藏/字符串搜索 零依赖",
+        "description": "LSBæå/PNGåå/EOFéè/å­ç¬¦ä¸²æç´¢ é¶ä¾èµ",
         "usage": "python img_stego.py <image.png> [--lsb|--chunks]",
         "deps": [],
         "input_type": "file",
@@ -436,9 +436,9 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     },
     "file_analyzer": {
         "name": "file_analyzer.py",
-        "title": "文件头分析器",
+        "title": "æä»¶å¤´åæå¨",
         "category": "misc",
-        "description": "Magic bytes检测/HEX dump/Strings/内嵌文件扫描",
+        "description": "Magic bytesæ£æµ/HEX dump/Strings/ååµæä»¶æ«æ",
         "usage": "python file_analyzer.py <file> [--hex|--strings]",
         "deps": [],
         "input_type": "file",
@@ -448,18 +448,18 @@ SCRIPTS: Dict[str, ScriptMeta] = {
 }
 
 
-# ── 分类映射 ──
+# ââ åç±»æ å° ââ
 CATEGORIES: Dict[str, str] = {
-    "crypto": "🔐 密码 / 编码",
-    "web": "🌐 Web",
-    "reverse": "🔧 逆向",
-    "misc": "📦 杂项 / Misc",
-    "forensics": "🔍 取证 / 隐写",
+    "crypto": "ð å¯ç  / ç¼ç ",
+    "web": "ð Web",
+    "reverse": "ð§ éå",
+    "misc": "ð¦ æé¡¹ / Misc",
+    "forensics": "ð åè¯ / éå",
 }
 
 
 def list_scripts(category: Optional[str] = None) -> List[tuple]:
-    """列出脚本（可按分类筛选），返回 (key, meta) 列表."""
+    """ååºèæ¬ï¼å¯æåç±»ç­éï¼ï¼è¿å (key, meta) åè¡¨."""
     results = []
     for key, meta in SCRIPTS.items():
         if category and meta["category"] != category:
@@ -469,7 +469,7 @@ def list_scripts(category: Optional[str] = None) -> List[tuple]:
 
 
 def search_scripts(query: str) -> List[tuple]:
-    """按关键词搜索脚本."""
+    """æå³é®è¯æç´¢èæ¬."""
     q = query.lower()
     results = []
     for key, meta in SCRIPTS.items():
@@ -481,12 +481,12 @@ def search_scripts(query: str) -> List[tuple]:
 
 
 def get_script(key: str) -> Optional[ScriptMeta]:
-    """获取单个脚本元数据."""
+    """è·ååä¸ªèæ¬åæ°æ®."""
     return SCRIPTS.get(key)
 
 
 def get_script_path(key: str) -> Optional[str]:
-    """获取脚本的绝对路径."""
+    """è·åèæ¬çç»å¯¹è·¯å¾."""
     meta = SCRIPTS.get(key)
     if not meta:
         return None

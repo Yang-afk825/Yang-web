@@ -1,33 +1,33 @@
-"""Hash 类型识别器 — 根据 hash 格式识别加密算法.
+"""Hash ç±»åè¯å«å¨ â æ ¹æ® hash æ ¼å¼è¯å«å å¯ç®æ³.
 
-支持 40+ 种常见 hash 格式: MD5, SHA1/256/512, NTLM, MySQL, bcrypt, CRC32 等.
+æ¯æ 40+ ç§å¸¸è§ hash æ ¼å¼: MD5, SHA1/256/512, NTLM, MySQL, bcrypt, CRC32 ç­.
 """
 import re
 from typing import List, Tuple
 
 
-# ═══════════════════════════════════════════════════════════
-#  Hash 签名数据库 — (regex, 算法名, 类别)
-# ═══════════════════════════════════════════════════════════
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+#  Hash ç­¾åæ°æ®åº â (regex, ç®æ³å, ç±»å«)
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 HASH_SIGNATURES: List[Tuple[str, str, str]] = [
-    # ── MD 家族 ──
+    # ââ MD å®¶æ ââ
     (r"^[a-fA-F0-9]{32}$",                    "MD5",                       "MD"),
-    (r"^[a-fA-F0-9]{16}$",                    "MD5 (MySQL / 16位)",        "MD"),
+    (r"^[a-fA-F0-9]{16}$",                    "MD5 (MySQL / 16ä½)",        "MD"),
     (r"^[a-fA-F0-9]{48}$",                    "MD5 (SHA-384 truncated?)",   "MD"),
-    # ── SHA 家族 ──
+    # ââ SHA å®¶æ ââ
     (r"^[a-fA-F0-9]{40}$",                    "SHA-1",                     "SHA"),
     (r"^[a-fA-F0-9]{56}$",                    "SHA-224",                   "SHA"),
     (r"^[a-fA-F0-9]{64}$",                    "SHA-256",                   "SHA"),
     (r"^[a-fA-F0-9]{96}$",                    "SHA-384",                   "SHA"),
     (r"^[a-fA-F0-9]{128}$",                   "SHA-512",                   "SHA"),
-    # ── NTLM / LM ──
+    # ââ NTLM / LM ââ
     (r"^[a-fA-F0-9]{32}$",                    "NTLM (Windows)",            "Windows"),
     (r"^[a-fA-F0-9]{32}$",                    "LM (Windows, uppercase)",   "Windows"),
-    # ── MySQL ──
+    # ââ MySQL ââ
     (r"^\*[a-fA-F0-9]{40}$",                  "MySQL 4.1+ / 5.x",         "Database"),
     (r"^[a-fA-F0-9]{16}$",                    "MySQL 3.x / OLD_PASSWORD",  "Database"),
-    # ── 盐值格式 ──
+    # ââ çå¼æ ¼å¼ ââ
     (r"^\$2[aby]\$\d{1,2}\$[./a-zA-Z0-9]{53}$", "bcrypt (Blowfish)",     "Salted"),
     (r"^\$1\$[./a-zA-Z0-9]{1,8}\$[./a-zA-Z0-9]{22}$", "MD5 Crypt ($1$)", "Salted"),
     (r"^\$5\$[./a-zA-Z0-9]{1,16}\$[./a-zA-Z0-9]{43}$", "SHA-256 Crypt ($5$)", "Salted"),
@@ -35,10 +35,10 @@ HASH_SIGNATURES: List[Tuple[str, str, str]] = [
     (r"^\$argon2",                             "Argon2",                   "Salted"),
     (r"^\$scrypt",                             "scrypt",                   "Salted"),
     (r"^\$pbkdf2",                             "PBKDF2",                   "Salted"),
-    # ── CRC ──
+    # ââ CRC ââ
     (r"^[a-fA-F0-9]{8}$",                     "CRC32 / Adler32",          "Checksum"),
     (r"^[a-fA-F0-9]{4}$",                     "CRC16",                     "Checksum"),
-    # ── 其他 ──
+    # ââ å¶ä» ââ
     (r"^[a-fA-F0-9]{56}$",                    "SHA-3-224",                 "SHA-3"),
     (r"^[a-fA-F0-9]{64}$",                    "SHA-3-256",                 "SHA-3"),
     (r"^[a-fA-F0-9]{96}$",                    "SHA-3-384",                 "SHA-3"),
@@ -53,17 +53,17 @@ HASH_SIGNATURES: List[Tuple[str, str, str]] = [
     (r"^[a-fA-F0-9]{32}$",                    "LM Hash (16 bytes hex)",   "Windows"),
     (r"^[a-fA-F0-9]{32}:[a-fA-F0-9]{32}$",    "LM:NTLM",                  "Windows"),
     (r"^[a-f0-9]{32}(:.*)?$",                  "MD5 (Unix)",               "MD"),
-    # ── JWT / Base64 签名 ──
+    # ââ JWT / Base64 ç­¾å ââ
     (r"^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$", "JWT Token", "Token"),
-    # ── UUID ──
+    # ââ UUID ââ
     (r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$", "UUID (Version 4)", "Other"),
 ]
 
 
 def identify(text: str) -> List[Tuple[str, str, str]]:
-    """识别 hash 类型.
+    """è¯å« hash ç±»å.
 
-    返回: [(算法名, 类别, 详细说明), ...] 可能返回多个匹配.
+    è¿å: [(ç®æ³å, ç±»å«, è¯¦ç»è¯´æ), ...] å¯è½è¿åå¤ä¸ªå¹é.
     """
     text = text.strip()
     results = []
@@ -72,7 +72,7 @@ def identify(text: str) -> List[Tuple[str, str, str]]:
         if re.fullmatch(pattern, text):
             results.append((algo, category, pattern))
 
-    # 如果没有精确匹配, 尝试基于长度和字符集的模糊匹配
+    # å¦ææ²¡æç²¾ç¡®å¹é, å°è¯åºäºé¿åº¦åå­ç¬¦éçæ¨¡ç³å¹é
     if not results:
         hex_chars = all(c in "0123456789abcdefABCDEF" for c in text)
         if hex_chars:
@@ -88,13 +88,13 @@ def identify(text: str) -> List[Tuple[str, str, str]]:
             }
             hints = length_hints.get(len(text), [])
             for algo, cat in hints:
-                results.append((algo, cat, f"长度 {len(text)} 字符"))
+                results.append((algo, cat, f"é¿åº¦ {len(text)} å­ç¬¦"))
 
     return results
 
 
 def identify_all(text: str) -> dict:
-    """详细识别, 返回完整信息字典."""
+    """è¯¦ç»è¯å«, è¿åå®æ´ä¿¡æ¯å­å¸."""
     matches = identify(text)
     return {
         "input": text,

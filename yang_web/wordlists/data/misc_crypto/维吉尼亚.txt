@@ -28,11 +28,11 @@
 	Z   Z A B C D E F G H I J K L M N O P Q R S T U V W X Y 
 
 
-    行和列分别用待加密的字符和加密当前字符的密钥来决定,然后横竖的交集,就是当前字符加密后的结果!
+    脨脨潞脥脕脨路脰卤冒脫脙麓媒录脫脙脺碌脛脳脰路没潞脥录脫脙脺碌卤脟掳脳脰路没碌脛脙脺脭驴脌麓戮枚露篓,脠禄潞贸潞谩脢煤碌脛陆禄录炉,戮脥脢脟碌卤脟掳脳脰路没录脫脙脺潞贸碌脛陆谩鹿没!
 
-    比起传统的凯撒(caesar)密码,维吉尼亚(vigenere)在移位密码带来的字符出现频率上,具有更多迷惑性!多表替换,意味着不同字母移位替换时,遇到不同的密钥(偏移量),可能得到相同的密文;当然,相同的明文经过加密可能获得不同的密文,
-    下面是一个用 dorainm 当作密钥来加密 blood has not been cold yet的例子
+    卤脠脝冒麓芦脥鲁碌脛驴颅脠枚(caesar)脙脺脗毛,脦卢录陋脛谩脩脟(vigenere)脭脷脪脝脦禄脙脺脗毛麓酶脌麓碌脛脳脰路没鲁枚脧脰脝碌脗脢脡脧,戮脽脫脨赂眉露脿脙脭禄贸脨脭!露脿卤铆脤忙禄禄,脪芒脦露脳脜虏禄脥卢脳脰脛赂脪脝脦禄脤忙禄禄脢卤,脫枚碌陆虏禄脥卢碌脛脙脺脭驴(脝芦脪脝脕驴),驴脡脛脺碌脙碌陆脧脿脥卢碌脛脙脺脦脛;碌卤脠禄,脧脿脥卢碌脛脙梅脦脛戮颅鹿媒录脫脙脺驴脡脛脺禄帽碌脙虏禄脥卢碌脛脙脺脦脛,
+    脧脗脙忙脢脟脪禄赂枚脫脙 dorainm 碌卤脳梅脙脺脭驴脌麓录脫脙脺 blood has not been cold yet碌脛脌媒脳脫
 
-明文: bloodhasbotbeencoldyet
-密钥: dorainmdorainmdorainmd
-密文: EZFOLUMVBFTJRQQQFLLLQW
+脙梅脦脛: bloodhasbotbeencoldyet
+脙脺脭驴: dorainmdorainmdorainmd
+脙脺脦脛: EZFOLUMVBFTJRQQQFLLLQW

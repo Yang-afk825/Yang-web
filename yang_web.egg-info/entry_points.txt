@@ -1,0 +1,2 @@
+[console_scripts]
+yang-web = yang_web.cli:main

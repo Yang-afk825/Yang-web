@@ -4,55 +4,55 @@
 
 # width,height=pyautogui.size()
 # print(width,height,sep="\n")
-# #移动鼠标到指定位置duration为持续时间
+# #ç§»å¨é¼ æ å°æå®ä½ç½®durationä¸ºæç»­æ¶é´
 # pyautogui.moveTo(500,500,duration=0.25)
-# pyautogui.doubleClick(x=100, y=150, button="left") # 鼠标在（100，150）位置左击两下
-# pyautogui.tripleClick() # 鼠标当前位置左击三下
-# pyautogui.mouseDown() # 鼠标左键按下再松开
+# pyautogui.doubleClick(x=100, y=150, button="left") # é¼ æ å¨ï¼100ï¼150ï¼ä½ç½®å·¦å»ä¸¤ä¸
+# pyautogui.tripleClick() # é¼ æ å½åä½ç½®å·¦å»ä¸ä¸
+# pyautogui.mouseDown() # é¼ æ å·¦é®æä¸åæ¾å¼
 # pyautogui.mouseUp()
-# pyautogui.mouseDown(button='right') # 按下鼠标右键
-# pyautogui.mouseUp(button='right', x=100, y=200) # 移动到(100, 200)位置，然后松开鼠标右键
+# pyautogui.mouseDown(button='right') # æä¸é¼ æ å³é®
+# pyautogui.mouseUp(button='right', x=100, y=200) # ç§»å¨å°(100, 200)ä½ç½®ï¼ç¶åæ¾å¼é¼ æ å³é®
  
 
 
-# #相对当前位置移动鼠标
+# #ç¸å¯¹å½åä½ç½®ç§»å¨é¼ æ 
 # pyautogui.moveRel(100,0,duration=0.25)
 
-# #获取鼠标位置 position()
+# #è·åé¼ æ ä½ç½® position()
 # a=pyautogui.position()
 # print(a)
 
-# #click()：鼠标单击
-# #doubleClick()：鼠标双击
-# #rightClick()：鼠标右击
+# #click()ï¼é¼ æ åå»
+# #doubleClick()ï¼é¼ æ åå»
+# #rightClick()ï¼é¼ æ å³å»
 # pyautogui.click(500,500)
 
-#dragTo()：按住移动鼠标到一个位置
-#dragRel()：按住移动鼠标到一个相对位置
-# 按住鼠标左键，把鼠标拖拽到(100, 200)位置
+#dragTo()ï¼æä½ç§»å¨é¼ æ å°ä¸ä¸ªä½ç½®
+#dragRel()ï¼æä½ç§»å¨é¼ æ å°ä¸ä¸ªç¸å¯¹ä½ç½®
+# æä½é¼ æ å·¦é®ï¼æé¼ æ ææ½å°(100, 200)ä½ç½®
 # pyautogui.dragTo(100, 200, button='left')
-# 按住鼠标左键，用2秒钟把鼠标拖拽到(300, 400)位置
+# æä½é¼ æ å·¦é®ï¼ç¨2ç§éæé¼ æ ææ½å°(300, 400)ä½ç½®
 # pyautogui.dragTo(300, 400, 2, button='left')
-# 按住鼠标左键，用0.2秒钟把鼠标向上拖拽
+# æä½é¼ æ å·¦é®ï¼ç¨0.2ç§éæé¼ æ åä¸ææ½
 # pyautogui.dragRel(0, -60, duration=0.2)
 
-#滚动鼠标        scoll()函数
-# pyautogui.scroll(10) # 向上滚动10格
-# pyautogui.scroll(-10) # 向下滚动10格
-# pyautogui.scroll(10, x=100, y=100) # 移动到(100, 100)位置再向上滚动10格
+#æ»å¨é¼ æ         scoll()å½æ°
+# pyautogui.scroll(10) # åä¸æ»å¨10æ ¼
+# pyautogui.scroll(-10) # åä¸æ»å¨10æ ¼
+# pyautogui.scroll(10, x=100, y=100) # ç§»å¨å°(100, 100)ä½ç½®ååä¸æ»å¨10æ ¼
 
-# 开始很慢，不断加速
+# å¼å§å¾æ¢ï¼ä¸æ­å é
 # pyautogui.moveTo(100, 100, 2, pyautogui.easeInQuad)
-# # 开始很快，不断减速
+# # å¼å§å¾å¿«ï¼ä¸æ­åé
 # pyautogui.moveTo(100, 100, 2, pyautogui.easeOutQuad)
-# # 开始和结束都快，中间比较慢
+# # å¼å§åç»æé½å¿«ï¼ä¸­é´æ¯è¾æ¢
 # pyautogui.moveTo(100, 100, 2, pyautogui.easeInOutQuad)
-# # 一步一徘徊前进
+# # ä¸æ­¥ä¸å¾å¾åè¿
 # pyautogui.moveTo(100, 100, 2, pyautogui.easeInBounce)
-# # 徘徊幅度更大，甚至超过起点和终点
+# # å¾å¾å¹åº¦æ´å¤§ï¼çè³è¶è¿èµ·ç¹åç»ç¹
 # pyautogui.moveTo(100, 100, 2, pyautogui.easeInElastic)
 
-# 获取屏幕快照        screenshot()函数
+# è·åå±å¹å¿«ç§        screenshot()å½æ°
 # import pyautogui
 # im=pyautogui.screenshot()
 # im.getpixel((0,0))
@@ -60,41 +60,41 @@
 # im.show()
 # im.save("111.png")
 
-# 通过键盘发送字符串        typewrite()函数
+# éè¿é®çåéå­ç¬¦ä¸²        typewrite()å½æ°
 # import pyautogui
 # pyautogui.click(500,500)
 # pyautogui.typewrite('hello world')
-# # 按下、释放键盘
-# pyautogui.keyDown("S")#：按下键盘
-# pyautogui.keyUp("S")#：释放按键
-# pyautogui.hotkey('command','z')        #按下热键ctrl+c
+# # æä¸ãéæ¾é®ç
+# pyautogui.keyDown("S")#ï¼æä¸é®ç
+# pyautogui.keyUp("S")#ï¼éæ¾æé®
+# pyautogui.hotkey('command','z')        #æä¸ç­é®ctrl+c
 
 
-#————————————————————————————————————————————————————————
-# 案例获取鼠标的位置和颜色，方便复制我们定位的鼠标坐标点到代码中
+#ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# æ¡ä¾è·åé¼ æ çä½ç½®åé¢è²ï¼æ¹ä¾¿å¤å¶æä»¬å®ä½çé¼ æ åæ ç¹å°ä»£ç ä¸­
 # import pyautogui
 # import time
-# # 获取鼠标位置
+# # è·åé¼ æ ä½ç½®
 # def get_mouse_positon():
-#   time.sleep(5) # 准备时间
-#   print('开始获取鼠标位置')
+#   time.sleep(5) # åå¤æ¶é´
+#   print('å¼å§è·åé¼ æ ä½ç½®')
 #   try:
 #     for i in range(10):
 #       # Get and print the mouse coordinates.
 #       x, y = pyautogui.position()
-#       positionStr = '鼠标坐标点（X,Y）为：{},{}'.format(str(x).rjust(4), str(y).rjust(4))
-#       pix = pyautogui.screenshot().getpixel((x, y)) # 获取鼠标所在屏幕点的RGB颜色
+#       positionStr = 'é¼ æ åæ ç¹ï¼X,Yï¼ä¸ºï¼{},{}'.format(str(x).rjust(4), str(y).rjust(4))
+#       pix = pyautogui.screenshot().getpixel((x, y)) # è·åé¼ æ æå¨å±å¹ç¹çRGBé¢è²
 #       positionStr += ' RGB:(' + str(pix[0]).rjust(3) + ',' + str(pix[1]).rjust(3) + ',' + str(pix[2]).rjust(
 #         3) + ')'
 #       print(positionStr)
-#       time.sleep(0.5) # 停顿时间
+#       time.sleep(0.5) # åé¡¿æ¶é´
 #   except:
-#     print('获取鼠标位置失败')
+#     print('è·åé¼ æ ä½ç½®å¤±è´¥')
 # if __name__ == "__main__":
 #   get_mouse_positon()
-#————————————————————————————————————————————————————————
+#ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
-#案例获取鼠标的位置和颜色2
+#æ¡ä¾è·åé¼ æ çä½ç½®åé¢è²2
 # import pyautogui
  
 # print('Press Ctrl-C to quit.')
@@ -103,32 +103,32 @@
 #     # Get and print the mouse coordinates.
 #     x, y = pyautogui.position()
 #     positionStr = 'X:' + str(x).rjust(4) + ' Y:' + str(y).rjust(4)
-#     pix = pyautogui.screenshot().getpixel((x, y)) # 获取鼠标所在屏幕点的RGB颜色
+#     pix = pyautogui.screenshot().getpixel((x, y)) # è·åé¼ æ æå¨å±å¹ç¹çRGBé¢è²
 #     positionStr += ' RGB:(' + str(pix[0]).rjust(3) + ',' + str(pix[1]).rjust(3) + ',' + str(pix[2]).rjust(3) + ')'
-#     print(positionStr, end='') # end='' 替换了默认的换行
-#     print('\b' * len(positionStr), end='', flush=True) # 连续退格键并刷新，删除之前打印的坐标，就像直接更新坐标效果
-# except KeyboardInterrupt: # 处理 Ctrl-C 按键
+#     print(positionStr, end='') # end='' æ¿æ¢äºé»è®¤çæ¢è¡
+#     print('\b' * len(positionStr), end='', flush=True) # è¿ç»­éæ ¼é®å¹¶å·æ°ï¼å é¤ä¹åæå°çåæ ï¼å°±åç´æ¥æ´æ°åæ ææ
+# except KeyboardInterrupt: # å¤ç Ctrl-C æé®
 #   print('\nDone.')
 
 
-#键盘
+#é®ç
 # import pyautogui
  
-# pyautogui.typewrite('Hello world!') # 输入Hello world!字符串
-# pyautogui.typewrite('Hello world!', interval=0.25) # 每次输入间隔0.25秒，输入Hello world!
+# pyautogui.typewrite('Hello world!') # è¾å¥Hello world!å­ç¬¦ä¸²
+# pyautogui.typewrite('Hello world!', interval=0.25) # æ¯æ¬¡è¾å¥é´é0.25ç§ï¼è¾å¥Hello world!
  
-# pyautogui.press('enter') # 按下并松开（轻敲）回车键
-# pyautogui.press(['left', 'left', 'left', 'left']) # 按下并松开（轻敲）四下左方向键
-# pyautogui.keyDown('shift') # 按下`shift`键
-# pyautogui.keyUp('shift') # 松开`shift`键
+# pyautogui.press('enter') # æä¸å¹¶æ¾å¼ï¼è½»æ²ï¼åè½¦é®
+# pyautogui.press(['left', 'left', 'left', 'left']) # æä¸å¹¶æ¾å¼ï¼è½»æ²ï¼åä¸å·¦æ¹åé®
+# pyautogui.keyDown('shift') # æä¸`shift`é®
+# pyautogui.keyUp('shift') # æ¾å¼`shift`é®
  
 # pyautogui.keyDown('shift')
 # pyautogui.press('4')
-# pyautogui.keyUp('shift') # 输出 $ 符号的按键
+# pyautogui.keyUp('shift') # è¾åº $ ç¬¦å·çæé®
  
-# pyautogui.hotkey('ctrl', 'v') # 组合按键（Ctrl+V），粘贴功能，按下并松开'ctrl'和'v'按键
+# pyautogui.hotkey('ctrl', 'v') # ç»åæé®ï¼Ctrl+Vï¼ï¼ç²è´´åè½ï¼æä¸å¹¶æ¾å¼'ctrl'å'v'æé®
  
-# # pyautogui.KEYBOARD_KEYS数组中就是press()，keyDown()，keyUp()和hotkey()函数可以输入的按键名称
+# # pyautogui.KEYBOARD_KEYSæ°ç»ä¸­å°±æ¯press()ï¼keyDown()ï¼keyUp()åhotkey()å½æ°å¯ä»¥è¾å¥çæé®åç§°
 # pyautogui.KEYBOARD_KEYS = ['\t', '\n', '\r', ' ', '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.',
             #   '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@',
             #   '[', '\\', ']', '^', '_', '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
@@ -148,58 +148,58 @@
             #   'up', 'volumedown', 'volumemute', 'volumeup', 'win', 'winleft', 'winright', 'yen', 'command',
             #   'option', 'optionleft', 'optionright']
 
-#弹窗操作
+#å¼¹çªæä½
 # import pyautogui
-# # 显示一个简单的带文字和OK按钮的消息弹窗。用户点击后返回button的文字。
+# # æ¾ç¤ºä¸ä¸ªç®åçå¸¦æå­åOKæé®çæ¶æ¯å¼¹çªãç¨æ·ç¹å»åè¿åbuttonçæå­ã
 # pyautogui.alert(text='', title='', button='OK')
-# b = pyautogui.alert(text='要开始程序么？', title='请求框', button='OK')
-# print(b) # 输出结果为OK
-# # 显示一个简单的带文字、OK和Cancel按钮的消息弹窗，用户点击后返回被点击button的文字，支持自定义数字、文字的列表。
-# pyautogui.confirm(text='', title='', buttons=['OK', 'Cancel']) # OK和Cancel按钮的消息弹窗
-# pyautogui.confirm(text='', title='', buttons=range(10)) # 10个按键0-9的消息弹窗
+# b = pyautogui.alert(text='è¦å¼å§ç¨åºä¹ï¼', title='è¯·æ±æ¡', button='OK')
+# print(b) # è¾åºç»æä¸ºOK
+# # æ¾ç¤ºä¸ä¸ªç®åçå¸¦æå­ãOKåCancelæé®çæ¶æ¯å¼¹çªï¼ç¨æ·ç¹å»åè¿åè¢«ç¹å»buttonçæå­ï¼æ¯æèªå®ä¹æ°å­ãæå­çåè¡¨ã
+# pyautogui.confirm(text='', title='', buttons=['OK', 'Cancel']) # OKåCancelæé®çæ¶æ¯å¼¹çª
+# pyautogui.confirm(text='', title='', buttons=range(10)) # 10ä¸ªæé®0-9çæ¶æ¯å¼¹çª
 # a = pyautogui.confirm(text='', title='', buttons=range(10))
-# print(a) # 输出结果为你选的数字
-# 可以输入的消息弹窗，带OK和Cancel按钮。用户点击OK按钮返回输入的文字，点击Cancel按钮返回None。
+# print(a) # è¾åºç»æä¸ºä½ éçæ°å­
+# å¯ä»¥è¾å¥çæ¶æ¯å¼¹çªï¼å¸¦OKåCancelæé®ãç¨æ·ç¹å»OKæé®è¿åè¾å¥çæå­ï¼ç¹å»Cancelæé®è¿åNoneã
 # pyautogui.prompt(text='', title='', default='')
-# 样式同prompt()，用于输入密码，消息用*表示。带OK和Cancel按钮。用户点击OK按钮返回输入的文字，点击Cancel按钮返回None。
+# æ ·å¼åprompt()ï¼ç¨äºè¾å¥å¯ç ï¼æ¶æ¯ç¨*è¡¨ç¤ºãå¸¦OKåCancelæé®ãç¨æ·ç¹å»OKæé®è¿åè¾å¥çæå­ï¼ç¹å»Cancelæé®è¿åNoneã
 # pyautogui.password(text='', title='', default='', mask='*')
 
-#图像操作
+#å¾åæä½
 import pyautogui
  
-pyautogui.screenshot(r'C:\Users\ZDH\Desktop\PY\my_screenshot.png') # 截全屏并设置保存图片的位置和名称
-im = pyautogui.screenshot(r'C:\Users\ZDH\Desktop\PY\my_screenshot.png') # 截全屏并设置保存图片的位置和名称
-print(im) # 打印图片的属性
+pyautogui.screenshot(r'C:\Users\ZDH\Desktop\PY\my_screenshot.png') # æªå¨å±å¹¶è®¾ç½®ä¿å­å¾ççä½ç½®ååç§°
+im = pyautogui.screenshot(r'C:\Users\ZDH\Desktop\PY\my_screenshot.png') # æªå¨å±å¹¶è®¾ç½®ä¿å­å¾ççä½ç½®ååç§°
+print(im) # æå°å¾ççå±æ§
  
-# 不截全屏，截取区域图片。截取区域region参数为：左上角XY坐标值、宽度和高度
+# ä¸æªå¨å±ï¼æªååºåå¾çãæªååºåregionåæ°ä¸ºï¼å·¦ä¸è§XYåæ å¼ãå®½åº¦åé«åº¦
 pyautogui.screenshot(r'C:\Users\ZDH\Desktop\PY\region_screenshot.png', region=(0, 0, 300, 400))
  
-pix = pyautogui.screenshot().getpixel((220, 200)) # 获取坐标(220,200)所在屏幕点的RGB颜色
+pix = pyautogui.screenshot().getpixel((220, 200)) # è·ååæ (220,200)æå¨å±å¹ç¹çRGBé¢è²
 positionStr = ' RGB:(' + str(pix[0]).rjust(3) + ',' + str(pix[1]).rjust(3) + ',' + str(pix[2]).rjust(3) + ')'
-print(positionStr) # 打印结果为RGB:( 60, 63, 65)
-pix = pyautogui.pixel(220, 200) # 获取坐标(220,200)所在屏幕点的RGB颜色与上面三行代码作用一样
+print(positionStr) # æå°ç»æä¸ºRGB:( 60, 63, 65)
+pix = pyautogui.pixel(220, 200) # è·ååæ (220,200)æå¨å±å¹ç¹çRGBé¢è²ä¸ä¸é¢ä¸è¡ä»£ç ä½ç¨ä¸æ ·
 positionStr = ' RGB:(' + str(pix[0]).rjust(3) + ',' + str(pix[1]).rjust(3) + ',' + str(pix[2]).rjust(3) + ')'
-print(positionStr) # 打印结果为RGB:( 60, 63, 65)
+print(positionStr) # æå°ç»æä¸ºRGB:( 60, 63, 65)
  
-# 如果你只是要检验一下指定位置的像素值，可以用pixelMatchesColor(x,y,RGB)函数，把X、Y和RGB元组值穿入即可
-# 如果所在屏幕中(x,y)点的实际RGB三色与函数中的RGB一样就会返回True，否则返回False
-# tolerance参数可以指定红、绿、蓝3种颜色误差范围
+# å¦æä½ åªæ¯è¦æ£éªä¸ä¸æå®ä½ç½®çåç´ å¼ï¼å¯ä»¥ç¨pixelMatchesColor(x,y,RGB)å½æ°ï¼æXãYåRGBåç»å¼ç©¿å¥å³å¯
+# å¦ææå¨å±å¹ä¸­(x,y)ç¹çå®éRGBä¸è²ä¸å½æ°ä¸­çRGBä¸æ ·å°±ä¼è¿åTrueï¼å¦åè¿åFalse
+# toleranceåæ°å¯ä»¥æå®çº¢ãç»¿ãè3ç§é¢è²è¯¯å·®èå´
 pyautogui.pixelMatchesColor(100, 200, (255, 255, 255))
 pyautogui.pixelMatchesColor(100, 200, (255, 255, 245), tolerance=10)
  
-# 获得文件图片在现在的屏幕上面的坐标，返回的是一个元组(top, left, width, height)
-# 如果截图没找到，pyautogui.locateOnScreen()函数返回None
+# è·å¾æä»¶å¾çå¨ç°å¨çå±å¹ä¸é¢çåæ ï¼è¿åçæ¯ä¸ä¸ªåç»(top, left, width, height)
+# å¦ææªå¾æ²¡æ¾å°ï¼pyautogui.locateOnScreen()å½æ°è¿åNone
 a = pyautogui.locateOnScreen(r'C:\Users\ZDH\Desktop\PY\region_screenshot.png')
-print(a) # 打印结果为Box(left=0, top=0, width=300, height=400)
-x, y = pyautogui.center(a) # 获得文件图片在现在的屏幕上面的中心坐标
-print(x, y) # 打印结果为150 200
-x, y = pyautogui.locateCenterOnScreen(r'C:\Users\ZDH\Desktop\PY\region_screenshot.png') # 这步与上面的四行代码作用一样
-print(x, y) # 打印结果为150 200
+print(a) # æå°ç»æä¸ºBox(left=0, top=0, width=300, height=400)
+x, y = pyautogui.center(a) # è·å¾æä»¶å¾çå¨ç°å¨çå±å¹ä¸é¢çä¸­å¿åæ 
+print(x, y) # æå°ç»æä¸º150 200
+x, y = pyautogui.locateCenterOnScreen(r'C:\Users\ZDH\Desktop\PY\region_screenshot.png') # è¿æ­¥ä¸ä¸é¢çåè¡ä»£ç ä½ç¨ä¸æ ·
+print(x, y) # æå°ç»æä¸º150 200
  
-# 匹配屏幕所有与目标图片的对象，可以用for循环和list()输出
+# å¹éå±å¹ææä¸ç®æ å¾ççå¯¹è±¡ï¼å¯ä»¥ç¨forå¾ªç¯ålist()è¾åº
 pyautogui.locateAllOnScreen(r'C:\Users\ZDH\Desktop\PY\region_screenshot.png')
 for pos in pyautogui.locateAllOnScreen(r'C:\Users\ZDH\Desktop\PY\region_screenshot.png'):
   print(pos)
-# 打印结果为Box(left=0, top=0, width=300, height=400)
+# æå°ç»æä¸ºBox(left=0, top=0, width=300, height=400)
 a = list(pyautogui.locateAllOnScreen(r'C:\Users\ZDH\Desktop\PY\region_screenshot.png'))
-print(a) # 打印结果为[Box(left=0, top=0, width=300, height=400)]
+print(a) # æå°ç»æä¸º[Box(left=0, top=0, width=300, height=400)]

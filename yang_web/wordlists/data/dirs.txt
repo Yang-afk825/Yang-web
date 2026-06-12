@@ -1,8 +1,8 @@
-"""CTF 专用 Web 目录字典.
+"""CTF ä¸ç¨ Web ç®å½å­å¸.
 
-覆盖: 源码泄露路径, 配置文件, 备份文件, 管理后台, 常见框架路由.
+è¦ç: æºç æ³é²è·¯å¾, éç½®æä»¶, å¤ä»½æä»¶, ç®¡çåå°, å¸¸è§æ¡æ¶è·¯ç±.
 """
-# ── 源码泄露 / 版本控制 ──
+# ââ æºç æ³é² / çæ¬æ§å¶ ââ
 .git/HEAD
 .git/config
 .git/index
@@ -15,7 +15,7 @@
 CVS/
 .bzr/
 
-# ── 配置文件 ──
+# ââ éç½®æä»¶ ââ
 .env
 .env.local
 .env.production
@@ -52,7 +52,7 @@ sitemap.xml
 crossdomain.xml
 clientaccesspolicy.xml
 
-# ── 备份文件 ──
+# ââ å¤ä»½æä»¶ ââ
 index.php.bak
 index.php~
 index.php.old
@@ -80,7 +80,7 @@ old/
 temp/
 tmp/
 
-# ── 管理后台 ──
+# ââ ç®¡çåå° ââ
 admin/
 admin.php
 admin.html
@@ -108,7 +108,7 @@ console/
 system/
 sysadmin/
 
-# ── 测试 / 调试 ──
+# ââ æµè¯ / è°è¯ ââ
 test.php
 test.html
 test/
@@ -135,7 +135,7 @@ swagger/
 docs/
 doc/
 
-# ── 上传 / 静态资源 ──
+# ââ ä¸ä¼  / éæèµæº ââ
 upload/
 uploads/
 upload.php
@@ -157,7 +157,7 @@ downloads/
 attachment/
 attachments/
 
-# ── 框架路由 ──
+# ââ æ¡æ¶è·¯ç± ââ
 index.php
 index.html
 index.asp
@@ -187,7 +187,7 @@ errors/
 404.html
 500.html
 
-# ── 其他敏感 ──
+# ââ å¶ä»ææ ââ
 flag
 flag.txt
 flag.php

@@ -3,7 +3,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', type=str, default=None, required=True,
-                    help='输入文件名称')
+                    help='è¾å¥æä»¶åç§°')
 args  = parser.parse_args()
 
 

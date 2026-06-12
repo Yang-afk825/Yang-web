@@ -1,4 +1,4 @@
-"""Image Steganography Toolkit — LSB, channel extraction, PNG chunk analysis, zero deps."""
+"""Image Steganography Toolkit â LSB, channel extraction, PNG chunk analysis, zero deps."""
 
 from __future__ import annotations
 import sys
@@ -43,7 +43,7 @@ def extract_png_chunks(data: bytes) -> list:
 
 
 def extract_lsb(data: bytes, channel: str = "all", bits: int = 1) -> str:
-    """Extract LSB from image data (simplified — extract from pixel data after header).
+    """Extract LSB from image data (simplified â extract from pixel data after header).
 
     For PNG: extract from IDAT chunks. For BMP: from pixel data.
     """

