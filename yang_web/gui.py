@@ -464,6 +464,7 @@ class MiscCryptoPanel(tk.Frame):
 
         # Reference text content
         self.ref_frame, self.ref_text = _output_area(right, 10)
+        self.ref_frame.pack(fill=tk.BOTH, expand=True, pady=(2, 4))
 
         # IO area
         io_bar = tk.Frame(right, bg=BG)
@@ -495,6 +496,7 @@ class MiscCryptoPanel(tk.Frame):
         # Output
         _label(right, "输出:", pady=4)
         self.output_frame, self.output = _output_area(right, 6)
+        self.output_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 4))
 
         # Store state
         self._selected_cid = None
