@@ -9,7 +9,10 @@ import sys
 import os
 
 # 导入核心模块
-from .core.decoder import chain_decode, brute_decode, detect_encoding, DECODERS
+from .core.decoder import (chain_decode, brute_decode, detect_encoding, DECODERS,
+    decode_base64, decode_base32, decode_base16, decode_base58, decode_base85,
+    decode_url, decode_html, decode_rot13, decode_binary, decode_octal,
+    decode_decimal, decode_morse, decode_unicode_escape)
 from .core.hashid import identify as hash_identify
 from .core.jwt import decode_jwt, analyze_jwt, none_attack, brute_jwt, BUILTIN_WORDLIST
 from .core.misc_crypto import (
@@ -126,65 +129,213 @@ def _clear_output(txt_widget):
 # ═══════════════════════════════════════════════════════════
 
 class DecodePanel(tk.Frame):
-    """智能解码面板"""
+    """智能解码面板 — 粘贴即用，自动识别+一键解码."""
     def __init__(self, parent):
         super().__init__(parent, bg=BG)
         _label(self, "🔓 智能解码器", fg=ACCENT, font_size=16, bold=True, pady=8)
-        _label(self, "支持 14 种编码自动识别 + 递归链式解码 → 还原明文", fg=YELLOW, font_size=9)
+        _label(self, "粘贴密文 → 自动识别编码类型 → 一键解码 | 支持 14 种编码", fg=YELLOW, font_size=9)
 
-        _label(self, "📥 输入密文:", pady=8)
-        self.input_entry = _entry(self, 70)
+        # ── Input area ──
+        input_frame = tk.Frame(self, bg=DARK, bd=2, relief="groove")
+        input_frame.pack(fill=tk.X, padx=4, pady=(8, 4))
+        _label(input_frame, "📥 粘贴密文到这里:", fg=ACCENT, font_size=10, pady=2)
+        self.input_text = scrolledtext.ScrolledText(input_frame, height=5,
+                                                     bg=INPUT_BG, fg=FG,
+                                                     insertbackground=ACCENT,
+                                                     relief="flat", borderwidth=0,
+                                                     font=("Cascadia Code", 11),
+                                                     wrap=tk.WORD)
+        self.input_text.pack(fill=tk.X, padx=6, pady=(0, 6))
 
+        # ── Action buttons ──
         btn_frame = tk.Frame(self, bg=BG)
-        btn_frame.pack(anchor="w", pady=4)
-        tk.Button(btn_frame, text="🔍 自动解码", command=self._auto_decode,
-                  bg=GREEN, fg=DARK, activebackground=ACCENT, relief="flat",
-                  padx=20, pady=6, cursor="hand2",
-                  font=("Microsoft YaHei UI", 11, "bold")).pack(side=tk.LEFT, padx=(0, 8))
-        tk.Button(btn_frame, text="💣 暴力尝试", command=self._brute,
+        btn_frame.pack(anchor="w", pady=4, padx=4)
+        tk.Button(btn_frame, text="🔍 识别编码", command=self._detect,
+                  bg=ACCENT, fg=DARK, activebackground=GREEN, relief="flat",
+                  padx=16, pady=6, cursor="hand2",
+                  font=("Microsoft YaHei UI", 10, "bold")).pack(side=tk.LEFT, padx=(0, 6))
+        tk.Button(btn_frame, text="💣 暴力全部", command=self._brute,
                   bg=YELLOW, fg=DARK, activebackground=ACCENT, relief="flat",
-                  padx=20, pady=6, cursor="hand2",
-                  font=("Microsoft YaHei UI", 11, "bold")).pack(side=tk.LEFT, padx=(0, 8))
-        tk.Button(btn_frame, text="🗑 清空", command=lambda: (self.input_entry.delete(0, tk.END), _clear_output(self.output)),
+                  padx=16, pady=6, cursor="hand2",
+                  font=("Microsoft YaHei UI", 10, "bold")).pack(side=tk.LEFT, padx=(0, 6))
+        tk.Button(btn_frame, text="🔗 链式解码", command=self._chain,
+                  bg=GREEN, fg=DARK, activebackground=ACCENT, relief="flat",
+                  padx=16, pady=6, cursor="hand2",
+                  font=("Microsoft YaHei UI", 10, "bold")).pack(side=tk.LEFT, padx=(0, 6))
+        tk.Button(btn_frame, text="🗑 清空", command=self._clear_all,
                   bg=RED, fg=DARK, activebackground="#ff6b6b", relief="flat",
                   padx=16, pady=6, cursor="hand2",
                   font=("Microsoft YaHei UI", 10)).pack(side=tk.LEFT)
 
-        _label(self, "📤 解码结果:", pady=8)
-        self.output_frame, self.output = _output_area(self, 16)
-        self.output_frame.pack(fill=tk.BOTH, expand=True)
+        # ── Detection result + quick-decode buttons (shown after detect) ──
+        self.detect_frame = tk.Frame(self, bg=BG)
+        self.detect_frame.pack(fill=tk.X, padx=4, pady=2)
+        self.detect_label = tk.Label(self.detect_frame, text="", bg=BG, fg=YELLOW,
+                                      font=("Microsoft YaHei UI", 9, "bold"),
+                                      anchor="w", justify="left")
+        self.detect_label.pack(anchor="w")
+        self.detect_btns = tk.Frame(self.detect_frame, bg=BG)
+        self.detect_btns.pack(anchor="w", pady=2)
 
-    def _auto_decode(self):
+        # ── Manual picker ──
+        manual_bar = tk.Frame(self, bg=BG)
+        manual_bar.pack(fill=tk.X, padx=4, pady=2)
+        tk.Label(manual_bar, text="手动选择:", bg=BG, fg=FG,
+                 font=("Microsoft YaHei UI", 9)).pack(side=tk.LEFT, padx=(0, 4))
+        manual_opts = ["base64", "base32", "base16/hex", "url", "html", "unicode",
+                       "binary", "octal", "decimal", "rot13", "morse", "base58", "base85"]
+        self.manual_var = tk.StringVar(value="base64")
+        self.manual_cb = ttk.Combobox(manual_bar, textvariable=self.manual_var,
+                                       values=manual_opts, state="readonly", width=14)
+        self.manual_cb.pack(side=tk.LEFT, padx=2)
+        tk.Button(manual_bar, text="Decode", command=self._manual_decode,
+                  bg=INPUT_BG, fg=ACCENT, activebackground=BORDER, relief="flat",
+                  padx=12, pady=2, cursor="hand2",
+                  font=("Microsoft YaHei UI", 9, "bold")).pack(side=tk.LEFT, padx=2)
+
+        # ── Output ──
+        _label(self, "📤 解码结果:", pady=(8, 2))
+        self.output_frame, self.output = _output_area(self, 12)
+        self.output_frame.pack(fill=tk.BOTH, expand=True, padx=4, pady=(0, 4))
+
+    def _get_text(self):
+        return self.input_text.get("1.0", tk.END).strip()
+
+    def _clear_all(self):
+        self.input_text.delete("1.0", tk.END)
         _clear_output(self.output)
-        text = self.input_entry.get().strip()
+        for w in self.detect_btns.winfo_children():
+            w.destroy()
+        self.detect_label.config(text="")
+
+    def _detect(self):
+        """检测编码类型并显示可点击解码按钮."""
+        text = self._get_text()
+        _clear_output(self.output)
+        for w in self.detect_btns.winfo_children():
+            w.destroy()
         if not text:
-            _append(self.output, "⚠ 请先输入密文")
+            self.detect_label.config(text="⚠ 请先粘贴密文")
+            _append(self.output, "⚠ 请先粘贴密文到上方输入框")
             return
-        _append(self.output, f"📋 输入 ({len(text)} 字符):\n  {text[:200]}\n\n")
+
+        # Run detection
+        detections = detect_encoding(text)
+        if not detections:
+            self.detect_label.config(text="❌ 未识别到已知编码")
+            _append(self.output, "❌ 自动检测未识别到已知编码类型\n\n💡 试试:\n  • 点「💣 暴力全部」尝试所有解码器\n  • 用「手动选择」下拉框指定编码")
+            return
+
+        # Show detection results
+        lines = [f"✅ 检测到 {len(detections)} 种可能编码:"]
+        for enc_id, desc, conf in detections[:8]:
+            emoji = "🟢" if conf >= 80 else "🟡" if conf >= 50 else "🟠"
+            lines.append(f"  {emoji} {desc} — 置信度 {conf}%")
+        self.detect_label.config(text="\n".join(lines))
+
+        # Show results + quick-decode buttons
+        _append(self.output, f"📋 输入 ({len(text)} 字符):\n  {text[:200]}\n\n🔍 检测结果:\n")
+        for enc_id, desc, conf in detections[:8]:
+            _append(self.output, f"  {'🟢' if conf >= 80 else '🟡' if conf >= 50 else '🟠'} {desc} ({enc_id}) — {conf}%")
+
+        # Create quick-decode buttons for top results
+        for enc_id, desc, conf in detections[:5]:
+            btn = tk.Button(self.detect_btns,
+                           text=f"🔓 用 {desc.split()[0]} 解码",
+                           command=lambda eid=enc_id, edesc=desc: self._quick_decode(eid, edesc),
+                           bg=INPUT_BG, fg=GREEN, activebackground=GREEN,
+                           activeforeground=DARK, relief="flat",
+                           padx=10, pady=2, cursor="hand2",
+                           font=("Microsoft YaHei UI", 9))
+            btn.pack(side=tk.LEFT, padx=2, pady=2)
+
+    def _quick_decode(self, enc_id, desc):
+        """Quick decode with a specific encoding."""
+        text = self._get_text()
+        decoder_func, _ = DECODERS.get(enc_id, (None, None))
+        if not decoder_func:
+            _append(self.output, f"\n❌ 解码器 {desc} 不可用")
+            return
         try:
-            result = chain_decode(text)
-            _append(self.output, f"🔓 链式解码:\n")
-            for step in result["steps"]:
-                _append(self.output, f"  Step {step['step']}: {step['from']} → {step['encoding']}")
-                _append(self.output, f"           → {step['result'][:150]}\n")
-            _append(self.output, f"\n✅ 最终结果: {result['result']}")
+            result = decoder_func(text)
+            _append(self.output, f"\n{'─'*50}\n🔓 使用 {desc} 解码:\n{'─'*50}\n{result}")
         except Exception as e:
-            _append(self.output, f"❌ 解码失败: {e}")
+            _append(self.output, f"\n❌ {desc} 解码失败: {e}")
+
+    def _manual_decode(self):
+        """Manually decode with selected encoding."""
+        text = self._get_text()
+        if not text:
+            _clear_output(self.output)
+            _append(self.output, "⚠ 请先粘贴密文")
+            return
+        choice = self.manual_var.get().split("/")[0]
+        decoders = {
+            "base64": ("base64", decode_base64),
+            "base32": ("base32", decode_base32),
+            "base16": ("base16", decode_base16),
+            "url": ("url", decode_url),
+            "html": ("html", decode_html),
+            "unicode": ("unicode", decode_unicode_escape),
+            "binary": ("binary", decode_binary),
+            "octal": ("octal", decode_octal),
+            "decimal": ("decimal", decode_decimal),
+            "rot13": ("rot13", decode_rot13),
+            "morse": ("morse", decode_morse),
+            "base58": ("base58", decode_base58),
+            "base85": ("base85", decode_base85),
+        }
+        if choice not in decoders:
+            _append(self.output, f"❌ 不支持的编码: {choice}")
+            return
+        enc_id, func = decoders[choice]
+        _clear_output(self.output)
+        try:
+            result = func(text)
+            _append(self.output, f"📥 {text[:80]}...\n\n🔓 用 {enc_id} 解码:\n{'─'*50}\n{result}")
+        except Exception as e:
+            _append(self.output, f"❌ {enc_id} 解码失败: {e}")
+
+    def _chain(self):
+        """Chain decode: recursively decode until can't."""
+        text = self._get_text()
+        _clear_output(self.output)
+        if not text:
+            _append(self.output, "⚠ 请先粘贴密文")
+            return
+        _append(self.output, f"📋 输入 ({len(text)} 字符):\n  {text[:200]}\n\n🔗 链式解码:\n")
+        try:
+            steps = chain_decode(text)
+            if not steps:
+                _append(self.output, "❌ 未识别到可链式解码的编码")
+                return
+            for i, step in enumerate(steps):
+                enc_id, enc_desc, decoded = step
+                _append(self.output, f"  Step {i+1}: {enc_desc} ({enc_id})")
+                _append(self.output, f"           → {decoded[:150]}\n")
+            _append(self.output, f"\n{'═'*50}\n✅ 最终结果: {steps[-1][2]}\n{'═'*50}")
+        except Exception as e:
+            _append(self.output, f"❌ 链式解码失败: {e}\n\n💡 试试「🔍 识别编码」或「💣 暴力全部」")
 
     def _brute(self):
+        """Brute force: try ALL decoders."""
+        text = self._get_text()
         _clear_output(self.output)
-        text = self.input_entry.get().strip()
         if not text:
-            _append(self.output, "⚠ 请先输入密文")
+            _append(self.output, "⚠ 请先粘贴密文")
             return
-        _append(self.output, f"📋 输入: {text}\n\n💣 暴力尝试所有解码器:\n\n")
+        _append(self.output, f"📋 输入 ({len(text)} 字符):\n  {text[:200]}\n\n💣 暴力尝试所有解码器:\n")
         try:
             results = brute_decode(text)
             if not results:
-                _append(self.output, "❌ 没有匹配到可读结果")
+                _append(self.output, "\n❌ 所有解码器均未得到可读结果")
                 return
+            _append(self.output, f"\n找到 {len(results)} 个可读结果:\n{'─'*50}")
             for r in results:
-                _append(self.output, f"  • {r['encoding']}: {r['result'][:120]}\n")
+                enc_id, enc_desc, decoded = r[0], r[1], r[2]
+                confidence = r[3] if len(r) > 3 else 50
+                marker = "⭐" if confidence >= 80 else "  "
+                _append(self.output, f"\n{marker} {enc_desc} ({enc_id}): {decoded[:200]}")
         except Exception as e:
             _append(self.output, f"❌ 错误: {e}")
 
