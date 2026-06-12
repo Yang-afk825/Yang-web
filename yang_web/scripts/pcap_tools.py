@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """PCAP/Wireshark helpers â extract data from packet captures (zero-deps)."""
 
 from __future__ import annotations

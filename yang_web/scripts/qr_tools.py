@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """QR code tools â generate, parse, repair damaged QR codes.
 
 Pure Python: no external deps.

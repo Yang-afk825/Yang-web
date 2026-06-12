@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """SSRF (Server-Side Request Forgery) Payload çæå¨.
 
 è¦ç:

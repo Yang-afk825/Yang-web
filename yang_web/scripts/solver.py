@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """CTF Web ä¸é®è§£é¢å¼æ â è¾å¥ URL èªå¨æ¢æµå¹¶å°è¯æå flag."""
 
 from __future__ import annotations

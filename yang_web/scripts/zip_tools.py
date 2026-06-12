@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """ZIP analysis & password recovery â CRC-based & known-plaintext."""
 
 from __future__ import annotations

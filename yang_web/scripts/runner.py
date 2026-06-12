@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """CTF èæ¬è¿è¡å¨ â å¨æå è½½æ§è¡èæ¬."""
 
 from __future__ import annotations

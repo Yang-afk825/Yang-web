@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Built-in CTF wordlists â common passwords, usernames, directory names.
 
 No external files needed â all wordlists embedded.

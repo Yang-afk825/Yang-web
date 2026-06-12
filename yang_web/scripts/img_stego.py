@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Image Steganography Toolkit â LSB, channel extraction, PNG chunk analysis, zero deps."""
 
 from __future__ import annotations

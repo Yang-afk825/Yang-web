@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Morse code & other classic ciphers â encode / decode / auto-detect."""
 
 MORSE_ENCODE = {

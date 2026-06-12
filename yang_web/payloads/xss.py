@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """XSS (Cross-Site Scripting) Payload çæå¨.
 
 è¦ç:

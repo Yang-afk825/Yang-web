@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """AES å å¯/è§£å¯å·¥å· â æ¯æ ECB / CBC æ¨¡å¼ (zero-dependency)."""
 
 from __future__ import annotations

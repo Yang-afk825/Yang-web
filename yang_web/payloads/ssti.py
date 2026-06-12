@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """SSTI (Server-Side Template Injection) Payload çæå¨.
 
 æ¯ææ¨¡æ¿å¼æ:
