@@ -384,31 +384,54 @@ class JWTPanel(tk.Frame):
 
 
 class ScriptsPanel(tk.Frame):
-    """内嵌 CTF 脚本库面板"""
+    """CTF scripts panel with dependency management."""
     def __init__(self, parent):
         super().__init__(parent, bg=BG)
-        _label(self, "📦 内嵌 CTF 脚本库", fg=ACCENT, font_size=16, bold=True, pady=8)
-        _label(self, "D:\\CTF常用脚本 直接内嵌 — 26 个脚本，一键调用", fg=YELLOW, font_size=9)
+        _label(self, "CTF Scripts", fg=ACCENT, font_size=16, bold=True, pady=8)
+        _label(self, "D:\\CTF 41 scripts + dep management + Web Solver", fg=YELLOW, font_size=9)
 
-        # 搜索栏
-        search_frame = tk.Frame(self, bg=BG)
-        search_frame.pack(fill=tk.X, pady=(8, 4), padx=4)
-        tk.Label(search_frame, text="🔍", bg=BG, fg=ACCENT,
+        # Solve bar — input URL, one-click attack
+        solve_bar = tk.Frame(self, bg=DARK)
+        solve_bar.pack(fill=tk.X, padx=4, pady=(4, 0))
+        tk.Label(solve_bar, text="Target:", bg=DARK, fg=ACCENT,
+                 font=("Microsoft YaHei UI", 10, "bold")).pack(side=tk.LEFT, padx=(8, 4))
+        self.url_entry = tk.Entry(solve_bar, bg=INPUT_BG, fg=FG,
+                                   insertbackground=ACCENT, relief="flat",
+                                   font=("Cascadia Code", 10),
+                                   width=50)
+        self.url_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=4, ipady=3)
+        self.url_entry.insert(0, "http://")
+        self.solve_btn = tk.Button(solve_bar, text="Solve", command=self._solve_url,
+                                    bg=ACCENT, fg=DARK, activebackground=GREEN,
+                                    relief="flat", padx=16, pady=3, cursor="hand2",
+                                    font=("Microsoft YaHei UI", 10, "bold"))
+        self.solve_btn.pack(side=tk.LEFT, padx=(4, 8))
+
+        # Search bar + dep buttons
+        top_bar = tk.Frame(self, bg=BG)
+        top_bar.pack(fill=tk.X, pady=(8, 4), padx=4)
+        tk.Label(top_bar, text="Search", bg=BG, fg=ACCENT,
                  font=("Microsoft YaHei UI", 12)).pack(side=tk.LEFT)
-        self.search_entry = tk.Entry(search_frame, bg=INPUT_BG, fg=FG,
+        self.search_entry = tk.Entry(top_bar, bg=INPUT_BG, fg=FG,
                                       insertbackground=ACCENT, relief="flat",
-                                      font=("Cascadia Code", 11), width=30)
-        self.search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=8,
-                               ipady=4)
+                                      font=("Cascadia Code", 11), width=25)
+        self.search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=8, ipady=4)
         self.search_entry.bind("<KeyRelease>", self._do_search)
+        tk.Button(top_bar, text="Check Deps", command=self._check_deps,
+                  bg=INPUT_BG, fg=YELLOW, activebackground=ACCENT, relief="flat",
+                  padx=10, pady=4, cursor="hand2",
+                  font=("Microsoft YaHei UI", 9)).pack(side=tk.LEFT, padx=2)
+        tk.Button(top_bar, text="Install All", command=self._install_all_deps,
+                  bg=INPUT_BG, fg=GREEN, activebackground=ACCENT, relief="flat",
+                  padx=10, pady=4, cursor="hand2",
+                  font=("Microsoft YaHei UI", 9)).pack(side=tk.LEFT, padx=2)
 
-        # 分类按钮
         cat_frame = tk.Frame(self, bg=BG)
         cat_frame.pack(fill=tk.X, pady=4, padx=4)
         self.cat_buttons = {}
-        for cat_key, cat_label in [("all", "全部"), ("crypto", "密码"),
-                                    ("web", "Web"), ("reverse", "逆向"),
-                                    ("misc", "杂项")]:
+        for cat_key, cat_label in [("all", "All"), ("crypto", "Crypto"),
+                                    ("web", "Web"), ("reverse", "Reverse"),
+                                    ("misc", "Misc")]:
             btn = tk.Button(cat_frame, text=cat_label, relief="flat",
                            bg=INPUT_BG, fg=FG, activebackground=ACCENT,
                            activeforeground=DARK, padx=12, pady=4,
@@ -416,15 +439,16 @@ class ScriptsPanel(tk.Frame):
                            command=lambda c=cat_key: self._filter_cat(c))
             btn.pack(side=tk.LEFT, padx=2)
             self.cat_buttons[cat_key] = btn
+        self.dep_status_label = tk.Label(cat_frame, text="", bg=BG, fg=YELLOW,
+                                          font=("Microsoft YaHei UI", 8))
+        self.dep_status_label.pack(side=tk.RIGHT, padx=8)
 
-        # 脚本列表（左侧）
         panes = tk.PanedWindow(self, bg=BG, sashwidth=3)
         panes.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
 
         list_frame = tk.Frame(panes, bg=BG)
-        panes.add(list_frame, width=320)
-
-        _label(list_frame, "脚本列表:", pady=4)
+        panes.add(list_frame, width=340)
+        _label(list_frame, "Scripts:", pady=4)
         self.script_list = tk.Listbox(list_frame, bg=INPUT_BG, fg=FG,
                                        selectbackground=ACCENT,
                                        selectforeground=DARK,
@@ -434,28 +458,33 @@ class ScriptsPanel(tk.Frame):
         self.script_list.pack(fill=tk.BOTH, expand=True, pady=(0, 4))
         self.script_list.bind("<<ListboxSelect>>", self._on_select)
 
-        # 详情/输出区（右侧）
         detail_frame = tk.Frame(panes, bg=BG)
-        panes.add(detail_frame, width=600)
-
-        _label(detail_frame, "详情 & 输出:", pady=4)
+        panes.add(detail_frame, width=580)
+        _label(detail_frame, "Details:", pady=4)
         self.detail_frame, self.detail_output = _output_area(detail_frame, 18)
         self.detail_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 运行按钮
         btn_bar = tk.Frame(detail_frame, bg=BG)
         btn_bar.pack(fill=tk.X, pady=4)
-        tk.Button(btn_bar, text="▶ 运行脚本", command=self._run_selected,
+        tk.Button(btn_bar, text="Run", command=self._run_selected,
                   bg=GREEN, fg=DARK, activebackground=ACCENT, relief="flat",
                   padx=20, pady=6, cursor="hand2",
                   font=("Microsoft YaHei UI", 11, "bold")).pack(side=tk.LEFT, padx=(0, 8))
-        tk.Button(btn_bar, text="🗑 清空", command=lambda: _clear_output(self.detail_output),
+        self.install_btn = tk.Button(btn_bar, text="Install Script Deps",
+                                      command=self._install_script_deps,
+                                      bg=INPUT_BG, fg=YELLOW, activebackground=ACCENT,
+                                      relief="flat", padx=12, pady=6, cursor="hand2",
+                                      font=("Microsoft YaHei UI", 10))
+        self.install_btn.pack(side=tk.LEFT, padx=(0, 8))
+        self.install_btn.pack_forget()
+        tk.Button(btn_bar, text="Clear", command=lambda: _clear_output(self.detail_output),
                   bg=RED, fg=DARK, activebackground="#ff6b6b", relief="flat",
                   padx=16, pady=6, cursor="hand2",
                   font=("Microsoft YaHei UI", 10)).pack(side=tk.LEFT)
 
         self._all_scripts = []
         self._current_key = None
+        self._dep_status = {}
         self._populate_list()
 
     def _populate_list(self, category=None, query=None):
@@ -463,18 +492,23 @@ class ScriptsPanel(tk.Frame):
         self._all_scripts = []
         try:
             from .scripts.registry import SCRIPTS, CATEGORIES
+            from .scripts.deps import check_dep
             for key, meta in sorted(SCRIPTS.items(), key=lambda x: x[0]):
                 if category and category != "all" and meta["category"] != category:
                     continue
                 if query and query.lower() not in key.lower() and query.lower() not in meta["title"].lower() and query.lower() not in meta["description"].lower():
                     continue
-                cat_icon = CATEGORIES.get(meta["category"], "📦")
-                deps = f" [需: {','.join(meta['deps'])}]" if meta["deps"] else ""
-                display = f"{cat_icon} {meta['title']}{deps}"
+                cat_icon = CATEGORIES.get(meta["category"], "?")
+                if meta["deps"]:
+                    all_ok = all(check_dep(d) for d in meta["deps"])
+                    dep_icon = " [OK]" if all_ok else " [MISS]"
+                else:
+                    dep_icon = ""
+                display = cat_icon + " " + meta['title'] + dep_icon
                 self.script_list.insert(tk.END, display)
                 self._all_scripts.append((key, meta))
         except Exception as e:
-            self.script_list.insert(tk.END, f"加载失败: {e}")
+            self.script_list.insert(tk.END, "err: " + str(e))
 
     def _filter_cat(self, cat):
         for k, btn in self.cat_buttons.items():
@@ -498,21 +532,34 @@ class ScriptsPanel(tk.Frame):
         key, meta = self._all_scripts[idx]
         self._current_key = key
         _clear_output(self.detail_output)
-        _append(self.detail_output, f"📝 {meta['title']}\n")
-        _append(self.detail_output, f"{'─' * 50}\n")
-        _append(self.detail_output, f"分类: {meta['category']}\n")
-        _append(self.detail_output, f"描述: {meta['description']}\n")
-        _append(self.detail_output, f"用法: {meta['usage']}\n")
-        _append(self.detail_output, f"输入: {meta['input_type']}  →  输出: {meta['output_type']}\n")
+        _append(self.detail_output, "title: " + meta['title'] + "\n")
+        _append(self.detail_output, "=" * 50 + "\n")
+        _append(self.detail_output, "category: " + meta['category'] + "\n")
+        _append(self.detail_output, "desc: " + meta['description'] + "\n")
+        _append(self.detail_output, "usage: " + meta['usage'] + "\n")
+        _append(self.detail_output, "input: " + meta['input_type'] + " -> output: " + meta['output_type'] + "\n")
         if meta["deps"]:
-            _append(self.detail_output, f"⚠ 依赖: {', '.join(meta['deps'])}\n")
+            from .scripts.deps import check_dep
+            _append(self.detail_output, "\ndep status:\n")
+            all_ok = True
+            for d in meta["deps"]:
+                ok = check_dep(d)
+                icon = "  ok" if ok else "  MISS"
+                _append(self.detail_output, icon + " " + d + "\n")
+                if not ok:
+                    all_ok = False
+            if all_ok:
+                self.install_btn.pack_forget()
+            else:
+                self.install_btn.pack(side=tk.LEFT, padx=(0, 8))
         else:
-            _append(self.detail_output, f"✅ 零依赖 (纯标准库)\n")
+            _append(self.detail_output, "\nzero deps\n")
+            self.install_btn.pack_forget()
 
     def _run_selected(self):
         if not self._current_key:
             _clear_output(self.detail_output)
-            _append(self.detail_output, "⚠ 请先选择一个脚本")
+            _append(self.detail_output, "select a script first")
             return
         try:
             from .scripts.runner import run_script as _run
@@ -522,21 +569,167 @@ class ScriptsPanel(tk.Frame):
                     meta = m
                     break
             _clear_output(self.detail_output)
-            _append(self.detail_output, f"🚀 运行: {meta['title'] if meta else self._current_key}\n")
-            _append(self.detail_output, f"{'─' * 50}\n\n")
+            title = meta['title'] if meta else self._current_key
+            _append(self.detail_output, "running: " + title + "\n")
+            _append(self.detail_output, "=" * 50 + "\n\n")
             result = _run(self._current_key)
             if result["stdout"]:
                 _append(self.detail_output, result["stdout"])
             if result["stderr"]:
-                _append(self.detail_output, f"\n⚠ 错误输出:\n{result['stderr']}")
+                _append(self.detail_output, "\nerr:\n" + result['stderr'])
             if result["success"]:
-                _append(self.detail_output, f"\n{'─' * 50}\n✅ 脚本执行成功")
+                _append(self.detail_output, "\n" + "=" * 50 + "\nOK")
             else:
-                _append(self.detail_output, f"\n{'─' * 50}\n❌ 脚本执行失败 (code={result['exit_code']})")
+                _append(self.detail_output, "\n" + "=" * 50 + "\nFAIL code=" + str(result['exit_code']))
         except Exception as e:
             _clear_output(self.detail_output)
-            _append(self.detail_output, f"❌ 运行出错: {e}")
+            _append(self.detail_output, "error: " + str(e))
 
+    def _check_deps(self):
+        _clear_output(self.detail_output)
+        _append(self.detail_output, "checking deps...\n")
+        _append(self.detail_output, "=" * 50 + "\n\n")
+        try:
+            from .scripts.deps import check_all_deps
+            status = check_all_deps()
+            if not status:
+                _append(self.detail_output, "all zero-dependency\n")
+                self.dep_status_label.configure(text="all zero-deps", fg=GREEN)
+                return
+            total = 0
+            missing = 0
+            for key, info in status.items():
+                ok = "OK" if info["all_ok"] else "MISS"
+                _append(self.detail_output, ok + " " + info['meta']['title'] + "\n")
+                total += 1
+                for d in info["deps"]:
+                    icon = "    ok" if d["installed"] else "    MISS"
+                    _append(self.detail_output, icon + " " + d['name'] + "\n")
+                if not info["all_ok"]:
+                    missing += 1
+                _append(self.detail_output, "\n")
+            if missing == 0:
+                _append(self.detail_output, "\nall " + str(total) + " OK")
+                self.dep_status_label.configure(text="all " + str(total) + " OK", fg=GREEN)
+            else:
+                _append(self.detail_output, "\n" + str(missing) + "/" + str(total) + " MISS")
+                self.dep_status_label.configure(text=str(missing) + "/" + str(total) + " MISS", fg=YELLOW)
+        except Exception as e:
+            _append(self.detail_output, "check failed: " + str(e))
+
+    def _install_all_deps(self):
+        _clear_output(self.detail_output)
+        _append(self.detail_output, "installing missing deps...\n")
+        _append(self.detail_output, "=" * 50 + "\n\n")
+        import threading
+        def run():
+            try:
+                from .scripts.deps import get_missing_deps, install_all_missing
+                missing = get_missing_deps()
+                if not missing:
+                    _append(self.detail_output, "all installed\n")
+                    self.dep_status_label.configure(text="all installed", fg=GREEN)
+                    return
+                pkgs = ", ".join(sorted(missing))
+                _append(self.detail_output, "installing " + str(len(missing)) + ": " + pkgs + "\n\n")
+                _append(self.detail_output, "please wait... pip is running\n")
+                results = install_all_missing()
+                ok_count = 0
+                for r in results:
+                    icon = "OK" if r["success"] else "FAIL"
+                    msg = r['message']
+                    if isinstance(msg, bytes):
+                        msg = msg.decode('utf-8', errors='replace')
+                    _append(self.detail_output, icon + " " + r['dep'] + ": " + msg + "\n")
+                    if r["success"]:
+                        ok_count += 1
+                _append(self.detail_output, "\n" + "=" * 50 + "\n")
+                if ok_count == len(results):
+                    _append(self.detail_output, "all " + str(ok_count) + " installed")
+                    self.dep_status_label.configure(text="all installed", fg=GREEN)
+                else:
+                    _append(self.detail_output, str(ok_count) + "/" + str(len(results)) + " OK")
+                self._populate_list()
+            except Exception as e:
+                _append(self.detail_output, "install failed: " + str(e))
+        t = threading.Thread(target=run, daemon=True)
+        t.start()
+
+    def _install_script_deps(self):
+        if not self._current_key:
+            return
+        try:
+            from .scripts.deps import install_deps_for_script
+            from .scripts.registry import get_script
+            meta = get_script(self._current_key)
+            if not meta or not meta["deps"]:
+                return
+            _clear_output(self.detail_output)
+            _append(self.detail_output, "installing '" + meta['title'] + "' deps: " + ", ".join(meta['deps']) + "\n")
+            _append(self.detail_output, "=" * 50 + "\n\n")
+            _append(self.detail_output, "please wait... pip is running\n")
+        except Exception as e:
+            _append(self.detail_output, "prep error: " + str(e))
+            return
+        import threading
+        def run():
+            try:
+                from .scripts.deps import install_deps_for_script
+                results = install_deps_for_script(self._current_key)
+                ok_count = 0
+                for r in results:
+                    icon = "OK" if r["success"] else "FAIL"
+                    msg = r['message']
+                    if isinstance(msg, bytes):
+                        msg = msg.decode('utf-8', errors='replace')
+                    _append(self.detail_output, icon + " " + r['dep'] + ": " + msg + "\n")
+                    if r["success"]:
+                        ok_count += 1
+                _append(self.detail_output, "\n" + "=" * 50 + "\n")
+                if ok_count == len(results):
+                    _append(self.detail_output, "done, ready to run")
+                sel = self.script_list.curselection()
+                if sel:
+                    self._on_select(None)
+                self._populate_list()
+            except Exception as e:
+                _append(self.detail_output, "install failed: " + str(e))
+        t = threading.Thread(target=run, daemon=True)
+        t.start()
+
+    def _solve_url(self):
+        url = self.url_entry.get().strip()
+        if not url or url == "http://":
+            _clear_output(self.detail_output)
+            _append(self.detail_output, "Enter a target URL and click Solve\n")
+            return
+        self.solve_btn.configure(text="Running...", state="disabled", bg=RED)
+        _clear_output(self.detail_output)
+        _append(self.detail_output, "Target: " + url + "\n")
+        _append(self.detail_output, "=" * 50 + "\n\n")
+        import threading
+        def run():
+            try:
+                from .scripts.solver import solve_web
+                def progress(step, status, detail):
+                    if status == "flag!":
+                        _append(self.detail_output, "\nFLAG: " + detail + "\n")
+                    elif status == "running":
+                        _append(self.detail_output, step + " " + detail + "\n")
+                    else:
+                        s = "> " if status == "ok" else "x "
+                        _append(self.detail_output, s + step + ": " + detail + "\n")
+                result = solve_web(url, progress_callback=progress)
+                _append(self.detail_output, "\n" + "=" * 50 + "\n")
+                if result["flag"]:
+                    _append(self.detail_output, "FLAG: " + result["flag"] + "\n")
+                else:
+                    _append(self.detail_output, "No flag found - try other tabs or manual scripts\n")
+            except Exception as e:
+                _append(self.detail_output, "Error: " + str(e) + "\n")
+            self.solve_btn.configure(text="Solve", state="normal", bg=ACCENT)
+        t = threading.Thread(target=run, daemon=True)
+        t.start()
 
 def _pretty_json(obj):
     import json
@@ -554,18 +747,36 @@ def run_gui():
     root.minsize(900, 600)
     apply_theme(root)
 
-    # 顶部标题栏
+    # ── 状态: gui 还是 cli ──
+    mode = {"current": "gui"}
+
+    # ── 顶部标题栏 ──
     header = tk.Frame(root, bg=DARK, height=52)
     header.pack(fill=tk.X)
     header.pack_propagate(False)
     tk.Label(header, text="🔧  Yang-Web", bg=DARK, fg=ACCENT,
              font=("Cascadia Code", 16, "bold")).pack(side=tk.LEFT, padx=20, pady=10)
-    tk.Label(header, text="离线 CTF Web 瑞士军刀  ·  零依赖  ·  15 个模块 + 26 内嵌脚本",
-             bg=DARK, fg=YELLOW, font=("Microsoft YaHei UI", 9)).pack(side=tk.LEFT, pady=14)
 
-    # Tab 页
-    notebook = ttk.Notebook(root)
-    notebook.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
+    mode_label = tk.Label(header, text="离线 CTF Web 瑞士军刀  ·  15 个模块 + 41 内嵌脚本",
+             bg=DARK, fg=YELLOW, font=("Microsoft YaHei UI", 9))
+    mode_label.pack(side=tk.LEFT, pady=14)
+
+    # ── 切换按钮 ──
+    toggle_btn = tk.Button(header, text="💻 CLI",
+                           bg=INPUT_BG, fg=ACCENT, relief="flat", borderwidth=1,
+                           padx=14, pady=4, cursor="hand2",
+                           font=("Microsoft YaHei UI", 9, "bold"),
+                           activebackground=BORDER, activeforeground=ACCENT)
+    toggle_btn.pack(side=tk.RIGHT, padx=16, pady=10)
+
+    # ── 内容容器 ──
+    content = tk.Frame(root, bg=BG)
+    content.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
+
+    # GUI 模式 — Notebook
+    gui_frame = tk.Frame(content, bg=BG)
+    notebook = ttk.Notebook(gui_frame)
+    notebook.pack(fill=tk.BOTH, expand=True)
 
     # 解码
     decode_panel = DecodePanel(notebook)
@@ -637,11 +848,175 @@ def run_gui():
     # Scripts — 内嵌 CTF 脚本库
     notebook.add(ScriptsPanel(notebook), text=" 📦 脚本库 ")
 
-    # 底部状态栏
+    # ── CLI 模式 — 终端面板 (初始隐藏) ──
+    cli_frame = tk.Frame(content, bg=DARK)
+
+    # 终端输出区
+    cli_output_frame, cli_output = _output_area(cli_frame, 30)
+    cli_output_frame.pack(fill=tk.BOTH, expand=True, padx=6, pady=(6, 0))
+    cli_output.configure(bg=DARK, fg=GREEN, font=("Cascadia Code", 10),
+                         insertbackground=GREEN)
+
+    # 底部输入行
+    input_bar = tk.Frame(cli_frame, bg=DARK, height=34)
+    input_bar.pack(fill=tk.X, padx=6, pady=6)
+    input_bar.pack_propagate(False)
+
+    prompt_label = tk.Label(input_bar, text=">>>", bg=DARK, fg=YELLOW,
+                            font=("Cascadia Code", 11, "bold"))
+    prompt_label.pack(side=tk.LEFT, padx=(6, 2), pady=4)
+
+    cli_entry = tk.Entry(input_bar, bg=INPUT_BG, fg=FG, insertbackground=ACCENT,
+                         relief="flat", borderwidth=0,
+                         font=("Cascadia Code", 11))
+    cli_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=3, padx=(2, 6))
+
+    # ── CLI 历史与命令执行 ──
+    import io
+    from .cli import main as cli_main
+
+    cli_history = []
+    history_idx = [0]
+
+    def _run_cli_cmd(cmd_text):
+        _append(cli_output, f"{'>'*3} {cmd_text}", "input")
+
+        if not cmd_text.strip():
+            return
+
+        cli_history.append(cmd_text)
+        history_idx[0] = len(cli_history)
+
+        # 内置命令
+        if cmd_text.strip().lower() in ("clear", "cls"):
+            _clear_output(cli_output)
+            return
+        if cmd_text.strip().lower() in ("help", "-h", "--help"):
+            _append(cli_output, """
+  Commands (same as CLI):
+    decode BASE64 <text>       decode <text>           hashid <hash>
+    encode BASE64 <text>       encode <text>           jwt <token>
+    ssti python <tpl>          ssti <engine> <tpl>     scripts --run <name>
+    sqli mysql <payload>       sqli <db> <payload>     scripts --search <kw>
+    lfi <target>               lfi <path>              solve <url>
+    ssrf <target>              ssrf <url>              scan dirs|files
+    xss <target>               xss <context>           clear, help
+    rce <target>               rce <cmd>               exit (back to GUI)
+    php <payload>               php <type>
+  Tip: prefix all CLI-style args as-is, e.g.  scripts --run 'rsa_toolkit'
+""")
+            return
+        if cmd_text.strip().lower() in ("exit", "quit"):
+            return  # handled by toggle
+
+        # Capture stdout
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        buf = io.StringIO()
+        sys.stdout = buf
+        sys.stderr = buf
+
+        try:
+            # 拆分参数 (处理引号)
+            import shlex
+            try:
+                args = shlex.split(cmd_text)
+            except ValueError:
+                args = cmd_text.split()
+
+            sys.argv = ["yang_web"] + args
+            try:
+                cli_main()
+            except SystemExit:
+                pass
+
+            out = buf.getvalue()
+            if out.strip():
+                for line in out.rstrip().split("\n"):
+                    _append(cli_output, line)
+            else:
+                _append(cli_output, "(ok)")
+        except Exception as e:
+            _append(cli_output, f"Error: {e}")
+        finally:
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
+            buf.close()
+
+    def _on_cli_enter(event):
+        cmd = cli_entry.get().strip()
+        if cmd.lower() in ("exit", "quit"):
+            cli_entry.delete(0, tk.END)
+            _toggle_mode()
+            return
+        _run_cli_cmd(cmd)
+        cli_entry.delete(0, tk.END)
+
+    def _on_cli_up(event):
+        if not cli_history:
+            return "break"
+        if history_idx[0] > 0:
+            history_idx[0] -= 1
+        cli_entry.delete(0, tk.END)
+        cli_entry.insert(0, cli_history[history_idx[0]])
+        return "break"
+
+    def _on_cli_down(event):
+        if not cli_history:
+            return "break"
+        if history_idx[0] < len(cli_history) - 1:
+            history_idx[0] += 1
+            cli_entry.delete(0, tk.END)
+            cli_entry.insert(0, cli_history[history_idx[0]])
+        else:
+            history_idx[0] = len(cli_history)
+            cli_entry.delete(0, tk.END)
+        return "break"
+
+    cli_entry.bind("<Return>", _on_cli_enter)
+    cli_entry.bind("<Up>", _on_cli_up)
+    cli_entry.bind("<Down>", _on_cli_down)
+
+    def _show_cli_welcome():
+        _append(cli_output, "▔" * 60)
+        _append(cli_output, "  Yang-Web CLI  —  嵌入式终端")
+        _append(cli_output, f"  41 脚本  ·  15 模块  ·  离线运行")
+        _append(cli_output, "▔" * 60)
+        _append(cli_output, "  Type 'help' for commands, 'exit' to return to GUI")
+        _append(cli_output, "")
+
+    # ── 模式切换逻辑 ──
+    def _toggle_mode():
+        if mode["current"] == "gui":
+            # 切换到 CLI
+            gui_frame.pack_forget()
+            cli_frame.pack(fill=tk.BOTH, expand=True)
+            mode["current"] = "cli"
+            toggle_btn.configure(text="🖥 GUI", fg=YELLOW)
+            mode_label.configure(text="命令行模式  ·  Type 'help'  ·  'exit' 返回 GUI")
+
+            # 欢迎信息
+            _clear_output(cli_output)
+            _show_cli_welcome()
+            cli_entry.focus_set()
+        else:
+            # 切换回 GUI
+            cli_frame.pack_forget()
+            gui_frame.pack(fill=tk.BOTH, expand=True)
+            mode["current"] = "gui"
+            toggle_btn.configure(text="💻 CLI", fg=ACCENT)
+            mode_label.configure(text="离线 CTF Web 瑞士军刀  ·  15 个模块 + 41 内嵌脚本")
+
+    toggle_btn.configure(command=_toggle_mode)
+
+    # 初始显示 GUI
+    gui_frame.pack(fill=tk.BOTH, expand=True)
+
+    # ── 底部状态栏 ──
     status = tk.Frame(root, bg=DARK, height=28)
     status.pack(fill=tk.X, side=tk.BOTTOM)
     status.pack_propagate(False)
-    tk.Label(status, text="Yang-Web v1.2.0  |  零依赖  |  Python 标准库  |  26 个内嵌脚本  |  Ctrl+C 复制选中文本",
+    tk.Label(status, text="Yang-Web v1.3.2  |  GUI+CLI 双模式  |  41 scripts  |  💻 按钮切换",
              bg=DARK, fg=BORDER, font=("Microsoft YaHei UI", 8)).pack(side=tk.LEFT, padx=16, pady=4)
 
     root.mainloop()

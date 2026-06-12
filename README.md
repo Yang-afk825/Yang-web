@@ -456,6 +456,10 @@ Yang-web/
 - 词库扩充
 - Bug 修复
 
+## 📮 联系
+
+有想法的师傅可以联系我：3303257524@qq.com
+
 ## 📄 License
 
 MIT License — 详见 [LICENSE](LICENSE)

@@ -41,6 +41,8 @@ from .payloads import upload as _upload_mod
 from .scripts import (
     list_scripts, search_scripts, get_script, get_script_path,
     run_script, auto_solve, SCRIPTS, CATEGORIES,
+    check_all_deps, get_missing_deps, install_all_missing,
+    install_deps_for_script,
 )
 
 # Aliases for function-level use
@@ -720,6 +722,51 @@ def cmd_scan(args):
 
 def cmd_scripts(args):
     """内置脚本库命令."""
+    # 依赖检查
+    if getattr(args, 'check_deps', False):
+        status = check_all_deps()
+        if not status:
+            print(green("\n[依赖] all scripts are zero-dependency"))
+            return
+        print(bold(f"\n[依赖] check result ({len(status)} scripts with deps):"))
+        for key, info in status.items():
+            ok = green("OK") if info["all_ok"] else red("MISS")
+            print(f"\n  {bold(info['meta']['title'])}  {ok}")
+            for d in info["deps"]:
+                icon = green("  v") if d["installed"] else red("  x")
+                print(f"    {icon} {d['name']}")
+        return
+
+    # 安装依赖
+    if getattr(args, 'install_deps', None):
+        if args.install_deps == "all":
+            missing = get_missing_deps()
+            if not missing:
+                print(green("\n[依赖] all deps installed"))
+                return
+            print(bold(f"\n[依赖] installing {len(missing)} pkgs: {', '.join(sorted(missing))}"))
+            print()
+            results = install_all_missing()
+            for r in results:
+                icon = green("v") if r["success"] else red("x")
+                print(f"  {icon} {r['dep']}: {r['message']}")
+        else:
+            key = args.install_deps
+            meta = get_script(key)
+            if not meta:
+                print(red(f"\n   script not found: {key}"))
+                return
+            if not meta["deps"]:
+                print(green(f"\n[依赖] '{meta['title']}' is zero-dependency"))
+                return
+            print(bold(f"\n[依赖] installing '{meta['title']}': {', '.join(meta['deps'])}"))
+            print()
+            results = install_deps_for_script(key)
+            for r in results:
+                icon = green("v") if r["success"] else red("x")
+                print(f"  {icon} {r['dep']}: {r['message']}")
+        return
+
     if args.search:
         results = search_scripts(args.search)
         if not results:
@@ -775,10 +822,12 @@ def cmd_scripts(args):
         print(bold(f"\n[脚本] {cat_name} - {len(results)} 个脚本"))
     else:
         print(bold(f"\n[脚本] 内嵌 CTF 脚本库 - 共 {len(results)} 个脚本"))
-        print(dim("   yang-web scripts --search <关键词>    搜索脚本"))
-        print(dim("   yang-web scripts --run <脚本名>       运行脚本"))
-        print(dim("   yang-web scripts --category <分类>   按分类筛选"))
-        print(dim("   yang-web solve <输入>                 一键智能解题"))
+        print(dim("   yang-web scripts --search <kw>      search"))
+        print(dim("   yang-web scripts --run <name>       run"))
+        print(dim("   yang-web scripts --category <cat>   filter"))
+        print(dim("   yang-web scripts --check-deps        check deps"))
+        print(dim("   yang-web scripts --install-deps      install deps"))
+        print(dim("   yang-web solve <input>               auto-solve"))
         print()
 
     cats_shown = {}
@@ -970,8 +1019,13 @@ def build_parser():
     p_scripts = sub.add_parser("scripts", help="内嵌 CTF 脚本库")
     p_scripts.add_argument("--category", metavar="CAT", help="按分类筛选 (crypto/web/reverse/misc)")
     p_scripts.add_argument("--search", metavar="KW", help="搜索脚本")
-    p_scripts.add_argument("--run", metavar="NAME", dest="run", help="运行指定脚本")
-    p_scripts.add_argument("--args", metavar="ARGS", help="传递给脚本的参数")
+    p_scripts.add_argument("--run", metavar="NAME", dest="run", help="Run script")
+    p_scripts.add_argument("--args", metavar="ARGS", help="Args for script")
+    p_scripts.add_argument("--check-deps", action="store_true", dest="check_deps",
+                            help="Check dependency status")
+    p_scripts.add_argument("--install-deps", metavar="NAME", nargs="?", const="all",
+                            dest="install_deps",
+                            help="Install deps (default: all, or script name)")
 
     # ── solve ──
     p_solve = sub.add_parser("solve", help="一键智能解题")
