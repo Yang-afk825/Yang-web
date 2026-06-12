@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """LFI / RFI / Path Traversal Payload 生成器.
 
 覆盖:

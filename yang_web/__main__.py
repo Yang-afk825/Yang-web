@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Yang-Web 入口 — 支持 GUI / CLI 双模式.
 
 用法:

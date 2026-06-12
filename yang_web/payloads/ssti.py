@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """SSTI (Server-Side Template Injection) Payload 生成器.
 
 支持模板引擎:

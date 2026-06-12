@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """依赖管理 — 检测 / 安装脚本所需第三方库."""
 
 from __future__ import annotations

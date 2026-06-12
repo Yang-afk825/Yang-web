@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """核心工具函数 — 颜色输出、字符检测、通用辅助。"""
 import re
 import os

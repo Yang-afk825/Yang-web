@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """SQL 注入 Payload 生成器.
 
 覆盖:

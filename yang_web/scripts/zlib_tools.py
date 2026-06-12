@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Compression helpers — zlib / gzip / bzip2 / lzma / inflate."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """无字符 RCE payload 生成器 — OR/XOR/NOT 绕过字符过滤.
 
 CTF 常见考点: 过滤了字母数字, 用异或/或/取反绕过.

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """CTF Web 一键解题引擎 — 输入 URL 自动探测并尝试提取 flag."""
 
 from __future__ import annotations

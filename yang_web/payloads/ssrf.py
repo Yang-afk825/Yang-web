@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """SSRF (Server-Side Request Forgery) Payload 生成器.
 
 覆盖:

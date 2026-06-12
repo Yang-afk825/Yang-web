@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """内建 CTF Web 词库."""
 import os
 

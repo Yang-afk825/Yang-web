@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """CTF 脚本运行器 — 动态加载执行脚本."""
 
 from __future__ import annotations

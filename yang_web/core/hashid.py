@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Hash 类型识别器 — 根据 hash 格式识别加密算法.
 
 支持 40+ 种常见 hash 格式: MD5, SHA1/256/512, NTLM, MySQL, bcrypt, CRC32 等.

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """AES 加密/解密工具 — 支持 ECB / CBC 模式 (zero-dependency)."""
 
 from __future__ import annotations

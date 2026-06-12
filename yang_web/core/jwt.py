@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """JWT 工具 — 解析、分析、攻击 JSON Web Token.
 
 支持:
