@@ -14,7 +14,7 @@ from .core.hashid import identify as hash_identify
 from .core.jwt import decode_jwt, analyze_jwt, none_attack, brute_jwt, BUILTIN_WORDLIST
 from .core.misc_crypto import (
     CIPHER_TYPES, list_ciphers, search_ciphers, get_cipher,
-    get_image_path, get_text_content, get_categories,
+    get_image_path, get_image2_path, get_text_content, get_categories,
     encode as mc_encode, decode as mc_decode,
 )
 from .payloads import ssti, sqli, lfi, ssrf, xss, php, upload
@@ -462,6 +462,13 @@ class MiscCryptoPanel(tk.Frame):
                                        relief="flat", padx=12, pady=3,
                                        cursor="hand2",
                                        font=("Microsoft YaHei UI", 9, "bold"))
+        self.view_img2_btn = tk.Button(ref_header, text="🖼 图2",
+                                        command=self._open_image2,
+                                        bg=INPUT_BG, fg=YELLOW,
+                                        activebackground=YELLOW, activeforeground=DARK,
+                                        relief="flat", padx=10, pady=3,
+                                        cursor="hand2",
+                                        font=("Microsoft YaHei UI", 9, "bold"))
         self.img_path_var = tk.StringVar(value="")
         tk.Label(ref_header, textvariable=self.img_path_var, bg=BG, fg=DARK,
                  font=("Cascadia Code", 7)).pack(side=tk.RIGHT, padx=4)
@@ -564,7 +571,9 @@ class MiscCryptoPanel(tk.Frame):
 
         # Show reference: image button + text content
         img = get_image_path(cid)
+        img2 = get_image2_path(cid)
         self._current_image_path = img if img else ""
+        self._current_image2_path = img2 if img2 else ""
 
         if img:
             self.view_img_btn.configure(state="normal", bg=INPUT_BG, fg=ACCENT)
@@ -572,6 +581,14 @@ class MiscCryptoPanel(tk.Frame):
             self.view_img_btn.pack(side=tk.LEFT, padx=(8, 0))
         else:
             self.view_img_btn.pack_forget()
+
+        if img2:
+            self.view_img2_btn.configure(state="normal")
+            self.view_img2_btn.pack(side=tk.LEFT, padx=4)
+        else:
+            self.view_img2_btn.pack_forget()
+
+        if not img and not img2:
             self.img_path_var.set("")
 
         # Load and show text content
@@ -579,11 +596,16 @@ class MiscCryptoPanel(tk.Frame):
         txt_content = get_text_content(cid)
         if txt_content:
             _append(self.ref_text, txt_content)
-        elif not img:
+        elif not img and not img2:
             # No image, no text — show algorithm note
             _append(self.ref_text, "[此密码为经典算法，无需参考图/说明文件]")
         else:
-            _append(self.ref_text, "[点击 \"查看原图\" 按钮查看参考图片]")
+            tips = []
+            if img:
+                tips.append("查看原图")
+            if img2:
+                tips.append("图2")
+            _append(self.ref_text, f"[点击 {', '.join(tips)} 按钮查看参考图片]")
 
         # Store selected cipher id
         self._selected_cid = cid
@@ -592,15 +614,26 @@ class MiscCryptoPanel(tk.Frame):
         self.info_var.set("")
         self.img_path_var.set("")
         self.view_img_btn.pack_forget()
+        self.view_img2_btn.pack_forget()
         _clear_output(self.ref_text)
         self._selected_cid = None
         self._current_image_path = ""
+        self._current_image2_path = ""
 
     def _open_image(self):
         """Open reference image with system viewer."""
         if self._current_image_path and os.path.exists(self._current_image_path):
             try:
                 os.startfile(self._current_image_path)
+            except Exception as e:
+                _clear_output(self.ref_text)
+                _append(self.ref_text, "无法打开图片: " + str(e))
+
+    def _open_image2(self):
+        """Open second reference image."""
+        if self._current_image2_path and os.path.exists(self._current_image2_path):
+            try:
+                os.startfile(self._current_image2_path)
             except Exception as e:
                 _clear_output(self.ref_text)
                 _append(self.ref_text, "无法打开图片: " + str(e))
