@@ -152,6 +152,7 @@ class DecodePanel(tk.Frame):
 
         _label(self, "📤 解码结果:", pady=8)
         self.output_frame, self.output = _output_area(self, 16)
+        self.output_frame.pack(fill=tk.BOTH, expand=True)
 
     def _auto_decode(self):
         _clear_output(self.output)
@@ -219,6 +220,7 @@ class PayloadPanel(tk.Frame):
                   font=("Microsoft YaHei UI", 9)).pack(side=tk.LEFT)
 
         self.output_frame, self.output = _output_area(self, 22)
+        self.output_frame.pack(fill=tk.BOTH, expand=True)
         self._refresh()
 
     def _refresh(self):
@@ -291,6 +293,7 @@ class HashPanel(tk.Frame):
 
         _label(self, "📤 识别结果:", pady=8)
         self.output_frame, self.output = _output_area(self, 14)
+        self.output_frame.pack(fill=tk.BOTH, expand=True)
 
     def _identify(self):
         _clear_output(self.output)
@@ -335,6 +338,7 @@ class JWTPanel(tk.Frame):
 
         _label(self, "📤 结果:", pady=8)
         self.output_frame, self.output = _output_area(self, 16)
+        self.output_frame.pack(fill=tk.BOTH, expand=True)
 
     def _get_token(self):
         return self.jwt_entry.get().strip()
