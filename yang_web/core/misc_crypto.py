@@ -758,3 +758,53 @@ def decode(cipher_id: str, cipher_text: str, **kwargs) -> str:
     if cid in funcs:
         return funcs[cid](cipher_text)
     return f"[!] 不支持解码: {cipher_id}"
+
+
+def get_text_path(cipher_id: str) -> str:
+    """返回密码类型对应的说明文本文件路径（如有）。"""
+    info = CIPHER_TYPES.get(cipher_id.lower())
+    if not info:
+        return ""
+    name = info["name"]
+    # Try common text file patterns
+    candidates = [
+        name + ".txt",
+        name + "加密解密.txt",
+        name + "加密解密法.txt",
+        name + "编码.txt",
+        name + ".txt",
+    ]
+    # Also try: binary -> 二进制, reverse -> 倒叙, etc.
+    txt_map = {
+        "binary": "二进制加密解密法.txt",
+        "reverse": "倒叙加密解密.txt",
+        "jefferson_wheel": "托马斯杰斐逊 转轮密码.txt",
+        "core_values": "核心价值观编码.txt",
+        "vigenere": "维吉尼亚.txt",
+        "morse": "摩尔密码加密与解密.jpg",  # no txt, just image
+    }
+    if cipher_id.lower() in txt_map:
+        target = DATA_DIR / txt_map[cipher_id.lower()]
+        if target.exists():
+            return str(target)
+    for c in candidates:
+        target = DATA_DIR / c
+        if target.exists():
+            return str(target)
+    return ""
+
+
+def get_text_content(cipher_id: str) -> str:
+    """读取密码类型的说明文本内容。"""
+    path = get_text_path(cipher_id)
+    if path and path.endswith('.txt'):
+        try:
+            with open(path, 'r', encoding='utf-8', errors='replace') as f:
+                return f.read()
+        except Exception:
+            try:
+                with open(path, 'r', encoding='gbk', errors='replace') as f:
+                    return f.read()
+            except Exception:
+                return ""
+    return ""
