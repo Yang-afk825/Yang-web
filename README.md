@@ -12,12 +12,13 @@
 
 Yang-Web 是一把 **CTF Web 方向的瑞士军刀**，覆盖了从信息探测、编码解码、Payload 生成到攻击利用的完整流程。所有功能**完全离线**运行，不依赖任何第三方库，拷贝到 U 盘就能在比赛环境直接使用。
 
-**14 个子命令，600+ 内置 Payload，一个终端搞定所有 Web 题。**
+**15 个子命令，600+ 内置 Payload + 41 个内嵌 CTF 脚本，一个终端搞定所有 Web 题。**
 
 ## ✨ 核心优势
 
 - 📴 **完全离线** — 零 pip 依赖，Python 标准库一把梭
 - 🧠 **智能解码** — 14 种编码格式自动识别 + 递归链式解码
+- 📦 **内嵌脚本库** — 41 个 CTF 脚本（Crypto/Web/Misc/Reverse），一键调用
 - 🎯 **Payload 全覆盖** — SSTI/SQLi/LFI/SSRF/XSS/RCE/PHP/Upload 八大攻击面
 - 🛡️ **WAF 绕过** — 30+ 种 SQL WAF 绕过 + 12 类 PHP RCE 绕过
 - 🔑 **JWT 攻击链** — 解析→None 攻击→弱密钥爆破→伪造令牌
@@ -368,6 +369,45 @@ $ yang-web encode rot13 "flag"
 
 ---
 
+### 15. 内嵌 CTF 脚本库 `scripts`
+
+🆕 内置 **41 个 CTF 常用脚本**，分类覆盖 Crypto、Web、Misc、Reverse 四大方向。
+
+```bash
+# 列出所有 41 个脚本
+$ yang-web scripts
+
+# 按分类查看
+$ yang-web scripts --category crypto      # 密码/编码 (17个)
+$ yang-web scripts --category web          # Web 攻击 (9个)
+$ yang-web scripts --category misc         # 杂项/Misc (14个)
+$ yang-web scripts --category reverse      # 逆向 (1个)
+
+# 搜索脚本
+$ yang-web scripts --search rsa
+$ yang-web scripts --search aes
+
+# 运行脚本
+$ yang-web scripts --run rsa_toolkit
+$ yang-web scripts --run classic_crypto
+$ yang-web scripts --run 'Base家族加解密'
+
+# 依赖检查 & 安装
+$ yang-web scripts --check-deps
+$ yang-web scripts --install-deps
+```
+
+**脚本一览**：
+
+| 分类 | 数量 | 代表脚本 |
+|------|:---:|------|
+| 🔐 密码/编码 | 17 | AES加解密、RSA攻击工具箱、Base64隐写、CRC32碰撞、MD5爆破、SM2、古典密码 |
+| 🌐 Web | 9 | 布尔盲注、时间盲注、无字符RCE绕过、PHPInfo条件竞争LFI、SSH弱口令扫描 |
+| 📦 杂项/Misc | 14 | 图片隐写分析、QR码工具、PCAP流量分析、ZIP分析、文件头分析器 |
+| 🔧 逆向 | 1 | APK 逆向 Solver (SCM time-capsule → SHA256 → RC4) |
+
+---
+
 ## 🔗 工作流示例
 
 ### 场景一：拿到一段密文
@@ -424,7 +464,8 @@ Yang-web/
 ├── yang_web/
 │   ├── __init__.py
 │   ├── __main__.py             # python -m 入口
-│   ├── cli.py                  # 命令行界面（14个子命令）
+│   ├── cli.py                  # 命令行界面（15个子命令）
+│   ├── gui.py                  # 🆕 图形界面 (GUI ↔ CLI 一键切换)
 │   ├── core/
 │   │   ├── decoder.py          # 智能解码引擎（14种编码）
 │   │   ├── hashid.py           # Hash 类型识别
@@ -439,6 +480,12 @@ Yang-web/
 │   │   ├── rce.py              # 命令注入 / 反弹Shell
 │   │   ├── php.py              # PHP 技巧（Magic Hash / 弱类型 / WAF绕过）
 │   │   └── upload.py           # 🆕 文件上传攻击
+│   ├── scripts/                # 🆕 内嵌 CTF 脚本库（41个脚本）
+│   │   ├── registry.py         # 脚本注册表
+│   │   ├── runner.py           # 脚本执行引擎
+│   │   ├── deps.py             # 依赖管理
+│   │   ├── solver.py           # 一键解题引擎
+│   │   └── *.py                # 41 个 CTF 脚本
 │   └── wordlists/
 │       └── data/
 │           ├── dirs.txt        # 300+ CTF 常用目录
