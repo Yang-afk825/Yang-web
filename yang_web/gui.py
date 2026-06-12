@@ -194,7 +194,7 @@ class DecodePanel(tk.Frame):
                   font=("Microsoft YaHei UI", 9, "bold")).pack(side=tk.LEFT, padx=2)
 
         # ── Output ──
-        _label(self, "📤 解码结果:", pady=(8, 2))
+        _label(self, "📤 解码结果:", pady=8)
         self.output_frame, self.output = _output_area(self, 12)
         self.output_frame.pack(fill=tk.BOTH, expand=True, padx=4, pady=(0, 4))
 
