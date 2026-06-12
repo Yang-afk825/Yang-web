@@ -154,7 +154,7 @@ CIPHER_TYPES = {
         "aliases": ["vigenere", "维吉尼亚", "vig"],
         "category": "多表替换",
         "encode": True, "decode": True,
-        "image": "维吉尼亚密码.png",
+        "image": "维吉尼亚密码.png", "image2": "维吉尼亚密.png",
         "description": "使用密钥词的凯撒密码变体，多表替换",
         "features": ["密钥循环", "维吉尼亚方阵", "26×26表格"],
     },
@@ -298,7 +298,7 @@ CIPHER_TYPES = {
         "aliases": ["binary", "二进制", "2进制"],
         "category": "进制编码",
         "encode": True, "decode": True,
-        "image": None,
+        "image": "二进制加密解密.png",
         "description": "ASCII/Unicode 字符的二进制表示",
         "features": ["7位/8位", "空格分隔", "可配合其他编码"],
     },
@@ -307,7 +307,7 @@ CIPHER_TYPES = {
         "aliases": ["reverse", "倒序", "倒叙", "反转"],
         "category": "置换",
         "encode": True, "decode": True,
-        "image": None,
+        "image": "倒叙加密解密.png",
         "description": "字符串直接反转，最简单的置换操作",
         "features": ["ABC→CBA", "可单词/句子", "非全反转注意"],
     },
@@ -693,10 +693,20 @@ def search_ciphers(query: str) -> list:
 
 
 def get_image_path(cipher_id: str) -> str:
-    """返回密码类型对应的参考图路径。"""
+    """返回密码类型对应的参考图主图路径。"""
     info = CIPHER_TYPES.get(cipher_id.lower())
     if info and info.get("image"):
         img_path = DATA_DIR / info["image"]
+        if img_path.exists():
+            return str(img_path)
+    return ""
+
+
+def get_image2_path(cipher_id: str) -> str:
+    """返回密码类型对应的参考图辅图路径（如有）。"""
+    info = CIPHER_TYPES.get(cipher_id.lower())
+    if info and info.get("image2"):
+        img_path = DATA_DIR / info["image2"]
         if img_path.exists():
             return str(img_path)
     return ""
@@ -776,8 +786,6 @@ def get_text_path(cipher_id: str) -> str:
     ]
     # Also try: binary -> 二进制, reverse -> 倒叙, etc.
     txt_map = {
-        "binary": "二进制加密解密法.txt",
-        "reverse": "倒叙加密解密.txt",
         "jefferson_wheel": "托马斯杰斐逊 转轮密码.txt",
         "core_values": "核心价值观编码.txt",
         "vigenere": "维吉尼亚.txt",
