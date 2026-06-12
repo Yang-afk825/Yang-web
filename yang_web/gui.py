@@ -383,6 +383,161 @@ class JWTPanel(tk.Frame):
             _append(self.output, f"❌ 错误: {e}")
 
 
+class ScriptsPanel(tk.Frame):
+    """内嵌 CTF 脚本库面板"""
+    def __init__(self, parent):
+        super().__init__(parent, bg=BG)
+        _label(self, "📦 内嵌 CTF 脚本库", fg=ACCENT, font_size=16, bold=True, pady=8)
+        _label(self, "D:\\CTF常用脚本 直接内嵌 — 26 个脚本，一键调用", fg=YELLOW, font_size=9)
+
+        # 搜索栏
+        search_frame = tk.Frame(self, bg=BG)
+        search_frame.pack(fill=tk.X, pady=(8, 4), padx=4)
+        tk.Label(search_frame, text="🔍", bg=BG, fg=ACCENT,
+                 font=("Microsoft YaHei UI", 12)).pack(side=tk.LEFT)
+        self.search_entry = tk.Entry(search_frame, bg=INPUT_BG, fg=FG,
+                                      insertbackground=ACCENT, relief="flat",
+                                      font=("Cascadia Code", 11), width=30)
+        self.search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=8,
+                               ipady=4)
+        self.search_entry.bind("<KeyRelease>", self._do_search)
+
+        # 分类按钮
+        cat_frame = tk.Frame(self, bg=BG)
+        cat_frame.pack(fill=tk.X, pady=4, padx=4)
+        self.cat_buttons = {}
+        for cat_key, cat_label in [("all", "全部"), ("crypto", "密码"),
+                                    ("web", "Web"), ("reverse", "逆向"),
+                                    ("misc", "杂项")]:
+            btn = tk.Button(cat_frame, text=cat_label, relief="flat",
+                           bg=INPUT_BG, fg=FG, activebackground=ACCENT,
+                           activeforeground=DARK, padx=12, pady=4,
+                           cursor="hand2", font=("Microsoft YaHei UI", 9),
+                           command=lambda c=cat_key: self._filter_cat(c))
+            btn.pack(side=tk.LEFT, padx=2)
+            self.cat_buttons[cat_key] = btn
+
+        # 脚本列表（左侧）
+        panes = tk.PanedWindow(self, bg=BG, sashwidth=3)
+        panes.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
+
+        list_frame = tk.Frame(panes, bg=BG)
+        panes.add(list_frame, width=320)
+
+        _label(list_frame, "脚本列表:", pady=4)
+        self.script_list = tk.Listbox(list_frame, bg=INPUT_BG, fg=FG,
+                                       selectbackground=ACCENT,
+                                       selectforeground=DARK,
+                                       relief="flat", borderwidth=0,
+                                       font=("Microsoft YaHei UI", 10),
+                                       height=20)
+        self.script_list.pack(fill=tk.BOTH, expand=True, pady=(0, 4))
+        self.script_list.bind("<<ListboxSelect>>", self._on_select)
+
+        # 详情/输出区（右侧）
+        detail_frame = tk.Frame(panes, bg=BG)
+        panes.add(detail_frame, width=600)
+
+        _label(detail_frame, "详情 & 输出:", pady=4)
+        self.detail_frame, self.detail_output = _output_area(detail_frame, 18)
+        self.detail_frame.pack(fill=tk.BOTH, expand=True)
+
+        # 运行按钮
+        btn_bar = tk.Frame(detail_frame, bg=BG)
+        btn_bar.pack(fill=tk.X, pady=4)
+        tk.Button(btn_bar, text="▶ 运行脚本", command=self._run_selected,
+                  bg=GREEN, fg=DARK, activebackground=ACCENT, relief="flat",
+                  padx=20, pady=6, cursor="hand2",
+                  font=("Microsoft YaHei UI", 11, "bold")).pack(side=tk.LEFT, padx=(0, 8))
+        tk.Button(btn_bar, text="🗑 清空", command=lambda: _clear_output(self.detail_output),
+                  bg=RED, fg=DARK, activebackground="#ff6b6b", relief="flat",
+                  padx=16, pady=6, cursor="hand2",
+                  font=("Microsoft YaHei UI", 10)).pack(side=tk.LEFT)
+
+        self._all_scripts = []
+        self._current_key = None
+        self._populate_list()
+
+    def _populate_list(self, category=None, query=None):
+        self.script_list.delete(0, tk.END)
+        self._all_scripts = []
+        try:
+            from .scripts.registry import SCRIPTS, CATEGORIES
+            for key, meta in sorted(SCRIPTS.items(), key=lambda x: x[0]):
+                if category and category != "all" and meta["category"] != category:
+                    continue
+                if query and query.lower() not in key.lower() and query.lower() not in meta["title"].lower() and query.lower() not in meta["description"].lower():
+                    continue
+                cat_icon = CATEGORIES.get(meta["category"], "📦")
+                deps = f" [需: {','.join(meta['deps'])}]" if meta["deps"] else ""
+                display = f"{cat_icon} {meta['title']}{deps}"
+                self.script_list.insert(tk.END, display)
+                self._all_scripts.append((key, meta))
+        except Exception as e:
+            self.script_list.insert(tk.END, f"加载失败: {e}")
+
+    def _filter_cat(self, cat):
+        for k, btn in self.cat_buttons.items():
+            if k == cat:
+                btn.configure(bg=ACCENT, fg=DARK)
+            else:
+                btn.configure(bg=INPUT_BG, fg=FG)
+        self._populate_list(category=cat)
+
+    def _do_search(self, event):
+        q = self.search_entry.get().strip()
+        self._populate_list(query=q if q else None)
+
+    def _on_select(self, event):
+        sel = self.script_list.curselection()
+        if not sel:
+            return
+        idx = sel[0]
+        if idx >= len(self._all_scripts):
+            return
+        key, meta = self._all_scripts[idx]
+        self._current_key = key
+        _clear_output(self.detail_output)
+        _append(self.detail_output, f"📝 {meta['title']}\n")
+        _append(self.detail_output, f"{'─' * 50}\n")
+        _append(self.detail_output, f"分类: {meta['category']}\n")
+        _append(self.detail_output, f"描述: {meta['description']}\n")
+        _append(self.detail_output, f"用法: {meta['usage']}\n")
+        _append(self.detail_output, f"输入: {meta['input_type']}  →  输出: {meta['output_type']}\n")
+        if meta["deps"]:
+            _append(self.detail_output, f"⚠ 依赖: {', '.join(meta['deps'])}\n")
+        else:
+            _append(self.detail_output, f"✅ 零依赖 (纯标准库)\n")
+
+    def _run_selected(self):
+        if not self._current_key:
+            _clear_output(self.detail_output)
+            _append(self.detail_output, "⚠ 请先选择一个脚本")
+            return
+        try:
+            from .scripts.runner import run_script as _run
+            meta = None
+            for k, m in self._all_scripts:
+                if k == self._current_key:
+                    meta = m
+                    break
+            _clear_output(self.detail_output)
+            _append(self.detail_output, f"🚀 运行: {meta['title'] if meta else self._current_key}\n")
+            _append(self.detail_output, f"{'─' * 50}\n\n")
+            result = _run(self._current_key)
+            if result["stdout"]:
+                _append(self.detail_output, result["stdout"])
+            if result["stderr"]:
+                _append(self.detail_output, f"\n⚠ 错误输出:\n{result['stderr']}")
+            if result["success"]:
+                _append(self.detail_output, f"\n{'─' * 50}\n✅ 脚本执行成功")
+            else:
+                _append(self.detail_output, f"\n{'─' * 50}\n❌ 脚本执行失败 (code={result['exit_code']})")
+        except Exception as e:
+            _clear_output(self.detail_output)
+            _append(self.detail_output, f"❌ 运行出错: {e}")
+
+
 def _pretty_json(obj):
     import json
     return json.dumps(obj, indent=2, ensure_ascii=False)
@@ -405,7 +560,7 @@ def run_gui():
     header.pack_propagate(False)
     tk.Label(header, text="🔧  Yang-Web", bg=DARK, fg=ACCENT,
              font=("Cascadia Code", 16, "bold")).pack(side=tk.LEFT, padx=20, pady=10)
-    tk.Label(header, text="离线 CTF Web 瑞士军刀  ·  零依赖  ·  14 个模块",
+    tk.Label(header, text="离线 CTF Web 瑞士军刀  ·  零依赖  ·  15 个模块 + 26 内嵌脚本",
              bg=DARK, fg=YELLOW, font=("Microsoft YaHei UI", 9)).pack(side=tk.LEFT, pady=14)
 
     # Tab 页
@@ -479,11 +634,14 @@ def run_gui():
     # JWT
     notebook.add(JWTPanel(notebook), text=" 🔑 JWT ")
 
+    # Scripts — 内嵌 CTF 脚本库
+    notebook.add(ScriptsPanel(notebook), text=" 📦 脚本库 ")
+
     # 底部状态栏
     status = tk.Frame(root, bg=DARK, height=28)
     status.pack(fill=tk.X, side=tk.BOTTOM)
     status.pack_propagate(False)
-    tk.Label(status, text="Yang-Web v1.1.0  |  零依赖  |  Python 标准库  |  Ctrl+C 复制选中文本",
+    tk.Label(status, text="Yang-Web v1.2.0  |  零依赖  |  Python 标准库  |  26 个内嵌脚本  |  Ctrl+C 复制选中文本",
              bg=DARK, fg=BORDER, font=("Microsoft YaHei UI", 8)).pack(side=tk.LEFT, padx=16, pady=4)
 
     root.mainloop()

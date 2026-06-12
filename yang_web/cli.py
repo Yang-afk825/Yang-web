@@ -13,6 +13,8 @@
     hashid   识别 Hash 类型
     jwt      JWT 解析 / 攻击
     scan     目录扫描 (离线词库)
+    scripts  内嵌 CTF 脚本库 (26 个脚本，一键调用)
+    solve    一键智能解题（自动检测 → 尝试脚本 → 输出结果）
 """
 import argparse
 import sys
@@ -36,6 +38,10 @@ from .payloads import ssrf as _ssrf_mod
 from .payloads import xss as _xss_mod
 from .payloads import php as _php_mod
 from .payloads import upload as _upload_mod
+from .scripts import (
+    list_scripts, search_scripts, get_script, get_script_path,
+    run_script, auto_solve, SCRIPTS, CATEGORIES,
+)
 
 # Aliases for function-level use
 ssti = _ssti_mod
@@ -709,6 +715,137 @@ def cmd_scan(args):
 
 
 # ═══════════════════════════════════════════════════════════
+#  脚本库子命令
+# ═══════════════════════════════════════════════════════════
+
+def cmd_scripts(args):
+    """内置脚本库命令."""
+    if args.search:
+        results = search_scripts(args.search)
+        if not results:
+            print(yellow(f"\n   未找到匹配 '{args.search}' 的脚本"))
+            return
+        print(bold(f"\n[脚本] 搜索 '{args.search}' 结果 ({len(results)} 个):"))
+        for key, meta in results:
+            cat_icon = CATEGORIES.get(meta["category"], "?")
+            print(f"\n  {bold(meta['title'])}  {dim(cat_icon)}")
+            print(f"  {dim('|')}  {meta['description']}")
+            print(f"  {dim('|')}  {cyan('用法:')} {meta['usage']}")
+            if meta["deps"]:
+                print(f"  {dim('|')}  {yellow('依赖:')} {', '.join(meta['deps'])}")
+        return
+
+    if args.run:
+        key = args.run
+        meta = get_script(key)
+        if not meta:
+            results = search_scripts(key)
+            if len(results) == 1:
+                key, meta = results[0]
+            elif len(results) > 1:
+                print(yellow(f"\n   多个匹配 '{key}', 请指定:"))
+                for k, m in results:
+                    print(f"     {cyan(k)}")
+                return
+            else:
+                print(red(f"\n   未找到脚本: {key}"))
+                return
+
+        script_args = args.args.split() if args.args else []
+        print(bold(f"\n[运行] {cyan(meta['title'])}"))
+        print(f"  {dim('描述:')} {meta['description']}")
+        print(f"  {dim('路径:')} {get_script_path(key)}")
+        print()
+        result = run_script(key, args=script_args)
+        if result["stdout"]:
+            print(result["stdout"])
+        if result["stderr"]:
+            print(red(result["stderr"]))
+        if result["success"]:
+            print(green(f"\n  [OK] 脚本执行成功"))
+        else:
+            print(red(f"\n  [FAIL] 脚本执行失败 (exit={result['exit_code']})"))
+        return
+
+    category = args.category
+    results = list_scripts(category=category)
+
+    if category:
+        cat_name = CATEGORIES.get(category, category)
+        print(bold(f"\n[脚本] {cat_name} - {len(results)} 个脚本"))
+    else:
+        print(bold(f"\n[脚本] 内嵌 CTF 脚本库 - 共 {len(results)} 个脚本"))
+        print(dim("   yang-web scripts --search <关键词>    搜索脚本"))
+        print(dim("   yang-web scripts --run <脚本名>       运行脚本"))
+        print(dim("   yang-web scripts --category <分类>   按分类筛选"))
+        print(dim("   yang-web solve <输入>                 一键智能解题"))
+        print()
+
+    cats_shown = {}
+    for key, meta in results:
+        cat = meta["category"]
+        if cat not in cats_shown:
+            cats_shown[cat] = []
+        cats_shown[cat].append((key, meta))
+
+    for cat in CATEGORIES:
+        if cat not in cats_shown:
+            continue
+        print(f"\n  {bold(CATEGORIES[cat])} ({len(cats_shown[cat])} 个)")
+        for key, meta in cats_shown[cat]:
+            deps_str = f" {yellow('[需: ' + ','.join(meta['deps']) + ']')}" if meta["deps"] else ""
+            print(f"    {dim('>')} {bold(meta['title'])}{deps_str}")
+            print(f"      {dim(meta['description'])}")
+            print(f"      {dim('运行:')} {cyan('yang-web scripts --run ' + repr(key))}")
+
+
+def cmd_solve(args):
+    """一键智能解题命令."""
+    input_data = args.input
+    input_type = args.type or "text"
+
+    if args.file:
+        input_type = "file"
+        input_data = args.file
+        if not os.path.isfile(input_data):
+            print(red(f"文件不存在: {input_data}"))
+            return
+
+    if not input_data:
+        print(red("请提供输入文本或文件路径"))
+        print(dim("  yang-web solve <文本>"))
+        print(dim("  yang-web solve --file <文件路径>"))
+        return
+
+    print(bold(f"\n[解题] 一键智能解题"))
+    print(f"  {dim('输入类型:')} {cyan(input_type)}")
+    print(f"  {dim('输入内容:')} {input_data[:100]}{'...' if len(input_data) > 100 else ''}")
+    print(f"\n  {dim('正在尝试相关脚本...')}\n")
+
+    results = auto_solve(input_data, input_type=input_type)
+
+    if not results["results"]:
+        print(yellow("  -- 无匹配脚本"))
+        return
+
+    for i, entry in enumerate(results["results"], 1):
+        status = green("v") if entry["success"] else red("x")
+        print(f"  [{i}] {status} {entry['title']} ({entry['category']})")
+        if entry["output"]:
+            for line in entry["output"].strip().split("\n")[:10]:
+                print(f"      {dim(line)}")
+        print()
+
+    print(bold(f"\n[统计] {len(results['results'])} 个脚本, "
+               f"{green(str(results['successes']))} 成功, "
+               f"{red(str(results['tried'] - results['successes']))} 失败"))
+
+    if results["successes"] == 0:
+        print(yellow("\n  [提示] 尝试 --file 模式, 或手动指定脚本"))
+        print(dim("     yang-web scripts --list  查看所有脚本"))
+
+
+# ═══════════════════════════════════════════════════════════
 #  主入口
 # ═══════════════════════════════════════════════════════════
 
@@ -829,6 +966,20 @@ def build_parser():
     p_jwt.add_argument("--secret", metavar="KEY", help="签名密钥")
     p_jwt.add_argument("--wordlist", metavar="FILE", help="自定义字典路径")
 
+    # ── scripts ──
+    p_scripts = sub.add_parser("scripts", help="内嵌 CTF 脚本库")
+    p_scripts.add_argument("--category", metavar="CAT", help="按分类筛选 (crypto/web/reverse/misc)")
+    p_scripts.add_argument("--search", metavar="KW", help="搜索脚本")
+    p_scripts.add_argument("--run", metavar="NAME", dest="run", help="运行指定脚本")
+    p_scripts.add_argument("--args", metavar="ARGS", help="传递给脚本的参数")
+
+    # ── solve ──
+    p_solve = sub.add_parser("solve", help="一键智能解题")
+    p_solve.add_argument("input", nargs="?", help="输入文本 (编码串/密文等)")
+    p_solve.add_argument("--type", metavar="TYPE", choices=["text", "file", "apk"],
+                          help="输入类型 (默认: text)")
+    p_solve.add_argument("--file", metavar="PATH", help="文件路径模式")
+
     # ── scan ──
     p_scan = sub.add_parser("scan", help="目录扫描 (离线词库)")
     p_scan.add_argument("type", nargs="?", choices=["dir", "file"], default="dir", help="词库类型 (dir/file)")
@@ -840,6 +991,11 @@ def build_parser():
 
 def main():
     """程序入口."""
+    if sys.platform == "win32":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
     parser = build_parser()
     args = parser.parse_args()
 
@@ -863,6 +1019,8 @@ def main():
         "hashid": cmd_hashid,
         "jwt": cmd_jwt,
         "scan": cmd_scan,
+        "scripts": cmd_scripts,
+        "solve": cmd_solve,
     }
 
     func = commands.get(args.command)
