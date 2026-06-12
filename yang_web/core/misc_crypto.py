@@ -189,7 +189,7 @@ CIPHER_TYPES = {
         "name": "电脑键盘坐标加密",
         "aliases": ["键盘坐标", "keyboard_coord"],
         "category": "键盘映射",
-        "encode": True, "decode": False,
+        "encode": True, "decode": True,
         "image": "电脑键盘坐标加密.jpg",
         "description": "用键盘矩阵行列坐标表示字母",
         "features": ["行号+列号", "双数字坐标", "参考图"],
@@ -252,7 +252,7 @@ CIPHER_TYPES = {
         "name": "数字坐标加密字母",
         "aliases": ["数字坐标", "number_coord"],
         "category": "坐标替换",
-        "encode": True, "decode": False,
+        "encode": True, "decode": True,
         "image": "数字坐标加密字母.png",
         "description": "字母网格坐标表示法，行号+列号",
         "features": ["XY坐标", "数字对", "参考图"],
@@ -541,6 +541,212 @@ def reverse_decode(cipher_text: str) -> str:
     return cipher_text[::-1]  # self-inverse
 
 
+# ── Caesar 凯撒 ────────────────────────────
+def caesar_encode(text: str, key: str = "3") -> str:
+    try:
+        shift = int(key) % 26
+    except ValueError:
+        shift = sum(ord(c) for c in key) % 26
+    result = []
+    for c in text:
+        if 'A' <= c <= 'Z':
+            result.append(chr((ord(c) - ord('A') + shift) % 26 + ord('A')))
+        elif 'a' <= c <= 'z':
+            result.append(chr((ord(c) - ord('a') + shift) % 26 + ord('a')))
+        else:
+            result.append(c)
+    return ''.join(result)
+
+
+def caesar_decode(cipher_text: str, key: str = "3") -> str:
+    try:
+        shift = int(key) % 26
+    except ValueError:
+        shift = sum(ord(c) for c in key) % 26
+    return caesar_encode(cipher_text, str(26 - shift))
+
+
+# ── ROT13 ──────────────────────────────────
+def rot13_encode(text: str) -> str:
+    return caesar_encode(text, "13")
+
+
+def rot13_decode(cipher_text: str) -> str:
+    return caesar_encode(cipher_text, "13")
+
+
+# ── Atbash 埃特巴什 ─────────────────────────
+def atbash_encode(text: str) -> str:
+    result = []
+    for c in text:
+        if 'A' <= c <= 'Z':
+            result.append(chr(ord('Z') - (ord(c) - ord('A'))))
+        elif 'a' <= c <= 'z':
+            result.append(chr(ord('z') - (ord(c) - ord('a'))))
+        else:
+            result.append(c)
+    return ''.join(result)
+
+
+def atbash_decode(cipher_text: str) -> str:
+    return atbash_encode(cipher_text)  # self-inverse
+
+
+# ── Rail Fence 栅栏 ────────────────────────
+def rail_fence_encode(text: str, key: str = "3") -> str:
+    try:
+        rails = max(2, int(key))
+    except ValueError:
+        rails = 3
+    if rails >= len(text):
+        return text
+    fence = [[] for _ in range(rails)]
+    rail, direction = 0, 1
+    for c in text:
+        fence[rail].append(c)
+        rail += direction
+        if rail == 0 or rail == rails - 1:
+            direction = -direction
+    return ''.join(''.join(row) for row in fence)
+
+
+def rail_fence_decode(cipher_text: str, key: str = "3") -> str:
+    try:
+        rails = max(2, int(key))
+    except ValueError:
+        rails = 3
+    if rails >= len(cipher_text):
+        return cipher_text
+    n = len(cipher_text)
+    # Build fence pattern
+    pattern = []
+    rail, direction = 0, 1
+    for _ in range(n):
+        pattern.append(rail)
+        rail += direction
+        if rail == 0 or rail == rails - 1:
+            direction = -direction
+    # Count chars per rail
+    counts = [0] * rails
+    for r in pattern:
+        counts[r] += 1
+    # Slice cipher text by rail
+    rails_text = []
+    idx = 0
+    for cnt in counts:
+        rails_text.append(cipher_text[idx:idx+cnt])
+        idx += cnt
+    # Reconstruct
+    pointers = [0] * rails
+    result = []
+    for r in pattern:
+        result.append(rails_text[r][pointers[r]])
+        pointers[r] += 1
+    return ''.join(result)
+
+
+# ── Morse 摩斯密码 ─────────────────────────
+MORSE_ENCODE_MAP = {
+    'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.',
+    'F': '..-.', 'G': '--.', 'H': '....', 'I': '..', 'J': '.---',
+    'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---',
+    'P': '.--.', 'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-',
+    'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-', 'Y': '-.--',
+    'Z': '--..',
+    '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-',
+    '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.',
+    '.': '.-.-.-', ',': '--..--', '?': '..--..', '/': '-..-.',
+    '@': '.--.-.', '(': '-.--.', ')': '-.--.-', '&': '.-...',
+    ':': '---...', '=': '-...-', '-': '-....-', '+': '.-.-.',
+    '"': '.-..-.', '\'': '.----.', '_': '..--.-', '!': '-.-.--',
+}
+MORSE_DECODE_MAP = {v: k for k, v in MORSE_ENCODE_MAP.items()}
+
+
+def morse_encode(text: str) -> str:
+    result = []
+    for c in text.upper():
+        if c == ' ':
+            result.append('/')
+        elif c in MORSE_ENCODE_MAP:
+            result.append(MORSE_ENCODE_MAP[c])
+        else:
+            result.append(c)
+    return ' '.join(result)
+
+
+def morse_decode(cipher_text: str) -> str:
+    result = []
+    for token in cipher_text.strip().split():
+        if token == '/':
+            result.append(' ')
+        elif token in MORSE_DECODE_MAP:
+            result.append(MORSE_DECODE_MAP[token])
+        else:
+            result.append('?')
+    return ''.join(result)
+
+
+# ── Keyboard Coordinate 键盘坐标 ────────────
+KEYBOARD_COORD_MAP = {
+    'Q': '11', 'W': '12', 'E': '13', 'R': '14', 'T': '15',
+    'Y': '16', 'U': '17', 'I': '18', 'O': '19', 'P': '10',
+    'A': '21', 'S': '22', 'D': '23', 'F': '24', 'G': '25',
+    'H': '26', 'J': '27', 'K': '28', 'L': '29',
+    'Z': '31', 'X': '32', 'C': '33', 'V': '34', 'B': '35',
+    'N': '36', 'M': '37',
+}
+KEYBOARD_COORD_REV = {v: k for k, v in KEYBOARD_COORD_MAP.items()}
+
+
+def keyboard_coordinate_encode(text: str) -> str:
+    result = []
+    for c in text.upper():
+        if c in KEYBOARD_COORD_MAP:
+            result.append(KEYBOARD_COORD_MAP[c])
+        else:
+            result.append(c)
+    return ' '.join(result)
+
+
+def keyboard_coordinate_decode(cipher_text: str) -> str:
+    result = []
+    tokens = ''.join(cipher_text.split())
+    for i in range(0, len(tokens) - 1, 2):
+        pair = tokens[i:i+2]
+        if pair in KEYBOARD_COORD_REV:
+            result.append(KEYBOARD_COORD_REV[pair])
+        else:
+            result.append('?')
+    return ''.join(result)
+
+
+# ── Number Coordinate 数字坐标 ──────────────
+NUMBER_COORD_MAP = {c: f"{i}" for i, c in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ')}
+NUMBER_COORD_REV = {v: k for k, v in NUMBER_COORD_MAP.items()}
+
+
+def number_coordinate_encode(text: str) -> str:
+    result = []
+    for c in text.upper():
+        if c in NUMBER_COORD_MAP:
+            result.append(NUMBER_COORD_MAP[c])
+        else:
+            result.append(c)
+    return ' '.join(result)
+
+
+def number_coordinate_decode(cipher_text: str) -> str:
+    result = []
+    tokens = cipher_text.split()
+    for t in tokens:
+        if t in NUMBER_COORD_REV:
+            result.append(NUMBER_COORD_REV[t])
+        else:
+            result.append('?')
+    return ''.join(result)
+
+
 # ── ADFGX ─────────────────────────────────
 def _adfgx_polybius(text: str, keyword: str = "") -> str:
     """ADFGX Polybius substitution phase."""
@@ -700,8 +906,15 @@ def encode(cipher_id: str, text: str, **kwargs) -> str:
         "bacon": bacon_encode, "baconian": bacon_encode,
         "polybius": polybius_encode, "polybius_square": polybius_encode,
         "vigenere": lambda t: vigenere_encode(t, kwargs.get("key", "A")),
+        "caesar": lambda t: caesar_encode(t, kwargs.get("key", "3")),
+        "rot13": rot13_encode,
+        "atbash": atbash_encode,
+        "rail_fence": lambda t: rail_fence_encode(t, kwargs.get("key", "3")),
+        "morse": morse_encode,
         "qwe": qwe_encode, "qwe_keyboard": qwe_encode,
         "keyboard_chessboard": keyboard_chess_encode,
+        "keyboard_coordinate": keyboard_coordinate_encode,
+        "number_coordinate": number_coordinate_encode,
         "phone": phone_encode, "phone_keypad": phone_encode,
         "alphabet_order": alphabet_order_encode,
         "sga": sga_encode, "standard_galactic": sga_encode,
@@ -724,8 +937,15 @@ def decode(cipher_id: str, cipher_text: str, **kwargs) -> str:
         "bacon": bacon_decode, "baconian": bacon_decode,
         "polybius": polybius_decode, "polybius_square": polybius_decode,
         "vigenere": lambda t: vigenere_decode(t, kwargs.get("key", "A")),
+        "caesar": lambda t: caesar_decode(t, kwargs.get("key", "3")),
+        "rot13": rot13_decode,
+        "atbash": atbash_decode,
+        "rail_fence": lambda t: rail_fence_decode(t, kwargs.get("key", "3")),
+        "morse": morse_decode,
         "qwe": qwe_decode, "qwe_keyboard": qwe_decode,
         "keyboard_chessboard": keyboard_chess_decode,
+        "keyboard_coordinate": keyboard_coordinate_decode,
+        "number_coordinate": number_coordinate_decode,
         "phone": phone_decode, "phone_keypad": phone_decode,
         "alphabet_order": alphabet_order_decode,
         "sga": sga_decode, "standard_galactic": sga_decode,
