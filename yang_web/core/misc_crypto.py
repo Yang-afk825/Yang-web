@@ -69,15 +69,6 @@ PHONE_KEYPAD = {
 }
 PHONE_DECODE = {v: k for k, v in PHONE_KEYPAD.items()}
 
-# 社会主义核心价值观编码
-CORE_VALUES = [
-    "富强", "民主", "文明", "和谐",
-    "自由", "平等", "公正", "法治",
-    "爱国", "敬业", "诚信", "友善",
-]
-CORE_ENCODE = {chr(ord('A') + i): CORE_VALUES[i] for i in range(12)}
-CORE_DECODE = {v: k for k, v in CORE_ENCODE.items()}
-
 # 标准银河字母 (SGA) — Minecraft 附魔台
 SGA_CHARS = {
     'A': 'ᔑ', 'B': 'ʖ', 'C': 'ᓵ', 'D': '↸', 'E': 'ᒷ',
@@ -247,15 +238,6 @@ CIPHER_TYPES = {
         "image": "摩尔密码加密与解密.jpg",
         "description": "点划信号编码，可表现为音频/灯光/文字",
         "features": [".- 长短信号", "可隐藏为音频", "空格/斜杠分隔"],
-    },
-    "core_values": {
-        "name": "核心价值观编码",
-        "aliases": ["核心价值观", "24字", "core_values"],
-        "category": "中文编码",
-        "encode": True, "decode": True,
-        "image": None,
-        "description": "用12组社会主义核心价值观词组表示A-L共12个字母",
-        "features": ["富强=字母", "仅支持A-L", "CTF常见中文编码"],
     },
     "pawnshat": {
         "name": "当铺密码",
@@ -466,16 +448,6 @@ def phone_encode(text: str) -> str:
 def phone_decode(cipher_text: str) -> str:
     parts = cipher_text.split()
     return ''.join(PHONE_DECODE.get(p, '?') for p in parts)
-
-
-# ── 核心价值观 ────────────────────────────
-def core_values_encode(text: str) -> str:
-    return ' '.join(CORE_ENCODE.get(c, c) for c in _clean_text(text))
-
-
-def core_values_decode(cipher_text: str) -> str:
-    parts = cipher_text.split()
-    return ''.join(CORE_DECODE.get(p, '?') for p in parts)
 
 
 # ── 当铺密码 ─────────────────────────────
@@ -731,7 +703,6 @@ def encode(cipher_id: str, text: str, **kwargs) -> str:
         "qwe": qwe_encode, "qwe_keyboard": qwe_encode,
         "keyboard_chessboard": keyboard_chess_encode,
         "phone": phone_encode, "phone_keypad": phone_encode,
-        "core_values": core_values_encode,
         "alphabet_order": alphabet_order_encode,
         "sga": sga_encode, "standard_galactic": sga_encode,
         "binary": binary_encode,
@@ -756,7 +727,6 @@ def decode(cipher_id: str, cipher_text: str, **kwargs) -> str:
         "qwe": qwe_decode, "qwe_keyboard": qwe_decode,
         "keyboard_chessboard": keyboard_chess_decode,
         "phone": phone_decode, "phone_keypad": phone_decode,
-        "core_values": core_values_decode,
         "alphabet_order": alphabet_order_decode,
         "sga": sga_decode, "standard_galactic": sga_decode,
         "binary": binary_decode,
@@ -787,7 +757,6 @@ def get_text_path(cipher_id: str) -> str:
     # Also try: binary -> 二进制, reverse -> 倒叙, etc.
     txt_map = {
         "jefferson_wheel": "托马斯杰斐逊 转轮密码.txt",
-        "core_values": "核心价值观编码.txt",
         "vigenere": "维吉尼亚.txt",
         "morse": "摩尔密码加密与解密.jpg",  # no txt, just image
     }
