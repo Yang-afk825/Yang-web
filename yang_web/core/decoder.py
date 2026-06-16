@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 """智能解码引擎 — 自动检测编码类型并链式解码.
 
-支持编码类型:
-    base64, base32, base16(hex), base58, base62, base85, base91
-    URL编码, HTML实体, ROT13, 二进制, 八进制, Unicode转义, 摩斯电码
+支持编码类型 (共 28+ 种):
+    Base 系: base64/32/16/58/85/91/92, url, html, unicode
+    进制: 二进制/八进制/十进制
+    古典: ROT13/ROT47/ROT5/ROT18, 摩斯电码
+    传输: Quoted-Printable, UUEncode, XXEncode, UTF-7, Punycode, Shellcode
+    编程: Brainfuck, Ook!
 """
 import re
 import base64
@@ -13,6 +16,13 @@ import html as html_mod
 import codecs
 from typing import Optional, List, Tuple, Callable
 from .utils import is_printable
+from .advanced_engines import (
+    brainfuck_decode, ook_decode,
+    quoted_printable_decode, uudecode, xxdecode,
+    utf7_decode, punycode_decode, shellcode_decode,
+    base91_decode, base92_decode,
+    rot47_decode, rot5_decode, rot18_decode,
+)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -172,6 +182,180 @@ def _is_decimal(text: str) -> int:
     return 0
 
 
+def _is_quoted_printable(text: str) -> int:
+    """Detect Quoted-Printable (=XX format)."""
+    text = text.strip()
+    # Count =XX hex patterns
+    matches = re.findall(r'=[0-9A-Fa-f]{2}', text)
+    if len(matches) < 2:
+        return 0
+    # Check ratio of encoded content
+    encoded_len = len(''.join(matches))
+    ratio = encoded_len / max(len(text), 1)
+    # QP signature: 3 chars per byte (=XX), so high density
+    if ratio > 0.55:  # >= 3 out of every ~5 chars are =XX
+        return 95
+    if ratio > 0.30:
+        # Make sure it's not just base64 with random = signs
+        if text.count('=') >= 3 and all(c in '0123456789ABCDEFabcdef=' for c in text):
+            return 90
+        return 80
+    return 0
+
+def _is_uuencode(text: str) -> int:
+    """Detect UUEncode format."""
+    lines = text.strip().split('\n')
+    if len(lines) < 2:
+        return 0
+    has_begin = any('begin' in l.lower() for l in lines[:2])
+    has_end = any('end' in l.lower() for l in lines[-2:])
+    has_len_byte = False
+    for l in lines:
+        l = l.strip()
+        if l and 32 <= ord(l[0]) <= 96 and l[0] not in 'M':
+            has_len_byte = True
+            break
+    if has_begin and has_end:
+        return 90
+    if has_len_byte and has_begin:
+        return 75
+    return 0
+
+def _is_xxencode(text: str) -> int:
+    """Detect XXEncode format."""
+    lines = text.strip().split('\n')
+    if len(lines) < 2:
+        return 0
+    has_begin = any('begin' in l.lower() for l in lines[:2])
+    has_len_byte = False
+    xx_chars = set('+-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')
+    for l in lines:
+        l = l.strip()
+        if l and 32 <= ord(l[0]) <= 96:
+            # Check if line body uses XXEncode alphabet
+            body = l[1:]
+            if body and all(c in xx_chars for c in body[:min(20, len(body))]):
+                has_len_byte = True
+                break
+    if has_begin and has_len_byte:
+        return 85
+    if has_len_byte and text.strip().endswith('+'):
+        return 70
+    return 0
+
+def _is_brainfuck(text: str) -> int:
+    """Detect Brainfuck code."""
+    bf_chars = set('><+-.,[]')
+    clean = ''.join(c for c in text if not c.isspace())
+    if not clean:
+        return 0
+    ratio = sum(1 for c in clean if c in bf_chars) / len(clean)
+    if ratio > 0.95 and any(c in clean for c in '[]'):
+        return 95
+    if ratio > 0.9 and len(clean) >= 10:
+        return 80
+    return 0
+
+def _is_ook(text: str) -> int:
+    """Detect Ook! language."""
+    clean = text.strip()
+    tokens = clean.split()
+    if len(tokens) < 4:
+        return 0
+    ook_tokens = {'Ook.', 'Ook?', 'Ook!'}
+    matches = sum(1 for t in tokens if t in ook_tokens)
+    if matches >= len(tokens) * 0.8:
+        return 95
+    if matches >= 4:
+        return 75
+    return 0
+
+def _is_utf7(text: str) -> int:
+    """Detect UTF-7 encoded text."""
+    text = text.strip()
+    # UTF-7 uses +XXX- patterns where XXX is base64
+    if '+ADw-' in text or '+AD4-' in text:
+        return 90
+    matches = re.findall(r'\+[A-Za-z0-9+/]+-', text)
+    if matches and len(text) > 5:
+        return 80
+    return 0
+
+def _is_zerowidth(text: str) -> int:
+    """Detect zero-width character encoding."""
+    zw_chars = {'\u200b', '\u200c', '\u200d', '\ufeff'}
+    count = sum(1 for c in text if c in zw_chars)
+    if count >= 4:
+        return 95
+    if count >= 2:
+        return 75
+    return 0
+
+def _is_punycode(text: str) -> int:
+    """Detect Punycode/IDNA encoding."""
+    if 'xn--' in text.lower():
+        if '.' in text:
+            return 90
+        return 80
+    return 0
+
+def _is_shellcode(text: str) -> int:
+    """Detect shellcode \\x format."""
+    hex_pairs = re.findall(r'\\x[0-9a-fA-F]{2}', text)
+    if len(hex_pairs) >= 4:
+        ratio = len(''.join(hex_pairs)) / max(len(text), 1)
+        if ratio > 0.4:
+            return 95
+        return 80
+    if len(hex_pairs) >= 2 and len(text) < 40:
+        return 60
+    return 0
+
+def _is_rot47(text: str) -> int:
+    """Detect if ROT47 is likely (printable ASCII with no obvious pattern)."""
+    if len(text) < 4:
+        return 0
+    printable = sum(1 for c in text if 32 <= ord(c) <= 126)
+    if printable / len(text) < 0.9:
+        return 0
+    # Try ROT47 and check for common words
+    decoded = rot47_decode(text)
+    common = ['the', 'and', 'is', 'are', 'this', 'flag', 'ctf', 'http', 'www']
+    score = sum(1 for w in common if w in decoded.lower())
+    orig_score = sum(1 for w in common if w in text.lower())
+    if score > orig_score and score >= 1:
+        return 75
+    return 15
+
+def _is_base91(text: str) -> int:
+    """Detect Base91 encoding."""
+    charset = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~"')
+    text = text.strip()
+    if not text:
+        return 0
+    match = sum(1 for c in text if c in charset)
+    if match / len(text) > 0.95:
+        # Check for special chars that distinguish from base64
+        special = sum(1 for c in text if c in '!#$%&()*+,./:;<=>?@[]^_`{|}~')
+        if special > len(text) * 0.05:
+            return 80
+        return 50
+    return 0
+
+def _is_base92(text: str) -> int:
+    """Detect Base92 encoding."""
+    charset = set("!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_abcdefghijklmnopqrstuvwxyz{|}")
+    text = text.strip()
+    if not text:
+        return 0
+    match = sum(1 for c in text if c in charset)
+    if match / len(text) > 0.95 and len(text) > 4:
+        # Has backslash or single quote (not in base91)
+        if "'" in text or '\\' in text or '|' in text:
+            return 85
+        return 55
+    return 0
+
 # ═══════════════════════════════════════════════════════════
 #  编码描述 & 检测器注册表
 # ═══════════════════════════════════════════════════════════
@@ -187,10 +371,21 @@ ENCODING_DETECTORS: List[Tuple[str, str, Callable[[str], int]]] = [
     ("base64",     "Base64",               _is_base64),
     ("base64url",  "Base64 URL-safe",      _is_base64_urlsafe),
     ("base85",     "Base85 / ASCII85",     _is_base85),
+    ("base91",     "Base91",               _is_base91),
+    ("base92",     "Base92",               _is_base92),
     ("url",        "URL 编码 %xx",        _is_url_encoded),
     ("html",       "HTML 实体 &amp;",      _is_html_entity),
     ("unicode",    "Unicode 转义 \\u",   _is_unicode_escape),
     ("rot13",      "ROT13",                _is_rot13),
+    ("rot47",      "ROT47",                _is_rot47),
+    ("shellcode",  "Shellcode \\x 格式",  _is_shellcode),
+    ("brainfuck",  "Brainfuck",            _is_brainfuck),
+    ("ook",        "Ook!",                 _is_ook),
+    ("quoted_printable", "Quoted-Printable", _is_quoted_printable),
+    ("uuencode",   "UUEncode",             _is_uuencode),
+    ("xxencode",   "XXEncode",             _is_xxencode),
+    ("utf7",       "UTF-7 编码",           _is_utf7),
+    ("punycode",   "Punycode / IDNA",      _is_punycode),
 ]
 
 
@@ -429,6 +624,73 @@ def _encode_morse(text: str) -> str:
 #  编码/解码 调度表
 # ═══════════════════════════════════════════════════════════
 
+def _decode_qp_wrapper(text: str) -> str:
+    """Wrapper for Quoted-Printable decode."""
+    return quoted_printable_decode(text)
+
+def _decode_uu_wrapper(text: str) -> str:
+    """Wrapper for UUEncode decode."""
+    return uudecode(text)
+
+def _decode_xx_wrapper(text: str) -> str:
+    """Wrapper for XXEncode decode."""
+    return xxdecode(text)
+
+def _decode_bf_wrapper(text: str) -> str:
+    """Wrapper for Brainfuck decode."""
+    return brainfuck_decode(text)
+
+def _decode_ook_wrapper(text: str) -> str:
+    """Wrapper for Ook! decode."""
+    return ook_decode(text)
+
+def _decode_utf7_wrapper(text: str) -> str:
+    """Wrapper for UTF-7 decode."""
+    return utf7_decode(text)
+
+def _decode_punycode_wrapper(text: str) -> str:
+    """Wrapper for Punycode decode."""
+    return punycode_decode(text)
+
+def _decode_shellcode_wrapper(text: str) -> str:
+    """Wrapper for Shellcode decode."""
+    return shellcode_decode(text)
+
+def _decode_base91_wrapper(text: str) -> str:
+    """Wrapper for Base91 decode."""
+    return base91_decode(text)
+
+def _decode_base92_wrapper(text: str) -> str:
+    """Wrapper for Base92 decode."""
+    return base92_decode(text)
+
+
+def _encode_rot47(text: str) -> str:
+    return rot47_decode(text)  # self-inverse
+
+def _encode_rot5(text: str) -> str:
+    return rot5_decode(text)
+
+def _encode_rot18(text: str) -> str:
+    return rot18_decode(text)
+
+def _encode_shellcode(text: str) -> str:
+    from .advanced_engines import shellcode_encode
+    return shellcode_encode(text)
+
+# Public aliases for GUI import
+decode_base91 = _decode_base91_wrapper
+decode_base92 = _decode_base92_wrapper
+decode_rot47 = rot47_decode
+decode_shellcode = _decode_shellcode_wrapper
+decode_brainfuck = _decode_bf_wrapper
+decode_ook = _decode_ook_wrapper
+decode_quoted_printable = _decode_qp_wrapper
+decode_uuencode = _decode_uu_wrapper
+decode_xxencode = _decode_xx_wrapper
+decode_utf7 = _decode_utf7_wrapper
+decode_punycode = _decode_punycode_wrapper
+
 DECODERS = {
     "base64":    (decode_base64,    _encode_base64),
     "base64url": (decode_base64url, _encode_base64url),
@@ -436,14 +698,25 @@ DECODERS = {
     "base16":    (decode_base16,    _encode_base16),
     "base58":    (decode_base58,    _encode_base58),
     "base85":    (decode_base85,    _encode_base85),
+    "base91":    (_decode_base91_wrapper, _decode_base91_wrapper),
+    "base92":    (_decode_base92_wrapper, _decode_base92_wrapper),
     "url":       (decode_url,       _encode_url),
     "html":      (decode_html,      _encode_html),
     "rot13":     (decode_rot13,     decode_rot13),
+    "rot47":     (rot47_decode,     _encode_rot47),
     "binary":    (decode_binary,    _encode_binary),
     "octal":     (decode_octal,     _encode_octal),
     "decimal":   (decode_decimal,   _encode_decimal),
     "unicode":   (decode_unicode_escape, _encode_unicode_escape),
     "morse":     (decode_morse,     _encode_morse),
+    "shellcode": (_decode_shellcode_wrapper, _encode_shellcode),
+    "brainfuck": (_decode_bf_wrapper, _decode_bf_wrapper),
+    "ook":       (_decode_ook_wrapper, _decode_ook_wrapper),
+    "quoted_printable": (_decode_qp_wrapper, _decode_qp_wrapper),
+    "uuencode":  (_decode_uu_wrapper, _decode_uu_wrapper),
+    "xxencode":  (_decode_xx_wrapper, _decode_xx_wrapper),
+    "utf7":      (_decode_utf7_wrapper, _decode_utf7_wrapper),
+    "punycode":  (_decode_punycode_wrapper, _decode_punycode_wrapper),
 }
 
 

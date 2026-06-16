@@ -27,7 +27,10 @@ from .core.decoder import (chain_decode, brute_decode, detect_encoding, DECODERS
 
     decode_url, decode_html, decode_rot13, decode_binary, decode_octal,
 
-    decode_decimal, decode_morse, decode_unicode_escape)
+    decode_decimal, decode_morse, decode_unicode_escape,
+    decode_base91, decode_base92, decode_rot47, decode_shellcode,
+    decode_brainfuck, decode_ook, decode_quoted_printable,
+    decode_uuencode, decode_xxencode, decode_utf7, decode_punycode)
 
 from .core.hashid import identify as hash_identify
 
@@ -784,7 +787,7 @@ class DecodePanel(tk.Frame):
 
         _label(self, "🔓 智能解码器", fg=ACCENT, font_size=16, bold=True, pady=8)
 
-        _label(self, "粘贴密文 → 自动识别编码类型 → 一键解码 | 支持 14 种编码", fg=YELLOW, font_size=9)
+        _label(self, "粘贴密文 → 自动识别编码类型 → 一键解码 | 支持 28+ 种编码", fg=YELLOW, font_size=9)
 
 
 
@@ -884,7 +887,9 @@ class DecodePanel(tk.Frame):
 
         manual_opts = ["base64", "base32", "base16/hex", "url", "html", "unicode",
 
-                       "binary", "octal", "decimal", "rot13", "morse", "base58", "base85"]
+                       "binary", "octal", "decimal", "rot13", "rot47", "morse", "base58", "base85",
+                       "base91", "base92", "shellcode", "brainfuck", "ook",
+                       "quoted_printable", "uuencode", "xxencode", "utf7", "punycode"]
 
         self.manual_var = tk.StringVar(value="base64")
 
@@ -1085,6 +1090,17 @@ class DecodePanel(tk.Frame):
             "base58": ("base58", decode_base58),
 
             "base85": ("base85", decode_base85),
+            "base91": ("base91", decode_base91),
+            "base92": ("base92", decode_base92),
+            "rot47": ("rot47", decode_rot47),
+            "shellcode": ("shellcode", decode_shellcode),
+            "brainfuck": ("brainfuck", decode_brainfuck),
+            "ook": ("ook", decode_ook),
+            "quoted_printable": ("quoted_printable", decode_quoted_printable),
+            "uuencode": ("uuencode", decode_uuencode),
+            "xxencode": ("xxencode", decode_xxencode),
+            "utf7": ("utf7", decode_utf7),
+            "punycode": ("punycode", decode_punycode),
 
         }
 
