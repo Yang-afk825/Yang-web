@@ -126,15 +126,46 @@ def ook_decode(code: str) -> str:
 # ═══════════════════════════════════════════
 
 def quoted_printable_encode(text: str) -> str:
-    """Encode text to Quoted-Printable format."""
-    import quopri
-    return quopri.encodestring(text.encode('utf-8')).decode('ascii').rstrip()
+    """Encode text to Quoted-Printable format (pure Python)."""
+    data = text.encode('utf-8')
+    result = []
+    for byte in data:
+        if byte == 32:
+            result.append('_')
+        elif (byte < 33 or byte > 126 or byte == 61):
+            result.append(f'={byte:02X}')
+        else:
+            result.append(chr(byte))
+    return ''.join(result)
 
 
 def quoted_printable_decode(cipher: str) -> str:
-    """Decode Quoted-Printable text."""
-    import quopri
-    return quopri.decodestring(cipher.encode('ascii')).decode('utf-8', errors='replace')
+    """Decode Quoted-Printable text (pure Python, no quopri)."""
+    import re
+
+    result = bytearray()
+    i = 0
+    s = cipher.strip()
+
+    while i < len(s):
+        c = s[i]
+        if c == '=':
+            if i + 2 < len(s):
+                hex_pair = s[i+1:i+3]
+                if hex_pair == '\r\n' or hex_pair == '\n':
+                    # Soft line break, skip
+                    i += 3
+                    continue
+                try:
+                    result.append(int(hex_pair, 16))
+                    i += 3
+                    continue
+                except ValueError:
+                    pass
+        result.append(ord(c))
+        i += 1
+
+    return bytes(result).decode('utf-8', errors='replace')
 
 
 # ═══════════════════════════════════════════
