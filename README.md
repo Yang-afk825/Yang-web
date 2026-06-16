@@ -1,12 +1,12 @@
-# Yang-Web 🛠️ v1.4.0
+# Yang-Web 🛠️ v2.0.0
 
-> **CTF 一站式工具箱** — 智能解码 + 23种密码/编码 + JWT攻击 + Payload库 + 靶场分析 + GUI图形界面
+> **CTF 一站式工具箱** — 智能解码 + 50+种密码/编码 + JWT攻击 + 反弹Shell + 隐写分析 + Payload库 + 靶场分析 + GUI图形界面
 
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-green.svg)]()
 [![GUI](https://img.shields.io/badge/GUI-tkinter-purple.svg)]()
-[![Ciphers](https://img.shields.io/badge/ciphers-23-orange.svg)]()
+[![Ciphers](https://img.shields.io/badge/ciphers-50+-orange.svg)]()
 [![Scripts](https://img.shields.io/badge/scripts-41-red.svg)]()
 [![Payloads](https://img.shields.io/badge/payloads-8_mods-blue.svg)]()
 
@@ -16,7 +16,7 @@
 
 Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密码破解、Payload 生成、靶场分析到攻击利用。内置 **图形界面 (GUI)**，支持 CLI ↔ GUI 一键切换。完全离线，零第三方依赖。
 
-**14 个子命令 + 智能解码器(14种编码) + 23种密码(Base全系+古典+键盘+中文) + 41个内嵌CTF脚本 + JWT攻击链 + 8大Payload模块 + 🆕靶场黑名单分析。**
+**14 个子命令 + 智能解码器(14种编码) + 50+种密码/编码 + 纯Python密码引擎(AES/RC4/RSA) + 中文特色密码 + 反弹Shell/WebShell生成 + 隐写分析 + 41个内嵌CTF脚本 + JWT攻击链 + 8大Payload模块 + 靶场黑名单分析。**
 
 ---
 
@@ -24,13 +24,15 @@ Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密�
 
 - 📴 **完全离线** — 零 pip 依赖，Python 标准库一把梭
 - 🧠 **智能解码器** — 粘贴即用：自动识别14种编码 + 一键解码 + 暴力全试 + 链式递归
-- 🔐 **23种密码** — Base全系 + 古典(凯撒/栅栏/猪圈/培根/Vigenère/ADFGX/摩斯) + 键盘映射 + 中文编码
+- 🔐 **50+种密码/编码** — Base全系 + 古典(凯撒/栅栏/猪圈/培根/Vigenère/ADFGX/摩斯) + 键盘映射 + 🆕中文特色密码(与佛论禅/核心价值观/百家姓...) + 🆕高级编码(Brainfuck/Ook!/JSFuck/AAencode...18种)
 - 📦 **41个内嵌脚本** — Crypto/Web/Misc/Reverse 全覆盖，一键运行
 - 🎯 **靶场分析(`--analyze`)** — 🆕 粘贴黑名单，自动告诉你哪些后缀/绕过能用
 - 🖥️ **图形界面** — GUI ↔ CLI 一键切换，密码面板即看即用
 - 🎯 **8大Payload模块** — SSTI/SQLi/LFI/SSRF/XSS/RCE/PHP/Upload
 - 🛡️ **WAF 绕过** — 30+ SQL WAF + 12类 PHP RCE 绕过
 - 🔑 **JWT 攻击链** — 解析→None攻击→弱密钥爆破→伪造令牌
+- 🔒 **🆕 纯Python密码引擎** — AES(ECB/CBC)/RC4/RSA/MD5/SHA全系/BLAKE2/CRC32/HMAC/XOR爆破/进制转换
+- 🐚 **🆕 反弹Shell & 隐写** — 10种语言反弹Shell + 6种WebShell + PNG分析 + LSB提取 + EXIF读取 + 密文特征识别
 
 ---
 
@@ -276,10 +278,14 @@ Yang-web/
 │   ├── __init__.py / __main__.py
 │   ├── cli.py                      # CLI (14子命令)
 │   ├── gui.py                      # GUI (图形界面)
-│   ├── core/                       # 核心引擎
+│   ├── core/                       # 核心引擎 (9个)
 │   │   ├── decoder.py              # 智能解码 (14种编码)
-│   │   ├── misc_crypto.py          # 密码引擎 (23种)
-│   │   ├── hashid.py / jwt.py     # Hash识别 / JWT攻击
+│   │   ├── misc_crypto.py          # 古典密码 (30+种)
+│   │   ├── hashid.py / jwt.py      # Hash识别 / JWT攻击
+│   │   ├── advanced_engines.py     # 🆕 高级编码 (18种)
+│   │   ├── chinese_ciphers.py      # 🆕 中文特色密码 (7种)
+│   │   ├── crypto_engine.py        # 🆕 密码学引擎
+│   │   ├── shell_stego.py          # 🆕 Shell & 隐写
 │   ├── payloads/                   # 8大Payload模块
 │   │   ├── sqli.py (🆕认证绕过)
 │   │   ├── upload.py (🆕--analyze)
@@ -290,6 +296,15 @@ Yang-web/
 ```
 
 ---
+
+## v2.0.0 更新 (2026-06-16)
+
+- 🆕 **高级编码引擎** — 18种冷门编码 (Brainfuck/Ook!/JSFuck/AAencode/Uuencode/XXencode/Quoted-Printable/Punycode/EBCDIC/Baudot/TapCode/Zalgo/ByteSwap/EmojiCode等)
+- 🆕 **中文特色密码** — 7种中文密码 (与佛论禅/核心价值观编码/兽音/熊曰/百家姓加密/中文电码/Gan语言)
+- 🆕 **密码学引擎** — 纯Python实现 AES(ECB/CBC 128/192/256位)/RC4/RSA/MD5/SHA全系/BLAKE2/CRC32/HMAC/XOR爆破/N进制转换
+- 🆕 **反弹Shell & 隐写** — 10种反弹Shell生成 + 6种WebShell + PNG Chunk分析 + LSB提取 + EXIF + 文件魔数 + 密文特征识别
+- 🖥️ **GUI面板升级** — 新增5个功能面板 (高级编码/中文密码/密码学/Shell生成/隐写分析), 6→11面板
+- 📊 **密码/编码数**: 23 → 50+ | **核心引擎**: 5 → 9 | **代码量**: ~3000 → ~6500行
 
 ## v1.4.0 更新
 

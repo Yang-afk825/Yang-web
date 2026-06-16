@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "yang-web"
-version = "1.4.0"
+version = "2.0.0"
 description = "Yang Web Arsenal — 离线 CTF Web 瑞士军刀"
 readme = "README.md"
 license = {text = "MIT"}
