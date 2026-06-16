@@ -30,7 +30,9 @@ from .core.decoder import (chain_decode, brute_decode, detect_encoding, DECODERS
     decode_decimal, decode_morse, decode_unicode_escape,
     decode_base91, decode_base92, decode_rot47, decode_shellcode,
     decode_brainfuck, decode_ook, decode_quoted_printable,
-    decode_uuencode, decode_xxencode, decode_utf7, decode_punycode)
+    decode_uuencode, decode_xxencode, decode_utf7, decode_punycode,
+    _decode_buddha, core_values_decode, beast_decode,
+    bear_decode, surnames_decode, telegraph_decode)
 
 from .core.hashid import identify as hash_identify
 
@@ -887,7 +889,8 @@ class DecodePanel(tk.Frame):
 
         manual_opts = ["base64", "base32", "base16/hex", "url", "html", "unicode",
 
-                       "binary", "octal", "decimal", "rot13", "rot47", "morse", "base58", "base85",
+                       "binary", "octal", "decimal", "rot13", "rot47", "morse", "base58", "base85","rot47", "morse", "base58", "base85",
+                       "buddha", "core_values", "beast", "bear", "surnames", "telegraph",
                        "base91", "base92", "shellcode", "brainfuck", "ook",
                        "quoted_printable", "uuencode", "xxencode", "utf7", "punycode"]
 
@@ -1101,6 +1104,12 @@ class DecodePanel(tk.Frame):
             "xxencode": ("xxencode", decode_xxencode),
             "utf7": ("utf7", decode_utf7),
             "punycode": ("punycode", decode_punycode),
+            "buddha": ("udkta", _decode_buddha),
+            "core_values": ("udkcv", core_values_decode),
+            "beast": ("udkbs", beast_decode),
+            "bear": ("udkbr", bear_decode),
+            "surnames": ("udksn", surnames_decode),
+            "telegraph": ("udktg", telegraph_decode),
 
         }
 

@@ -21,13 +21,69 @@ from .advanced_engines import (
     quoted_printable_decode, uudecode, xxdecode,
     utf7_decode, punycode_decode, shellcode_decode,
     base91_decode, base92_decode,
-    rot47_decode, rot5_decode, rot18_decode,
+    rot47_decode, rot5_decode, rot18_decode,    rot47_decode, rot5_decode, rot18_decode,
+)
+from .chinese_ciphers import (
+    _decode_buddha, core_values_decode, beast_decode,
+    bear_decode, surnames_decode, telegraph_decode,
 )
 
 
 # ═══════════════════════════════════════════════════════════
 #  编码检测函数 — 返回置信度 0-100
 # ═══════════════════════════════════════════════════════════
+
+def _is_buddha(text: str) -> int:
+    """与佛论禅检测."""
+    if '佛曰' in text or '佛曰' in text:
+        return 90
+    return 0
+
+def _is_core_values(text: str) -> int:
+    """核心价值观检测."""
+    cores = ['富强','民主','文明','和谐','自由','平等','公正','法治','爱国','敬业','诚信','友善']
+    count = sum(1 for c in cores if c in text)
+    if count >= 2:
+        return min(85, count * 25)
+    return 0
+
+def _is_beast(text: str) -> int:
+    """兽音检测."""
+    beast_chars = set('嗷呜啊~')
+    filtered = [c for c in text if c in beast_chars]
+    if len(filtered) < 4:
+        return 0
+    ratio = len(filtered) / max(len(text), 1)
+    if ratio > 0.6:
+        return int(ratio * 90)
+    return 0
+
+def _is_bear(text: str) -> int:
+    """熊曰检测."""
+    if '熊曰' in text:
+        return 90
+    return 0
+
+def _is_surnames(text: str) -> int:
+    """百家姓检测."""
+    surnames_set = set('赵钱孙李周吴郑王冯陈褚卫蒋沈韩杨朱秦尤许何吕施张孔曹严华金魏陶姜戚谢邹喻柏水窦章云苏潘葛奚范彭郎鲁韦昌马苗凤花方俞任袁柳酆鲍史唐费廉岑薛雷贺倪汤滕殷罗毕郝邬安常乐于时傅皮下齐康伍余元卜顾孟平黄')
+    filtered = [c for c in text if c in surnames_set]
+    if len(filtered) < 2:
+        return 0
+    ratio = len(filtered) / max(len(text), 1)
+    if ratio > 0.5:
+        return int(ratio * 90)
+    return 0
+
+def _is_telegraph(text: str) -> int:
+    """中文电码检测."""
+    import re
+    codes = re.findall(r'\b\d{4}\b', text.strip())
+    if len(codes) >= 2:
+        return 85
+    return 0
+
+
 
 def _is_base64(text: str) -> int:
     text = text.strip().rstrip("=")
@@ -386,6 +442,12 @@ ENCODING_DETECTORS: List[Tuple[str, str, Callable[[str], int]]] = [
     ("xxencode",   "XXEncode",             _is_xxencode),
     ("utf7",       "UTF-7 编码",           _is_utf7),
     ("punycode",   "Punycode / IDNA",      _is_punycode),
+    ("buddha",     "与佛论禅",             _is_buddha),
+    ("core_values","核心价值观",           _is_core_values),
+    ("beast",      "兽音",                 _is_beast),
+    ("bear",       "熊曰",                 _is_bear),
+    ("surnames",   "百家姓",              _is_surnames),
+    ("telegraph",  "中文电码",             _is_telegraph),
 ]
 
 
@@ -717,6 +779,12 @@ DECODERS = {
     "xxencode":  (_decode_xx_wrapper, _decode_xx_wrapper),
     "utf7":      (_decode_utf7_wrapper, _decode_utf7_wrapper),
     "punycode":  (_decode_punycode_wrapper, _decode_punycode_wrapper),
+    "buddha":    (_decode_buddha, _decode_buddha),
+    "core_values": (core_values_decode, core_values_decode),
+    "beast":     (beast_decode, beast_decode),
+    "bear":      (bear_decode, bear_decode),
+    "surnames":  (surnames_decode, surnames_decode),
+    "telegraph": (telegraph_decode, telegraph_decode),
 }
 
 

@@ -77,7 +77,9 @@ def core_values_decode(cipher: str) -> str:
     """核心价值观解码。"""
     import re
     # Find all 核心价值观 pairs
-    words = re.findall(r'[富民主文和明谐自平公治法爱敬诚友]{2}', cipher)
+        # Match exact core values words (each is 2 chars)
+    pattern = '|'.join(re.escape(w) for w in CORE_VALUES)
+    words = re.findall(pattern, cipher)
     result = bytearray()
     for i in range(0, len(words) - 1, 2):
         if i + 1 < len(words):
