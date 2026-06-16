@@ -171,7 +171,7 @@ def _scrollable_text(parent, height=12, width=80):
 
                   insertbackground=ACCENT, relief="flat", borderwidth=0,
 
-                  font=("Cascadia Code", 10), padx=10, pady=8,
+                  font=("Microsoft YaHei UI", 10), padx=10, pady=8,
 
                   wrap=tk.WORD)
 
