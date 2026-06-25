@@ -3490,7 +3490,9 @@ class UrlAttackPanel(tk.Frame):
                 tk.Label(df, text=f"🔍 攻击详情 | 共 {attacks} 次{timing_str} | {', '.join(stages)}",
                     bg=INPUT_BG, fg=GREEN, font=("Microsoft YaHei UI", 10)).pack(anchor="w", padx=14, pady=(6, 2))
                 for vc in confirmed[:6]:
-                    tk.Label(df, text=f"  ✅ {vc['type']}/{vc['param']}: {vc['payload'][:40]}",
+                    p = vc.get('param', vc.get('location', ''))
+                    pl = vc.get('payload', vc.get('location', ''))
+                    tk.Label(df, text=f"  ✅ {vc['type']}/{p}: {pl[:40]}",
                         bg=INPUT_BG, fg=FG, font=("Cascadia Code", 8)).pack(anchor="w", padx=18)
         else:
             timing_str = f" | ⏱ {timing/1000:.1f}s" if timing else ""
@@ -3505,7 +3507,9 @@ class UrlAttackPanel(tk.Frame):
                 tk.Label(vf, text="✅ 已确认漏洞:", bg=INPUT_BG, fg=GREEN,
                     font=("Microsoft YaHei UI", 10, "bold")).pack(anchor="w", padx=14, pady=(6, 2))
                 for vc in confirmed[:8]:
-                    tk.Label(vf, text=f"  {vc['type']}/{vc['param']}: {vc['payload'][:40]}",
+                    p = vc.get('param', vc.get('location', ''))
+                    pl = vc.get('payload', vc.get('location', ''))
+                    tk.Label(vf, text=f"  {vc['type']}/{p}: {pl[:40]}",
                         bg=INPUT_BG, fg=FG, font=("Cascadia Code", 9)).pack(anchor="w", padx=18)
 
         tk.Button(rf, text="⬅️ 返回漏洞列表", command=self._go_back,
