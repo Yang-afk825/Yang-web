@@ -1,0 +1,92 @@
+
+[01:18:18.378681] _do_attack START | pdef=PHP filter source | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:18:19.727466] _do_attack START | pdef=Magic hash MD5 | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:18:19.906333] _do_attack START | pdef=Magic hash MD5 | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:18:20.033293] _do_attack START | pdef=Magic hash MD5 | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:18:20.362807] _do_attack START | pdef=Array juggling | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:18:20.511601] _do_attack START | pdef=Array juggling | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:18:21.340369] _do_attack START | pdef=assert RCE | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:18:21.522464] _do_attack START | pdef=assert RCE | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:22:13.540717] _do_attack START | pdef=Boolean blind | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:22:14.055655] _do_attack START | pdef=Boolean blind | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:22:14.218732] _do_attack START | pdef=Boolean blind | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:22:14.846297] _do_attack START | pdef=OR-true bypass | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:22:15.032687] _do_attack START | pdef=OR-true bypass | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:22:15.190428] _do_attack START | pdef=OR-true bypass | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:22:15.346591] _do_attack START | pdef=OR-true bypass | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:22:15.497054] _do_attack START | pdef=OR-true bypass | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:22:15.642849] _do_attack START | pdef=OR-true bypass | param= | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:26:37.512574] _do_attack START | pdef=Semicolon id | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:26:44.022858] _do_attack START | pdef=Double-amp id | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:26:45.674970] _do_attack START | pdef=Double-amp id | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:26:46.345112] _do_attack START | pdef=Read flag file | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:26:47.333537] _do_attack START | pdef=Wildcard bypass | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:26:49.209389] _do_attack START | pdef=Quote bypass | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:26:50.191306] _do_attack START | pdef=Space bypass | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:26:53.059406] _do_attack START | pdef=Read flag file | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:30:45.000182] _do_attack START | pdef=分号注入 id | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:30:51.236130] _do_attack START | pdef=管道注入 id | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:30:52.667803] _do_attack START | pdef=双&号注入 id | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:30:53.780837] _do_attack START | pdef=读flag文件 | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:30:57.880272] _do_attack START | pdef=列目录 | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:31:00.992168] _do_attack START | pdef=通配符绕过 | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:31:02.824539] _do_attack START | pdef=引号绕过 | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:31:03.318155] _do_attack START | pdef=空格绕过 | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:31:03.864743] _do_attack START | pdef=换行符注入 | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:31:04.929535] _do_attack START | pdef=分号注入 id | param=cmd | url=http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctf
+
+[01:49:15.819529] _do_attack START | pdef=分号注入 id | param=cmd | url=http://80-b669d932-edd2-4e5d-a0b1-60d181dce18d.challenge.ctf
+
+[01:49:20.427001] _do_attack START | pdef=分号注入 id | param=cmd | url=http://80-b669d932-edd2-4e5d-a0b1-60d181dce18d.challenge.ctf
+
+[01:49:21.517710] _do_attack START | pdef=管道注入 id | param=cmd | url=http://80-b669d932-edd2-4e5d-a0b1-60d181dce18d.challenge.ctf
+
+[01:49:22.231836] _do_attack START | pdef=换行符注入 | param=cmd | url=http://80-b669d932-edd2-4e5d-a0b1-60d181dce18d.challenge.ctf
+
+[01:49:26.022295] _do_attack START | pdef=通配符绕过 | param=cmd | url=http://80-b669d932-edd2-4e5d-a0b1-60d181dce18d.challenge.ctf
+
+[01:49:27.328624] _do_attack START | pdef=引号绕过 | param=cmd | url=http://80-b669d932-edd2-4e5d-a0b1-60d181dce18d.challenge.ctf
+
+[01:49:28.393090] _do_attack START | pdef=空格绕过 | param=cmd | url=http://80-b669d932-edd2-4e5d-a0b1-60d181dce18d.challenge.ctf
+
+[01:49:29.881400] _do_attack START | pdef=读flag文件 | param=cmd | url=http://80-b669d932-edd2-4e5d-a0b1-60d181dce18d.challenge.ctf
+
+[01:58:35.161567] _do_attack START | pdef=直接执行 id | param=cmd | url=http://80-b669d932-edd2-4e5d-a0b1-60d181dce18d.challenge.ctf
+
+[02:02:52.966526] _do_attack START | pdef=直接执行 id | param=cmd | url=http://80-b669d932-edd2-4e5d-a0b1-60d181dce18d.challenge.ctf
+
+[02:03:01.266767] _do_attack START | pdef=直接执行 id | param=cmd | url=http://80-b669d932-edd2-4e5d-a0b1-60d181dce18d.challenge.ctf

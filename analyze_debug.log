@@ -1,0 +1,90 @@
+[23:30:40.125866] analyze_url called with: 'http://80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctfplus.cn/upload'
+[23:30:40.125866] parsed: host=80-c2103dc8-0f98-488b-bafe-852122c24402.challenge.ctfplus.cn, path=/upload, query=
+[23:30:40.125866] no query params
+[23:30:40.125866] evidence after step1: []
+[23:30:40.125866] path match: /upload -> Upload (75)
+[23:30:40.125866] evidence after step2: [('Upload', 75)]
+[23:30:40.125866] final evidence: [('Upload', 75)]
+[23:30:40.126871] GUI _analyze: results_count=1, has_error=False, evidence_types=['Upload']
+
+[23:53:46.951603] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[23:54:24.303929] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[23:58:09.225581] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[23:58:35.745606] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:00:02.286149] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:00:22.790351] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:01:06.479751] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:01:27.002974] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:03:21.425805] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:03:40.325432] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:08:35.060232] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:08:55.437835] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:12:58.063028] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:13:17.973304] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:15:57.011713] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:16:17.442086] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:18:52.514796] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:19:11.864143] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:20:45.723834] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:23:19.122130] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:23:38.940841] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:27:38.880284] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:27:58.846774] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:30:44.806103] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:31:06.694167] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:36:04.356661] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:36:24.952517] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:44:29.655031] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:44:50.526754] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:49:47.732384] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:51:03.829298] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:54:57.030715] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:55:18.932411] GUI _analyze: results_count=1, has_error=False, evidence_types=['PHP']
+
+[00:59:26.659469] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[00:59:46.757369] GUI _analyze: results_count=1, has_error=False, evidence_types=['SQLi']
+
+[01:02:20.166051] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[01:02:41.160378] GUI _analyze: results_count=1, has_error=False, evidence_types=['SQLi']
+
+[01:04:45.703679] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[01:05:08.121406] GUI _analyze: results_count=1, has_error=False, evidence_types=['SQLi']
+
+[01:08:26.207094] GUI _analyze: results_count=0, has_error=False, evidence_types=[]
+
+[01:08:46.628854] GUI _analyze: results_count=1, has_error=False, evidence_types=['SQLi']
