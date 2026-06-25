@@ -1117,9 +1117,78 @@ FLAG_PATHS = [
 ]
 
 FLAG_RE = re.compile(
-    r'(?:flag|ctf|iscc|hctf|ddctf|realworld|n1ctf|suctf|wmctf|geesec|dasctf|sigpwny|cyber|hack|pico|tjctf|angstrom|dctf|ractf|zh3r0|inctf|darkctf|csictf|ritsec|nactf|b01lers|kksctf)'
+    r'(?:flag|ctf|iscc|hctf|ddctf|realworld|n1ctf|suctf|wmctf|geesec|dasctf|sigpwny|cyber|hack|pico|tjctf|angstrom|dctf|ractf|zh3r0|inctf|darkctf|csictf|ritsec|nactf|b01lers|kksctf|'
+    r'0xgame|0xctf|nssctf|moectf|gactf|actf|starctf|ructf|plaidctf|defenit|hitcon|balsn|asis|codegate|0ctf|tctf|wctf|ractf|hxp|hackthebox|csaw)'
     r'\{[^}]+\}', re.IGNORECASE
 )
+
+
+def _scan_static_flag(url: str, on_progress=None, on_found=None) -> Optional[Dict]:
+    """Static flag scanner — find flags hidden in HTML source.
+    
+    Checks: HTML comments, JS variables, hidden elements, response body.
+    Returns None if no flag found, else a result dict.
+    """
+    t0 = time.time()
+    resp = send_request(url, timeout=10)
+    if not resp.get('ok'):
+        return None
+    
+    body = resp.get('body', '')
+    headers_text = str(resp.get('headers', {}))
+    
+    # 1. HTML comments <!-- flag{...} -->
+    comments = re.findall(r'<!--(.*?)-->', body, re.DOTALL)
+    for c in comments:
+        flags = FLAG_RE.findall(c)
+        if flags:
+            elapsed = int((time.time() - t0) * 1000)
+            if on_found:
+                try:
+                    on_found(flags[0])
+                except Exception:
+                    pass
+            if on_progress:
+                try:
+                    on_progress('static', 'HTML注释中发现Flag', flags[0][:60])
+                except Exception:
+                    pass
+            return {'flag': flags[0], 'vuln_confirmed': [{'type': 'STATIC', 'location': 'HTML comment'}],
+                    'attacks_run': 0, 'stages': ['static_scan', 'comment'],
+                    'timing_ms': elapsed}
+    
+    # 2. Full response body (already searched by FLAG_RE)
+    flags = FLAG_RE.findall(body)
+    if flags:
+        elapsed = int((time.time() - t0) * 1000)
+        if on_found:
+            try:
+                on_found(flags[0])
+            except Exception:
+                pass
+        if on_progress:
+            try:
+                on_progress('static', '响应体中发现Flag', flags[0][:60])
+            except Exception:
+                pass
+        return {'flag': flags[0], 'vuln_confirmed': [{'type': 'STATIC', 'location': 'response body'}],
+                'attacks_run': 0, 'stages': ['static_scan', 'body'],
+                'timing_ms': elapsed}
+    
+    # 3. Response headers
+    flags_h = FLAG_RE.findall(headers_text)
+    if flags_h:
+        elapsed = int((time.time() - t0) * 1000)
+        if on_found:
+            try:
+                on_found(flags_h[0])
+            except Exception:
+                pass
+        return {'flag': flags_h[0], 'vuln_confirmed': [{'type': 'STATIC', 'location': 'HTTP header'}],
+                'attacks_run': 0, 'stages': ['static_scan', 'header'],
+                'timing_ms': elapsed}
+    
+    return None
 
 
 def _execute_php_bypass(url: str, bypass_plan: Dict,
@@ -1294,6 +1363,10 @@ def auto_exploit(url, results, on_progress=None, on_found=None, fingerprint=None
     tasks = scheduler.schedule(results, fp)
 
     if not tasks:
+        _emit('plan', '无攻击目标', '扫描静态资源...')
+        static_result = _scan_static_flag(url, on_progress=on_progress, on_found=on_found)
+        if static_result and static_result.get('flag'):
+            return static_result
         _emit('plan', '无攻击目标', '分析未发现可利用漏洞')
         return {'flag': None, 'vuln_confirmed': [], 'attacks_run': 0,
                 'stages': ['no_targets'], 'timing_ms': int((time.time() - t_start) * 1000)}
@@ -1341,6 +1414,14 @@ def auto_exploit(url, results, on_progress=None, on_found=None, fingerprint=None
     _emit('attack', f'攻击完成', f'{attacks_run} 次 | 确认 {len(vuln_confirmed)} 漏洞')
 
     timing = int((time.time() - t_start) * 1000)
+    
+    # Fallback: scan HTML source for hidden flags
+    _emit('post', '扫描静态资源', '检查HTML注释/响应体...')
+    static_result = _scan_static_flag(url, on_progress=on_progress, on_found=on_found)
+    if static_result and static_result.get('flag'):
+        static_result['stages'] = stages + ['static_scan_fallback']
+        return static_result
+    
     return {
         'flag': None,
         'vuln_confirmed': vuln_confirmed,
