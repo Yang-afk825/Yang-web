@@ -1,6 +1,6 @@
-# Yang-Web 🛠️ v2.0.0
+# Yang-Web 🛠️ v3.0.0
 
-> **CTF 一站式工具箱** — 智能解码 + 50+种密码/编码 + JWT攻击 + 反弹Shell + 隐写分析 + Payload库 + 靶场分析 + GUI图形界面
+> **CTF 一站式工具箱** — 智能解码 + 50+种密码/编码 + 🆕智能攻击引擎 + JWT攻击 + 反弹Shell + 隐写分析 + Payload库 + 靶场分析 + GUI图形界面
 
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -9,6 +9,7 @@
 [![Ciphers](https://img.shields.io/badge/ciphers-50+-orange.svg)]()
 [![Scripts](https://img.shields.io/badge/scripts-41-red.svg)]()
 [![Payloads](https://img.shields.io/badge/payloads-8_mods-blue.svg)]()
+[![Engines](https://img.shields.io/badge/engines-7-brightgreen.svg)]()
 
 ---
 
@@ -16,7 +17,7 @@
 
 Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密码破解、Payload 生成、靶场分析到攻击利用。内置 **图形界面 (GUI)**，支持 CLI ↔ GUI 一键切换。完全离线，零第三方依赖。
 
-**14 个子命令 + 智能解码器(14种编码) + 50+种密码/编码 + 纯Python密码引擎(AES/RC4/RSA) + 中文特色密码 + 反弹Shell/WebShell生成 + 隐写分析 + 41个内嵌CTF脚本 + JWT攻击链 + 8大Payload模块 + 靶场黑名单分析。**
+**14 个子命令 + 智能解码器(14种编码) + 🆕智能攻击引擎(源码指纹→并发攻击→一键解题) + 50+种密码/编码 + 纯Python密码引擎(AES/RC4/RSA) + 中文特色密码 + 反弹Shell/WebShell生成 + 隐写分析 + 41个内嵌CTF脚本 + JWT攻击链 + 8大Payload模块 + 靶场黑名单分析。**
 
 ---
 
@@ -27,6 +28,7 @@ Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密�
 - 🔐 **50+种密码/编码** — Base全系 + 古典(凯撒/栅栏/猪圈/培根/Vigenère/ADFGX/摩斯) + 键盘映射 + 🆕中文特色密码(与佛论禅/核心价值观/百家姓...) + 🆕高级编码(Brainfuck/Ook!/JSFuck/AAencode...18种)
 - 📦 **41个内嵌脚本** — Crypto/Web/Misc/Reverse 全覆盖，一键运行
 - 🎯 **靶场分析(`--analyze`)** — 🆕 粘贴黑名单，自动告诉你哪些后缀/绕过能用
+- 🧠 **🆕 智能攻击引擎** — 粘贴URL→自动分析→一键解题：源码指纹识别 + 并发攻击 + 自适应调度 + 自动读Flag
 - 🖥️ **图形界面** — GUI ↔ CLI 一键切换，密码面板即看即用
 - 🎯 **8大Payload模块** — SSTI/SQLi/LFI/SSRF/XSS/RCE/PHP/Upload
 - 🛡️ **WAF 绕过** — 30+ SQL WAF + 12类 PHP RCE 绕过
@@ -260,6 +262,17 @@ $ yang-web decode "NTI2ZjYyNmY3NDIwNjU2MTczNzk="
 | 中文/特殊 | 当铺、杰斐逊转轮、摩斯、二进制加密、倒序、字母表顺序、数字坐标 |
 | 其他 | 标准银河字母、手机键盘、非斯象形文字、蓝孔打卡 |
 
+### 🆕 智能攻击面板（GUI）
+
+粘贴目标 URL，一键从分析到拿 Flag：
+
+1. **智能分析** — 源码指纹识别（`system()`/`eval()`/`$_POST` 等）+ CMS/WAF 检测 + 漏洞置信度评分
+2. **并发攻击** — 15 线程并发执行 payload，指数退避重试
+3. **自适应调度** — 根据指纹自动排序攻击策略（RCE 优先、自动选 GET/POST）
+4. **一键解题** — 自动攻击 → 自动提权 → 自动读 Flag
+
+---
+
 ### GUI 启动
 ```bash
 yang-web gui
@@ -286,6 +299,7 @@ Yang-web/
 │   │   ├── chinese_ciphers.py      # 🆕 中文特色密码 (7种)
 │   │   ├── crypto_engine.py        # 🆕 密码学引擎
 │   │   ├── shell_stego.py          # 🆕 Shell & 隐写
+│   │   ├── url_analyzer.py          # 🆕 v3.0 智能攻击引擎
 │   ├── payloads/                   # 8大Payload模块
 │   │   ├── sqli.py (🆕认证绕过)
 │   │   ├── upload.py (🆕--analyze)
@@ -296,6 +310,14 @@ Yang-web/
 ```
 
 ---
+
+## v3.0.0 更新 (2026-06-25)
+
+- 🧠 **智能攻击引擎** — SmartFingerprinter 源码指纹识别，从响应体检测 `system()`/`exec()`/`$_POST` 等危险函数及参数
+- ⚡ **并发攻击引擎** — ConcurrentEngine：15 线程并发执行，指数退避重试，发现 Flag 立即停止所有任务
+- 🎯 **自适应调度器** — AdaptiveScheduler：基于指纹自动排序攻击策略，CTF 优先级（RCE > LFI > SQLi），自动选择 GET/POST 方法
+- 🔍 **分析增强** — analyze_url 新增 Step 0 源码指纹分析，源码级漏洞直接加成 +40% 置信度
+- 🏗️ **GUI 线程安全** — queue.Queue + self.after() 序列化 worker→主线程，解决 15 线程并发操作 tkinter 导致的崩溃
 
 ## v2.0.0 更新 (2026-06-16)
 
