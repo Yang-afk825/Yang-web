@@ -303,6 +303,20 @@ yang-web gui
 Yang-web/
 ├── pyproject.toml
 ├── README.md
+├── docs/                           # 📚 知识文档
+│   └── ctf-guide/                  # CTF 全分类解题指南
+│       ├── README.md               # 索引导航
+│       ├── CTF-CheatSheet.md       # 速查表
+│       ├── SKILL.md                # 分类路由 + 解题流程
+│       ├── ctf-web.md              # Web安全 (725行)
+│       ├── ctf-crypto.md           # 密码学 (487行)
+│       ├── ctf-reverse.md          # 逆向 (524行)
+│       ├── ctf-pwn.md              # 二进制漏洞 (420行)
+│       ├── ctf-forensics.md        # 取证隐写 (687行)
+│       ├── ctf-misc.md             # 综合 (563行)
+│       ├── ctf-osint.md            # 情报调查 (523行)
+│       ├── ctf-malware.md          # 恶意软件 (541行)
+│       └── ctf-aiml.md             # AI/ML安全 (480行)
 ├── yang_web/
 │   ├── __init__.py / __main__.py
 │   ├── cli.py                      # CLI (14子命令)
@@ -353,6 +367,24 @@ Yang-web/
 - 🔧 **密码引擎补全** — Atbash/Caesar/ROT13/Rail Fence/Morse 等补全
 - 🔧 **GUI 搜索优化** — 输入框支持回车触发搜索
 - 🐛 **bugfix** — AES 解密轮密钥顺序修复、pyproject.toml 构建后端修复
+
+---
+
+## 📚 CTF 知识文档
+
+配套解题指南已在 `docs/ctf-guide/` 目录下，覆盖 **9 大方向 + 5000+ 行**深度参考：
+
+- 🔵 [Web 安全](docs/ctf-guide/ctf-web.md) — 源码泄露 / 文件包含 / SQL注入 / SSTI / SSRF / JWT / 反序列化
+- 🟡 [密码学](docs/ctf-guide/ctf-crypto.md) — RSA攻击全系 / AES模式攻防 / ECC / Lattice / 古典密码
+- 🔴 [逆向工程](docs/ctf-guide/ctf-reverse.md) — IDA / angr / Z3 / 脱壳 / APK / 反调试
+- 🟣 [Pwn](docs/ctf-guide/ctf-pwn.md) — 栈溢出 / ROP / 堆利用 / 格式化字符串
+- 🟠 [取证隐写](docs/ctf-guide/ctf-forensics.md) — LSB / 频谱图 / Wireshark / Volatility / 文件修复
+- 🟢 [Misc](docs/ctf-guide/ctf-misc.md) — PyJail / 条件竞争 / 网络协议隐写
+- ⚫ [OSINT](docs/ctf-guide/ctf-osint.md) — Google Dorks / 图片反查 / Maltego
+- 🔴 [恶意软件](docs/ctf-guide/ctf-malware.md) — LOLBAS / Cobalt Strike / DLL劫持
+- 🤖 [AI/ML](docs/ctf-guide/ctf-aiml.md) — 模型逆向 / 对抗样本 / LangChain安全
+
+👉 **[速查表](docs/ctf-guide/CTF-CheatSheet.md)** · **[索引导航](docs/ctf-guide/README.md)**
 
 ---
 
