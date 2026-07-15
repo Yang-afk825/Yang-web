@@ -96,6 +96,20 @@ try:
 except ImportError:
     HAS_STEGO = False
 
+try:
+    from .core.sqli_labs_solver import (
+        SQLLabsEngine, LESSON_DB, solve_sqli_labs,
+    )
+    HAS_SQLI_LABS = True
+except ImportError:
+    HAS_SQLI_LABS = False
+
+try:
+    from .core.js_challenge_solver import JSChallengeSolver, solve_js_challenge
+    HAS_JS_SOLVER = True
+except ImportError:
+    HAS_JS_SOLVER = False
+
 
 
 
@@ -3175,12 +3189,23 @@ class UrlAttackPanel(tk.Frame):
             bg=BG, fg=BORDER, font=("Microsoft YaHei UI", 9))
         self.status_label.pack(anchor="w", padx=12, pady=(2, 0))
 
-        # ── 一键解题按钮 (初始隐藏) ──
-        self.auto_solve_btn = tk.Button(self, text="🚀 一键解题 — 自动攻击+升级+读Flag",
+        # ── 操作按钮行 (初始隐藏) ──
+        self._btn_row = tk.Frame(self, bg=BG)
+        self.auto_solve_btn = tk.Button(self._btn_row, text="🚀 一键解题 — 自动攻击+升级+读Flag",
             bg="#FF6600", fg="#ffffff", relief="flat", padx=18, pady=8, cursor="hand2",
             font=("Microsoft YaHei UI", 12, "bold"),
             command=self._auto_solve_clicked)
-        # 分析后才显示
+        self.auto_solve_btn.pack(side=tk.LEFT, padx=(0, 8))
+        self.deep_scan_btn = tk.Button(self._btn_row, text="🔬 深度扫描 — 字典爆破+端口+攻击链升级",
+            bg="#9933CC", fg="#ffffff", relief="flat", padx=14, pady=8, cursor="hand2",
+            font=("Microsoft YaHei UI", 11, "bold"),
+            command=self._deep_scan_clicked)
+        self.deep_scan_btn.pack(side=tk.LEFT, padx=(0, 8))
+        self.multi_stage_btn = tk.Button(self._btn_row, text="🔄 多阶段解题 — 弱口令→跳转→XXE→...全自动",
+            bg="#009966", fg="#ffffff", relief="flat", padx=14, pady=8, cursor="hand2",
+            font=("Microsoft YaHei UI", 11, "bold"),
+            command=self._multi_stage_clicked)
+        self.multi_stage_btn.pack(side=tk.LEFT)
 
         # ── Canvas结果区 ──
         canvas_outer = tk.Frame(self, bg=BG)
@@ -3219,7 +3244,7 @@ class UrlAttackPanel(tk.Frame):
         self.url_entry.config(state="disabled")
         for w in self.result_frame.winfo_children():
             w.destroy()
-        self.auto_solve_btn.pack_forget()
+        self._btn_row.pack_forget()
         self._refresh_canvas()
 
         import threading
@@ -3253,8 +3278,8 @@ class UrlAttackPanel(tk.Frame):
             self._render_results(result)
             self._refresh_canvas()
 
-        # Always show auto-solve button (v3.0 supports static scan)
-        self.auto_solve_btn.pack(pady=(4, 12), ipadx=20, ipady=4)
+        # Always show action buttons (v3.5 supports deep scan)
+        self._btn_row.pack(pady=(4, 12))
         self._refresh_canvas()
 
     def _on_analyze_error(self, msg):
@@ -3301,8 +3326,8 @@ class UrlAttackPanel(tk.Frame):
                 pf.pack(fill=tk.X, padx=10, pady=(0, 6))
                 for pdef in payloads[:10]:
                     self._make_payload_row(pf, pdef, url, params)
-        # 显示一键解题按钮
-        self.auto_solve_btn.pack(fill=tk.X, padx=12, pady=(4, 2))
+        # 显示操作按钮
+        self._btn_row.pack(fill=tk.X, padx=12, pady=(4, 2))
 
     def _make_payload_row(self, parent, pdef, attack_url, params):
         """创建单个Payload的测试按钮行."""
@@ -3422,16 +3447,39 @@ class UrlAttackPanel(tk.Frame):
         if self._last_analyze_result is None:
             self.status_label.config(text="⚠️ 请先分析URL", fg=YELLOW)
             return
-        self.auto_solve_btn.pack_forget()
-        self._auto_solve(self._last_analyze_result)
+        self._btn_row.pack_forget()
+        self._auto_solve(self._last_analyze_result, mode="quick")
 
-    def _auto_solve(self, result):
-        """v3.0 一键解题：自动攻击 + 自动升级 + 自动读flag."""
+    def _deep_scan_clicked(self):
+        """🔬 深度扫描按钮."""
+        if self._last_analyze_result is None:
+            self.status_label.config(text="⚠️ 请先分析URL", fg=YELLOW)
+            return
+        self._btn_row.pack_forget()
+        self._auto_solve(self._last_analyze_result, mode="deep")
+
+    def _multi_stage_clicked(self):
+        """🔄 多阶段解题按钮."""
+        if self._last_analyze_result is None:
+            self.status_label.config(text="⚠️ 请先分析URL", fg=YELLOW)
+            return
+        self._btn_row.pack_forget()
+        self._auto_solve(self._last_analyze_result, mode="multi")
+
+    def _auto_solve(self, result, mode="quick"):
+        """v3.5 智能解题：快速/深度/多阶段 三种模式."""
         try:
-            self._auto_solve_inner(result)
+            self._auto_solve_inner(result, mode=mode)
         except Exception as e:
             import traceback
             err = str(e) + "\n" + str(traceback.format_exc())
+            try:
+                import time as _t2
+                with open('solve_debug.log', 'a', encoding='utf-8') as _f:
+                    _f.write(f"=== OUTER_CRASH {_t2.strftime('%H:%M:%S')} mode={mode} ===\n")
+                    _f.write(err + '\n')
+            except Exception:
+                pass
             with open('solve_debug.log', 'a', encoding='utf-8') as _f:
                 _f.write(f"\n=== EXCEPTION in _auto_solve ===\n{err}\n")
             err = err.replace('\x00', '').replace('\r', '')[:800]
@@ -3448,14 +3496,22 @@ class UrlAttackPanel(tk.Frame):
                 tk.Label(self.result_frame, text=f"引擎失败: {e}",
                     bg=BG, fg=RED).pack(pady=20)
 
-    def _auto_solve_inner(self, result):
+    def _auto_solve_inner(self, result, mode="quick"):
         """Inner implementation — wrapped by _auto_solve with error handling."""
         url = result.get("url", "")
         results = result.get("results", [])
         fingerprint = result.get("fingerprint", {})
 
         import time as _t
-        _log = [f"_auto_solve v3.0 {_t.time():.0f}", f"url={url[:80]}", f"results={len(results)}"]
+        is_deep = (mode == "deep")
+        is_multi = (mode == "multi")
+        if is_multi:
+            mode_label = "🔄 多阶段解题"
+        elif is_deep:
+            mode_label = "🔬 深度扫描"
+        else:
+            mode_label = "🚀 快速解题"
+        _log = [f"_auto_solve v3.6 {_t.time():.0f} mode={mode}", f"url={url[:80]}", f"results={len(results)}"]
         def _dlog(msg):
             _log.append(f"{msg}")
 
@@ -3489,15 +3545,27 @@ class UrlAttackPanel(tk.Frame):
                 fp_info += f" | 方法: {','.join(methods)}"
 
         _label(self.result_frame,
-            f"🚀 v3.0 智能解题引擎\n\n目标: {url[:80]}\n{fp_info}\n{len(results)} 种漏洞 → 并发攻击",
+            f"{mode_label} v3.6\n\n目标: {url[:80]}\n{fp_info}\n" +
+            (f"🔄 多阶段: 弱口令爆破→JS跳转→页面识别→对应攻击" if is_multi else
+             f"🗂 字典扫描 + 并发攻击 + 攻击链升级" if is_deep else
+             f"{len(results)} 种漏洞 → 并发攻击"),
             fg=ACCENT, font_size=11, pady=(8, 4))
         self._solve_status = tk.Label(self.result_frame, text="⏳ 构建攻击计划...",
             bg=BG, fg=YELLOW, font=("Microsoft YaHei UI", 11, "bold"))
         self._solve_status.pack(pady=(4, 4))
         self._solve_progress = tk.Text(self.result_frame, bg=INPUT_BG, fg=FG,
-            font=("Cascadia Code", 9), height=8, wrap=tk.WORD, bd=0, padx=10, pady=6)
-        self._solve_progress.pack(fill=tk.X, padx=6, pady=(0, 8))
+            font=("Cascadia Code", 9), height=6, wrap=tk.WORD, bd=0, padx=10, pady=6)
+        self._solve_progress.pack(fill=tk.X, padx=6, pady=(0, 4))
         self._solve_progress.insert(tk.END, "⏳ 指纹识别完成，构建攻击计划...\n")
+        # 进度条
+        bar_frame = tk.Frame(self.result_frame, bg=BG)
+        bar_frame.pack(fill=tk.X, padx=10, pady=(0, 4))
+        self._solve_bar_label = tk.Label(bar_frame, text="准备中...", bg=BG, fg=BORDER,
+            font=("Microsoft YaHei UI", 9))
+        self._solve_bar_label.pack(anchor="w")
+        self._solve_bar = ttk.Progressbar(bar_frame, mode='determinate', length=740, maximum=100)
+        self._solve_bar.pack(fill=tk.X)
+        self._solve_bar['value'] = 0
         self._cancel_flag = False
         self._stop_btn = tk.Button(self.result_frame, text="⏹ 停止",
             command=self._cancel_attack,
@@ -3526,11 +3594,22 @@ class UrlAttackPanel(tk.Frame):
                                 self._solve_progress.see(tk.END)
                         except Exception:
                             pass
+                    elif msg[0] == 'progress_bar':
+                        _, pct, label = msg
+                        try:
+                            if hasattr(self, '_solve_bar') and self._solve_bar.winfo_exists():
+                                self._solve_bar['value'] = pct
+                                self._solve_bar_label.config(text=label)
+                        except Exception:
+                            pass
                     elif msg[0] == 'flag':
                         _, flag = msg
                         try:
                             if hasattr(self, '_solve_status') and self._solve_status.winfo_exists():
                                 self._solve_status.config(text=f"🎉 找到Flag: {flag}", fg="#00FF00")
+                            if hasattr(self, '_solve_bar') and self._solve_bar.winfo_exists():
+                                self._solve_bar['value'] = 100
+                                self._solve_bar_label.config(text="✅ 完成！")
                             self.after(100, lambda f=flag: tk.messagebox.showinfo(
                                 "🎉 FLAG 已找到！", f"{f}", parent=self))
                         except Exception:
@@ -3548,6 +3627,14 @@ class UrlAttackPanel(tk.Frame):
                 return
             self._gui_queue.put(('progress', stage, item, status))
 
+        def _bar(pct, label=""):
+            """Thread-safe progress bar update: set percentage + label."""
+            if self._cancel_flag:
+                return
+            self._gui_queue.put(('progress_bar', pct, label))
+
+        _bar(5, "🔍 启动扫描引擎...")  # Initial progress
+
         def _found(flag):
             """Thread-safe flag found: enqueue update for main thread."""
             _dlog(f"FLAG callback: {flag}")
@@ -3555,15 +3642,87 @@ class UrlAttackPanel(tk.Frame):
 
         import threading
         def _run():
+            final = None
             try:
-                from .core.url_analyzer import auto_exploit
-                _dlog("thread: import ok")
-                self.after(0, lambda: self._solve_status.config(
-                    text=f"🔍 目标可达 | 指纹识别完成 | 开始并发攻击...", fg=GREEN))
-                final = auto_exploit(url, results,
-                    on_progress=_progress, on_found=_found,
-                    fingerprint=fingerprint)
-                _dlog(f"thread: auto_exploit done flag={final.get('flag')[:20] if final.get('flag') else None}")
+                _bar(10, "🔍 指纹识别完成，构建攻击计划...")
+
+                # ── Multi-Stage Mode: 全自动多阶段解题 ──
+                if is_multi:
+                    from .core.multi_stage import MultiStageEngine
+                    _dlog("thread: MultiStageEngine imported")
+                    _bar(15, "🔄 多阶段解题: 识别页面类型...")
+                    self.after(0, lambda: self._solve_status.config(
+                        text=f"🔄 多阶段解题: 弱口令→跳转→识别→攻击...", fg=GREEN))
+                    ms_engine = MultiStageEngine(timeout=8, max_stages=5)
+                    def _ms_progress(stage, item, status):
+                        _progress(stage, item, status)
+                        stage_pct_map = {
+                            'multi': 10, 'stage': 25, 'page_type': 30,
+                            'attack': 45, 'cred_try': 55, 'cred_found': 65,
+                            'redirect': 75, 'xxe_hit': 85, 'xxe_confirmed': 90,
+                            'sqli_hint': 60, 'ssti_hit': 85, 'rce_hit': 95,
+                            'flag': 100,
+                        }
+                        if stage in stage_pct_map:
+                            _bar(stage_pct_map[stage], f"{stage}: {str(item)[:30]}")
+                    ms_result = ms_engine.solve(url, on_progress=_ms_progress, on_flag=_found) or {}
+                    _dlog(f"thread: multi_stage done flag={str(ms_result.get('flag',''))[:20]}")
+                    flag_val = ms_result.get('flag')
+                    if flag_val:
+                        stages_ms = [f"S{e['stage']}:{e['type']}→{e['result']}" for e in ms_result.get('attack_log', [])]
+                        final = {
+                            'flag': flag_val, 'vuln_confirmed': [],
+                            'attacks_run': 0,
+                            'stages': stages_ms,
+                            'timing_ms': ms_result.get('timing_ms', 0),
+                            'source': 'multi_stage',
+                        }
+                    else:
+                        _dlog("thread: multi_stage no flag, trying auto_exploit")
+
+                # ── Deep Scan Mode: AdvancedSolver first ──
+                if is_deep:
+                    from .core.advanced_scanner import AdvancedSolver
+                    _dlog("thread: AdvancedSolver imported")
+                    _bar(15, "🔬 深度扫描: 端口发现中...")
+                    self.after(0, lambda: self._solve_status.config(
+                        text=f"🔬 深度扫描中: 端口+字典+对比+攻击链...", fg=GREEN))
+                    solver = AdvancedSolver()
+                    # Wrap progress callback to also update progress bar
+                    def _deep_progress(stage, item, status):
+                        _progress(stage, item, status)
+                        stage_pct = {
+                            'ports': 20, 'dict_scan': 35, 'method': 50,
+                            'diff': 60, 'chain': 70, 'chain_stage': 75,
+                            'chain_flag': 95, 'flag': 100,
+                        }
+                        if stage in stage_pct:
+                            _bar(stage_pct[stage], f"{stage}: {str(item)[:30]}")
+                    deep_result = solver.deep_scan(url, analysis_result=result,
+                        on_progress=_deep_progress, on_flag=_found) or {}
+                    _dlog(f"thread: deep_scan done flag={str(deep_result.get('flag',''))[:20]}")
+                    flag_val = deep_result.get('flag')
+                    if flag_val:
+                        final = {
+                            'flag': flag_val, 'vuln_confirmed': [],
+                            'attacks_run': 0,
+                            'stages': deep_result.get('stages', []),
+                            'timing_ms': deep_result.get('timing_ms', 0),
+                            'source': deep_result.get('source', 'deep_scan'),
+                        }
+                    else:
+                        _dlog("thread: deep_scan no flag, trying auto_exploit")
+
+                if final is None:
+                    _bar(80, "⚡ 并发攻击...")
+                    from .core.url_analyzer import auto_exploit
+                    _dlog("thread: auto_exploit imported")
+                    self.after(0, lambda: self._solve_status.config(
+                        text=f"🔍 并发攻击中...", fg=GREEN))
+                    final = auto_exploit(url, results,
+                        on_progress=_progress, on_found=_found,
+                        fingerprint=fingerprint)
+                    _dlog(f"thread: auto_exploit done flag={final.get('flag')[:20] if final.get('flag') else None}")
                 # DUMP full debug log for diagnosis
                 try:
                     with open('solve_debug.log', 'a', encoding='utf-8') as _f:
@@ -3587,6 +3746,14 @@ class UrlAttackPanel(tk.Frame):
                 import traceback as _tb2
                 _dlog(f"thread: EXCEPTION {e}")
                 err_text = str(e) + "\n" + str(_tb2.format_exc())
+                # Flush debug log to disk for diagnosis
+                try:
+                    with open('solve_debug.log', 'a', encoding='utf-8') as _f:
+                        _f.write(f"=== EXCEPTION {_t.strftime('%H:%M:%S')} ===\n")
+                        _f.write('\n'.join(_log) + '\n')
+                        _f.write(err_text + '\n')
+                except Exception:
+                    pass
                 # Sanitize for Tcl: remove null bytes and truncate
                 err_text = err_text.replace('\x00', '').replace('\r', '')[:800]
                 self.after(0, lambda et=err_text: self._show_solve_result(
@@ -3704,11 +3871,381 @@ class UrlAttackPanel(tk.Frame):
             pass
 
 
+class JSGamePanel(tk.Frame):
+    """JS/游戏挑战分析面板 — URL→自动提取Flag+作弊码+控制台命令."""
+
+    def __init__(self, parent):
+        super().__init__(parent, bg=BG)
+        self._analyzing = False
+
+        _label(self, "🎮 JS/游戏挑战分析器  —  Flag提取+作弊码+控制台命令",
+               fg=ACCENT, font_size=16, bold=True, pady=8)
+
+        # URL输入
+        url_row = tk.Frame(self, bg=BG)
+        url_row.pack(fill=tk.X, padx=10, pady=(4, 2))
+        tk.Label(url_row, text="URL:", bg=BG, fg=FG, font=("Microsoft YaHei UI", 11)).pack(side=tk.LEFT, padx=(0, 6))
+        self.url_entry = tk.Entry(url_row, bg=INPUT_BG, fg=FG, insertbackground=FG,
+            font=("Cascadia Code", 10), relief="flat", bd=1)
+        self.url_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.url_entry.bind("<Return>", lambda e: self._analyze())
+        tk.Button(url_row, text="📋 Paste", command=self._paste,
+            bg=INPUT_BG, fg=FG, font=("Microsoft YaHei UI", 9),
+            padx=10, cursor="hand2", relief="flat").pack(side=tk.LEFT, padx=(6, 4))
+        tk.Button(url_row, text="🔍 分析", command=self._analyze,
+            bg=ACCENT, fg=DARK, font=("Microsoft YaHei UI", 10, "bold"),
+            padx=16, pady=4, cursor="hand2", relief="flat").pack(side=tk.LEFT)
+
+        self.status_label = tk.Label(self, text="💡 粘贴JS/游戏题URL，点「分析」或按Enter",
+            bg=BG, fg=BORDER, font=("Microsoft YaHei UI", 9))
+        self.status_label.pack(anchor="w", padx=12, pady=(2, 0))
+
+        # 结果区
+        result_outer = tk.Frame(self, bg=BG)
+        result_outer.pack(fill=tk.BOTH, expand=True, padx=4)
+        self.result_text = scrolledtext.ScrolledText(result_outer,
+            bg=DARK, fg=FG, insertbackground=FG,
+            font=("Cascadia Code", 9), wrap=tk.WORD, relief="flat", bd=0)
+        self.result_text.pack(fill=tk.BOTH, expand=True)
+
+    def _paste(self):
+        try:
+            text = self.clipboard_get()
+            self.url_entry.delete(0, tk.END)
+            self.url_entry.insert(0, text.strip())
+        except Exception:
+            pass
+
+    def _log(self, msg):
+        self.result_text.insert(tk.END, msg + "\n")
+        self.result_text.see(tk.END)
+        self.result_text.update_idletasks()
+
+    def _analyze(self):
+        if self._analyzing:
+            return
+        url = self.url_entry.get().strip()
+        if not url:
+            self._log("⚠ 请输入URL")
+            return
+
+        self._analyzing = True
+        self.result_text.delete("1.0", tk.END)
+        self.status_label.config(text="🔍 正在分析JS...", fg=YELLOW)
+
+        import threading
+        def _run():
+            try:
+                solver = JSChallengeSolver(verbose=False)
+                report = solver.analyze(url)
+                self.after(0, lambda: self._show_result(report))
+            except Exception as e:
+                import traceback as _tb
+                self.after(0, lambda: self._on_error(str(e) + "\n" + _tb.format_exc()))
+        threading.Thread(target=_run, daemon=True).start()
+
+    def _show_result(self, report):
+        self._log("=" * 60)
+        if report.title:
+            self._log(f"  页面: {report.title}")
+        if report.game_type != "unknown":
+            self._log(f"  游戏类型: {report.game_type}")
+        self._log(f"  摘要: {report.summary}")
+        self._log("=" * 60)
+
+        if report.flags_found:
+            self._log(f"\n🏁 Flag ({len(report.flags_found)}):")
+            for f in report.flags_found:
+                self._log(f"  ✅ {f}")
+
+        if report.cheat_codes:
+            self._log(f"\n🎮 作弊码:")
+            for c in report.cheat_codes:
+                self._log(f"  🔑 {c}")
+
+        if report.console_commands:
+            self._log(f"\n💻 浏览器控制台命令 (F12 → Console 粘贴):")
+            for c in report.console_commands:
+                # 不显示注释行
+                if not c.strip().startswith("//"):
+                    self._log(f"  > {c}")
+            self._log(f"\n  # 也可复制全部命令自动执行")
+            for c in report.console_commands:
+                self._log(f"  {c}")
+
+        if report.js_files:
+            self._log(f"\n📜 JS 文件:")
+            for f in report.js_files:
+                self._log(f"  {f.split('/')[-1]}")
+
+        if report.api_endpoints:
+            self._log(f"\n🌐 API 端点:")
+            for e in report.api_endpoints:
+                self._log(f"  {e}")
+
+        self._analyzing = False
+        ok = bool(report.flags_found)
+        self.status_label.config(
+            text=f"{'✅' if ok else '⚠'} 分析完成 | {'Flag已获取' if ok else '未发现Flag'}",
+            fg=GREEN if ok else YELLOW)
+
+    def _on_error(self, msg):
+        self._log(f"\n❌ 错误: {msg[:500]}")
+        self._analyzing = False
+        self.status_label.config(text="❌ 分析异常", fg=RED)
+
+
+class SQLLabsPanel(tk.Frame):
+    """SQLi-LABS 靶场专项面板：关卡选择→自动注入→提取数据."""
+
+    def __init__(self, parent):
+        super().__init__(parent, bg=BG)
+        self.engine = None
+        self._solving = False
+
+        # ── 标题 ──
+        _label(self, "🔫 SQLi-LABS 专项求解器  —  65+关卡自动注入+数据提取",
+               fg=ACCENT, font_size=16, bold=True, pady=8)
+
+        # ── 靶场URL配置 ──
+        url_row = tk.Frame(self, bg=BG)
+        url_row.pack(fill=tk.X, padx=10, pady=(4, 2))
+        tk.Label(url_row, text="靶场:", bg=BG, fg=FG, font=("Microsoft YaHei UI", 11)).pack(side=tk.LEFT, padx=(0, 6))
+        self.url_entry = tk.Entry(url_row, bg=INPUT_BG, fg=FG, insertbackground=FG,
+            font=("Cascadia Code", 10), relief="flat", bd=1)
+        self.url_entry.insert(0, "http://80-d81dd610-1f3d-45b2-bccd-cf64012932fd.challenge.ctfplus.cn")
+        self.url_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        # ── 关卡选择行 ──
+        select_row = tk.Frame(self, bg=BG)
+        select_row.pack(fill=tk.X, padx=10, pady=(6, 2))
+
+        tk.Label(select_row, text="关卡:", bg=BG, fg=FG, font=("Microsoft YaHei UI", 11)).pack(side=tk.LEFT, padx=(0, 6))
+        self.lesson_entry = tk.Entry(select_row, bg=INPUT_BG, fg=FG, insertbackground=FG,
+            font=("Cascadia Code", 11), width=6, relief="flat", bd=1)
+        self.lesson_entry.insert(0, "1")
+        self.lesson_entry.pack(side=tk.LEFT, padx=(0, 6))
+        self.lesson_entry.bind("<Return>", lambda e: self._solve_one())
+
+        tk.Label(select_row, text="~", bg=BG, fg=FG, font=("Microsoft YaHei UI", 11)).pack(side=tk.LEFT, padx=(0, 6))
+        self.end_entry = tk.Entry(select_row, bg=INPUT_BG, fg=FG, insertbackground=FG,
+            font=("Cascadia Code", 11), width=6, relief="flat", bd=1)
+        self.end_entry.insert(0, "65")
+        self.end_entry.pack(side=tk.LEFT, padx=(0, 12))
+
+        # 按钮
+        self.solve_btn = tk.Button(select_row, text="🚀 求解当前关", command=self._solve_one,
+            bg=ACCENT, fg=DARK, font=("Microsoft YaHei UI", 10, "bold"),
+            padx=14, pady=4, cursor="hand2", relief="flat")
+        self.solve_btn.pack(side=tk.LEFT, padx=(0, 6))
+
+        self.batch_btn = tk.Button(select_row, text="📦 批量求解", command=self._solve_batch,
+            bg="#9933CC", fg="#ffffff", font=("Microsoft YaHei UI", 10, "bold"),
+            padx=14, pady=4, cursor="hand2", relief="flat")
+        self.batch_btn.pack(side=tk.LEFT, padx=(0, 6))
+
+        self.list_btn = tk.Button(select_row, text="📋 关卡列表", command=self._list_lessons,
+            bg=INPUT_BG, fg=FG, font=("Microsoft YaHei UI", 10),
+            padx=12, pady=4, cursor="hand2", relief="flat")
+        self.list_btn.pack(side=tk.LEFT, padx=(0, 6))
+
+        self.stop_btn = tk.Button(select_row, text="⏹ 停止", command=self._stop,
+            bg="#CC3333", fg="#ffffff", font=("Microsoft YaHei UI", 10),
+            padx=12, pady=4, cursor="hand2", relief="flat", state="disabled")
+        self.stop_btn.pack(side=tk.LEFT)
+
+        # ── 状态栏 ──
+        self.status_label = tk.Label(self, text="💡 输入关卡号，点「求解当前关」或按Enter开始",
+            bg=BG, fg=BORDER, font=("Microsoft YaHei UI", 9))
+        self.status_label.pack(anchor="w", padx=12, pady=(4, 0))
+
+        # ── 进度条 ──
+        self.progress = ttk.Progressbar(self, mode="determinate", length=800)
+        self.progress.pack(fill=tk.X, padx=12, pady=(4, 0))
+
+        # ── 结果区 ──
+        result_outer = tk.Frame(self, bg=BG)
+        result_outer.pack(fill=tk.BOTH, expand=True, padx=4)
+        self.result_text = scrolledtext.ScrolledText(result_outer,
+            bg=DARK, fg=FG, insertbackground=FG,
+            font=("Cascadia Code", 9), wrap=tk.WORD, relief="flat", bd=0)
+        self.result_text.pack(fill=tk.BOTH, expand=True)
+
+    def _get_engine(self):
+        url = self.url_entry.get().strip()
+        if not self.engine or self.engine.base_url != url.rstrip("/"):
+            self.engine = SQLLabsEngine(url, verbose=False)
+        return self.engine
+
+    def _log(self, msg):
+        self.result_text.insert(tk.END, msg + "\n")
+        self.result_text.see(tk.END)
+        self.result_text.update_idletasks()
+
+    def _solve_one(self):
+        if self._solving:
+            return
+        try:
+            num = int(self.lesson_entry.get().strip())
+        except ValueError:
+            self._log("⚠ 请输入有效的关卡号")
+            return
+
+        self._start_solve()
+        import threading
+        def _run():
+            try:
+                engine = self._get_engine()
+                # Override verbose for GUI output
+                original_verbose = engine.verbose
+                engine.verbose = False
+                r = engine.solve_lesson(num)
+                engine.verbose = original_verbose
+                self.after(0, lambda: self._show_single_result(r))
+            except Exception as e:
+                import traceback as _tb
+                self.after(0, lambda: self._on_error(str(e) + "\n" + _tb.format_exc()))
+        threading.Thread(target=_run, daemon=True).start()
+
+    def _solve_batch(self):
+        if self._solving:
+            return
+        try:
+            start = int(self.lesson_entry.get().strip())
+            end = int(self.end_entry.get().strip())
+        except ValueError:
+            self._log("⚠ 请输入有效的关卡范围")
+            return
+
+        self._start_solve()
+        import threading
+        def _run():
+            results = []
+            total_lessons = [n for n in range(start, end + 1) if n in LESSON_DB]
+            engine = self._get_engine()
+            for i, num in enumerate(total_lessons):
+                if not self._solving:
+                    break
+                pct = int((i / len(total_lessons)) * 100)
+                self.after(0, lambda p=pct, n=num, idx=i+1, tot=len(total_lessons):
+                    self._update_progress(f"Less-{n} ({idx}/{tot})...", p))
+                try:
+                    engine.verbose = False
+                    r = engine.solve_lesson(num)
+                    results.append(r)
+                except Exception as e:
+                    results.append({"lesson": num, "success": False, "error": str(e)})
+                if not self._solving:
+                    break
+                time.sleep(0.3)
+            solved = sum(1 for r in results if r.get("success"))
+            flags = [r.get("flag") for r in results if r.get("flag")]
+            self.after(0, lambda: self._show_batch_result(results, solved, flags))
+        threading.Thread(target=_run, daemon=True).start()
+
+    def _list_lessons(self):
+        self._log("=" * 80)
+        self._log(f"{'ID':>4}  {'类型':<18} {'方法':<7} {'难度':<6}  {'标题'}")
+        self._log("-" * 80)
+        for num in sorted(LESSON_DB.keys()):
+            if num % 10 == 0:
+                self._log("-" * 80)
+            l = LESSON_DB[num]
+            diff = "⭐" * l.difficulty
+            self._log(f"{num:>4}  {l.injection_type:<18} {l.method:<7} {diff:<7} {l.title}")
+        self._log("=" * 80)
+
+    def _start_solve(self):
+        self._solving = True
+        self.solve_btn.config(state="disabled", text="⏳ 求解中...")
+        self.batch_btn.config(state="disabled")
+        self.stop_btn.config(state="normal")
+        self.result_text.delete("1.0", tk.END)
+        self.progress["value"] = 0
+        self.status_label.config(text="⏳ 正在求解...", fg=YELLOW)
+
+    def _stop(self):
+        self._solving = False
+        self.solve_btn.config(state="normal", text="🚀 求解当前关")
+        self.batch_btn.config(state="normal")
+        self.stop_btn.config(state="disabled")
+        self.status_label.config(text="⏹ 已停止", fg=BORDER)
+        self._log("\n⏹ 求解已停止")
+
+    def _update_progress(self, msg, pct):
+        self.progress["value"] = pct
+        self.status_label.config(text=msg, fg=YELLOW)
+
+    def _finish_solve(self, msg, ok=True):
+        self._solving = False
+        self.solve_btn.config(state="normal", text="🚀 求解当前关")
+        self.batch_btn.config(state="normal")
+        self.stop_btn.config(state="disabled")
+        self.progress["value"] = 100
+        self.status_label.config(text=msg, fg=GREEN if ok else RED)
+
+    def _show_single_result(self, r):
+        self._log("=" * 60)
+        self._log(f"  Lesson: Less-{r.get('lesson', '?')}")
+        self._log(f"  Title: {r.get('title', '?')}")
+        self._log(f"  Success: {'✅' if r.get('success') else '❌'}")
+        self._log(f"  Quote Type: {r.get('quote_type', '?')}")
+        self._log("-" * 60)
+        if r.get("flag"):
+            self._log(f"  🏁 Flag: {r['flag']}")
+        if r.get("database"):
+            self._log(f"  📦 Database: {r['database']}")
+        if r.get("tables"):
+            tables = r["tables"]
+            self._log(f"  📊 Tables ({len(tables)}): {', '.join(tables[:15])}" + ("..." if len(tables) > 15 else ""))
+        if r.get("data"):
+            self._log("  📋 Data:")
+            for k, v in r["data"].items():
+                self._log(f"    {k}: {v[:120]}")
+        if r.get("columns"):
+            self._log("  🗂 Columns:")
+            for tbl, cols in r["columns"].items():
+                self._log(f"    {tbl}: {', '.join(cols)}")
+        if r.get("error"):
+            self._log(f"  ⚠ Error: {r['error']}")
+        self._log("=" * 60)
+        ok = r.get("success", False)
+        flag = r.get("flag", "")
+        msg = f"✅ Less-{r.get('lesson','?')} 完成" + (f" | Flag: {flag}" if flag else "")
+        self._finish_solve(msg, ok)
+
+    def _show_batch_result(self, results, solved, flags):
+        self._log("=" * 60)
+        self._log(f"  批量求解完成: {solved}/{len(results)} 成功")
+        self._log("-" * 60)
+        for r in results:
+            icon = "✅" if r.get("success") else "❌"
+            flag = r.get("flag", "")
+            db = r.get("database", "")
+            extra = f" | DB={db}" if db else ""
+            extra += f" | Flag={flag}" if flag else ""
+            self._log(f"  {icon} Less-{r.get('lesson','?'):>3}  {extra}")
+        if flags:
+            self._log("-" * 60)
+            self._log(f"  🏁 Flags ({len(flags)}):")
+            for f in flags:
+                self._log(f"    {f}")
+        self._log("=" * 60)
+        msg = f"✅ 批量完成: {solved}/{len(results)} 成功"
+        if flags:
+            msg += f" | {len(flags)} flags"
+        self._finish_solve(msg, solved > 0)
+
+    def _on_error(self, msg):
+        self._log(f"\n❌ 错误: {msg[:500]}")
+        self._finish_solve("❌ 求解异常", False)
+
+
 def run_gui():
 
     root = tk.Tk()
 
-    root.title("Yang-Web Arsenal v3.0 — 全能CTF工具箱")
+    root.title("Yang-Web Arsenal v3.6 — 全能CTF工具箱")
 
     root.geometry("1100x720")
 
@@ -3738,7 +4275,7 @@ def run_gui():
 
 
 
-    mode_label = tk.Label(header, text="全能 CTF 工具箱 v2.0  ·  50+ 模块 + 8大负载 + 6引擎",
+    mode_label = tk.Label(header, text="全能 CTF 工具箱 v3.6  ·  50+ 模块 + 8大负载 + 7引擎 + 字典扫描 + 多阶段", 
 
              bg=DARK, fg=YELLOW, font=("Microsoft YaHei UI", 9))
 
@@ -4153,6 +4690,14 @@ def run_gui():
 
     # 📚 CTF 知识文档
     notebook.add(DocsPanel(notebook), text=" 📚 文档 ")
+
+    # 🔫 SQLi-LABS 专项
+    if HAS_SQLI_LABS:
+        notebook.add(SQLLabsPanel(notebook), text=" 🔫 SQLi靶场 ")
+
+    # 🎮 JS/游戏挑战
+    if HAS_JS_SOLVER:
+        notebook.add(JSGamePanel(notebook), text=" 🎮 JS游戏 ")
 
 
 

@@ -1,5 +1,20 @@
 # -*- coding: utf-8 -*-
-"""CTF Web 一键解题引擎 — 输入 URL 自动探测并尝试提取 flag."""
+"""CTF Web 一键解题引擎 — v2.1 增强版
+
+集成 smart_solver 的增强 Web 求解器，支持:
+    - HTTP 探测
+    - 目录扫描（100+ 路径）
+    - SQL 注入检测
+    - LFI / 路径遍历
+    - SSTI 模板注入检测
+    - SSRF 服务端请求伪造
+    - RCE 命令注入
+    - 信息泄露路径探测
+
+Usage:
+    from scripts.solver import solve_web
+    result = solve_web("http://target:port/")
+"""
 
 from __future__ import annotations
 
@@ -25,6 +40,9 @@ FLAG_PATTERNS = [
 
 def solve_web(url: str, progress_callback=None) -> dict:
     """对 URL 发起自动探测，返回结果.
+    
+    默认使用增强版 WebSmartSolver（SSTI/RCE/SSRF/LFI/SQLi全覆盖）。
+    可以设置环境变量 YANGWEB_LEGACY=1 使用旧版基本求解器。
 
     Returns:
         {
@@ -33,6 +51,18 @@ def solve_web(url: str, progress_callback=None) -> dict:
             "results": [{"step": str, "status": "ok"/"fail"/"flag!", "detail": str}],
         }
     """
+    import os
+    if not os.environ.get("YANGWEB_LEGACY"):
+        try:
+            from core.smart_solver import WebSmartSolver
+            solver = WebSmartSolver(url)
+            result = solver.solve()
+            if progress_callback:
+                for r in result.get("results", []):
+                    progress_callback(r["step"], r["status"], r["detail"])
+            return result
+        except ImportError:
+            pass  # fallback to legacy
     results = []
     flag = None
     ctx = _make_ssl_ctx()

