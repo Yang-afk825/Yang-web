@@ -23,7 +23,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -349,6 +349,59 @@ def api_ciphers():
         raise _err(f"加载古典密码失败: {e}")
 
 # ---------------------------------------------------------------------------
+# 内嵌浏览器代理 — 请求/响应回显 (BP 风格)
+# ---------------------------------------------------------------------------
+class ProxyReq(BaseModel):
+    url: str
+    method: str = "GET"
+    headers: Optional[Dict[str, str]] = None
+    body: Optional[str] = None
+    timeout: int = 15
+
+@app.post("/api/proxy")
+def api_proxy(req: ProxyReq):
+    """代理请求任意 URL，返回完整响应供浏览器回显。"""
+    import base64 as _b64
+    try:
+        result = url_analyzer.send_request(
+            req.url, timeout=req.timeout, method=req.method,
+            post_data=req.body.encode("utf-8") if req.body else None)
+        return _ok(result)
+    except Exception as e:
+        raise _err(f"代理请求失败: {e}")
+
+@app.get("/api/proxy-view")
+def api_proxy_view(url: str):
+    """服务端拉取目标页面并以 HTML 返回，供 iframe 内嵌预览 (避免 CORS)。"""
+    import urllib.request as _ur
+    from urllib.error import HTTPError as _HE
+    try:
+        req = _ur.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) YangWeb/4.0",
+        })
+        resp = _ur.urlopen(req, timeout=15)
+        data = resp.read()
+        ctype = resp.headers.get("Content-Type", "").lower()
+        if "html" in ctype or "text" in ctype:
+            charset = "utf-8"
+            if "charset=" in ctype:
+                try:
+                    charset = ctype.split("charset=")[-1].split(";")[0].strip()
+                except Exception:
+                    pass
+            try:
+                text = data.decode(charset, errors="replace")
+            except Exception:
+                text = data.decode("utf-8", errors="replace")
+            return Response(content=text, media_type="text/html; charset=utf-8")
+        # 非 HTML (图片/文件) 直接转发
+        return Response(content=data, media_type=ctype or "application/octet-stream")
+    except _HE as e:
+        return Response(content=f"<h3>HTTP {e.code} — {e.reason}</h3>", media_type="text/html")
+    except Exception as e:
+        return Response(content=f"<h3>加载失败: {e}</h3>", media_type="text/html")
+
+# ---------------------------------------------------------------------------
 # 静态文件 (Web UI)
 # ---------------------------------------------------------------------------
 _WEB_DIR = Path(__file__).resolve().parent / "web"
@@ -364,14 +417,46 @@ if _WEB_DIR.exists():
 # ---------------------------------------------------------------------------
 def main():
     import uvicorn
-    import webbrowser
     port = int(os.environ.get("YANGWEB_PORT", "8765"))
     url = f"http://127.0.0.1:{port}"
-    print(f"Yang-Web v4.0 启动: {url}")
-    print("按 Ctrl+C 停止服务 (浏览器可关闭)")
-    # 延迟打开浏览器，等服务就绪
-    threading.Timer(1.2, lambda: webbrowser.open(url)).start()
-    uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+
+    # 后台线程启动 API 服务
+    def _run_server():
+        uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+
+    t = threading.Thread(target=_run_server, daemon=True)
+    t.start()
+
+    # 等待服务就绪
+    import urllib.request
+    for _ in range(50):
+        try:
+            urllib.request.urlopen(url + "/api/health", timeout=1)
+            break
+        except Exception:
+            time.sleep(0.2)
+
+    print(f"Yang-Web v4.0 API 服务: {url}")
+
+    # 优先用 pywebview 独立窗口 (无浏览器标签栏，工具箱形态)
+    try:
+        import webview
+        print("启动独立工具箱窗口 (WebView2)…")
+        webview.create_window(
+            "Yang-Web v4.0 — CTF 综合工具箱",
+            url,
+            width=1360, height=860,
+            min_size=(980, 640),
+            background_color="#0f1117",
+        )
+        webview.start()
+        print("窗口已关闭")
+    except ImportError:
+        # 无 pywebview 时回退到默认浏览器
+        import webbrowser
+        print("pywebview 不可用，改用默认浏览器打开…")
+        webbrowser.open(url)
+        input("按回车停止服务…")
 
 if __name__ == "__main__":
     main()

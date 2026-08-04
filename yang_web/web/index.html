@@ -237,6 +237,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
   <div class="nav-item" data-page="attack"><span class="ico">⚔️</span>自动攻击</div>
   <div class="nav-item" data-page="crypto"><span class="ico">🧮</span>密码学</div>
   <div class="nav-item" data-page="scripts"><span class="ico">📜</span>脚本库</div>
+  <div class="nav-item" data-page="browser"><span class="ico">🌐</span>内嵌浏览器</div>
   <div class="nav-item" data-page="chinese"><span class="ico">🀄</span>中文密码</div>
   <div class="nav-item" data-page="encode"><span class="ico">🔢</span>高级编码</div>
   <div class="spacer"></div>
@@ -371,6 +372,41 @@ tr:hover td { background: rgba(255,255,255,.02); }
         <thead><tr><th style="width:40%;">脚本</th><th>分类</th><th>说明</th><th style="width:80px;"></th></tr></thead>
         <tbody id="scriptBody"><tr><td colspan="4" class="dim">加载中…</td></tr></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- ===== 内嵌浏览器 ===== -->
+  <div class="page" id="page-browser">
+    <h2 class="page-title">内嵌浏览器</h2>
+    <div class="page-sub">BP 风格响应回显 · 请求/响应分离 · 目标页面预览</div>
+    <div class="card">
+      <div class="row">
+        <select id="browserMethod" style="flex:0 0 100px;">
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+          <option value="HEAD">HEAD</option>
+        </select>
+        <input type="text" id="browserUrl" placeholder="目标 URL，如 http://target.com/">
+        <button id="browserGo" class="green">🚀 请求</button>
+        <button id="browserOpen" class="ghost">↗ 新窗口打开</button>
+      </div>
+      <input type="text" id="browserBody" placeholder="POST body (可选)" style="display:none;">
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>📡 响应 (Headers)</h3>
+        <div class="output" id="browserHeaders" style="min-height:180px;">等待请求…</div>
+      </div>
+      <div class="card">
+        <h3>🖥️ 页面预览 <span class="tag" id="browserStatus"></span></h3>
+        <div style="border:1px solid var(--border); border-radius:8px; overflow:hidden; height:420px; background:#fff;">
+          <iframe id="browserFrame" style="width:100%; height:100%; border:none;" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>📄 响应源码</h3>
+      <div class="output" id="browserBody" style="min-height:200px;">等待请求…</div>
     </div>
   </div>
 
@@ -671,6 +707,51 @@ $('encodeBtn').onclick = async () => {
     const d = await api('/api/advanced-encode', {text, mode});
     setOut($('encodeOutput'), `<span class="acc">[${esc(mode)}]</span><br>${esc(d.result)}`);
   } catch(e) { setOut($('encodeOutput'), '<span class="err">' + esc(e.message) + '</span>'); }
+};
+
+// ─────────────────────────────────────────────
+// 内嵌浏览器
+// ─────────────────────────────────────────────
+function getBrowserUrl() { return $('browserUrl').value.trim(); }
+
+$('browserMethod').onchange = () => {
+  $('browserBody').style.display = $('browserMethod').value === 'POST' ? 'block' : 'none';
+};
+
+async function doBrowserReq() {
+  const url = getBrowserUrl();
+  if (!url) { setOut($('browserHeaders'), '<span class="err">请输入 URL</span>'); return; }
+  const method = $('browserMethod').value;
+  const body = $('browserBody').value;
+  setOut($('browserHeaders'), '<span class="spin"></span> 请求中…');
+  setOut($('browserBody'), '');
+  $('browserStatus').textContent = '';
+  $('browserFrame').src = 'about:blank';
+  try {
+    const d = await api('/api/proxy', {url, method, body: body || null, timeout: 15});
+    // Headers
+    let h = `<span class="acc">HTTP ${d.status}</span> · <span class="dim">${d.elapsed_ms}ms</span> · ${d.body_len} bytes<br><br>`;
+    for (const [k,v] of Object.entries(d.headers || {})) {
+      h += `<span class="acc">${esc(k)}</span>: ${esc(v)}<br>`;
+    }
+    setOut($('browserHeaders'), h);
+    $('browserStatus').textContent = `HTTP ${d.status}`;
+    // Body 源码
+    if (d.body) setOut($('browserBody'), esc(d.body).slice(0, 20000));
+    // iframe 预览 (走 proxy-view 避免 CORS)
+    if (d.status >= 200 && d.status < 400) {
+      $('browserFrame').src = `/api/proxy-view?url=${encodeURIComponent(url)}`;
+    }
+  } catch(e) {
+    setOut($('browserHeaders'), '<span class="err">' + esc(e.message) + '</span>');
+  }
+}
+$('browserGo').onclick = doBrowserReq;
+$('browserUrl').addEventListener('keydown', e => { if (e.key === 'Enter') doBrowserReq(); });
+
+$('browserOpen').onclick = () => {
+  const url = getBrowserUrl();
+  if (url) window.open(url, '_blank');
 };
 
 // ─────────────────────────────────────────────
