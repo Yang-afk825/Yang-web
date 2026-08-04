@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yang-Web v4.0 — CTF 综合工具箱</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --bg2: #161a23;
+  --bg3: #1d222e;
+  --border: #2a3040;
+  --text: #e2e8f0;
+  --text-dim: #94a3b8;
+  --accent: #4f8cff;
+  --accent2: #22d3ee;
+  --green: #34d399;
+  --yellow: #fbbf24;
+  --red: #f87171;
+  --purple: #a78bfa;
+  --mono: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+  --sans: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+/* ── 侧边栏 ── */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px;
+  gap: 4px;
+}
+.logo {
+  font-size: 20px;
+  font-weight: 700;
+  padding: 8px 12px 20px;
+  letter-spacing: 0.5px;
+}
+.logo span { color: var(--accent); }
+.logo small {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 13.5px;
+  transition: all .15s;
+  user-select: none;
+}
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active {
+  background: rgba(79,140,255,.12);
+  color: var(--accent);
+  font-weight: 600;
+}
+.nav-item .ico { font-size: 15px; width: 20px; text-align: center; }
+.sidebar .spacer { flex: 1; }
+.status-line {
+  padding: 10px 12px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+.dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+/* ── 主内容 ── */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+}
+.page { display: none; max-width: 1400px; margin: 0 auto; }
+.page.active { display: block; }
+h2.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.page-sub {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-bottom: 22px;
+}
+/* ── 卡片 ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.card h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card h3 .tag {
+  font-size: 10px;
+  background: var(--bg3);
+  color: var(--text-dim);
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 400;
+}
+/* ── 表单 ── */
+.row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.row label { min-width: 80px; font-size: 13px; color: var(--text-dim); display: flex; align-items: center; }
+input[type=text], textarea, select {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  font-family: var(--mono);
+  outline: none;
+  flex: 1;
+  transition: border .15s;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 120px; font-family: var(--mono); }
+select { font-family: var(--sans); cursor: pointer; }
+button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+button:hover { filter: brightness(1.1); }
+button:active { transform: scale(.98); }
+button.ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+button.ghost:hover { color: var(--text); border-color: var(--accent); }
+button.green { background: var(--green); color: #0f1117; }
+button.warn { background: var(--yellow); color: #0f1117; }
+button.small { padding: 5px 10px; font-size: 12px; }
+/* ── 输出 ── */
+.output {
+  background: #0a0d13;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 480px;
+  overflow-y: auto;
+  color: #c8d3e8;
+}
+.output .ok { color: var(--green); }
+.output .err { color: var(--red); }
+.output .dim { color: var(--text-dim); }
+.output .hl { color: var(--yellow); font-weight: 600; }
+.output .acc { color: var(--accent); }
+/* ── 结果网格 ── */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 1100px) { .grid2 { grid-template-columns: 1fr; } }
+/* ── 编码速查 chips ── */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+/* ── 表格 ── */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+th { color: var(--text-dim); font-weight: 600; font-size: 12px; }
+tr:hover td { background: rgba(255,255,255,.02); }
+/* ── 加载 ── */
+.spin {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: rot .8s linear infinite;
+  vertical-align: middle;
+}
+@keyframes rot { to { transform: rotate(360deg); } }
+/* ── 滚动条 ── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #3a4256; }
+</style>
+</head>
+<body>
+
+<!-- 侧边栏 -->
+<aside class="sidebar">
+  <div class="logo">Yang<span>-Web</span><small>v4.0 · CTF 工具箱</small></div>
+  <div class="nav-item active" data-page="decode"><span class="ico">🔓</span>智能解码</div>
+  <div class="nav-item" data-page="hash"><span class="ico">🔑</span>Hash 识别</div>
+  <div class="nav-item" data-page="jwt"><span class="ico">🎫</span>JWT 分析</div>
+  <div class="nav-item" data-page="attack"><span class="ico">⚔️</span>自动攻击</div>
+  <div class="nav-item" data-page="crypto"><span class="ico">🧮</span>密码学</div>
+  <div class="nav-item" data-page="scripts"><span class="ico">📜</span>脚本库</div>
+  <div class="nav-item" data-page="chinese"><span class="ico">🀄</span>中文密码</div>
+  <div class="nav-item" data-page="encode"><span class="ico">🔢</span>高级编码</div>
+  <div class="spacer"></div>
+  <div class="status-line"><span class="dot" id="healthDot"></span><span id="healthText">连接中…</span></div>
+</aside>
+
+<!-- 主内容 -->
+<main class="main">
+
+  <!-- ===== 智能解码 ===== -->
+  <div class="page active" id="page-decode">
+    <h2 class="page-title">智能解码</h2>
+    <div class="page-sub">自动检测编码 → 链式解码 → 暴力全试，31 种编码</div>
+    <div class="card">
+      <div class="row">
+        <select id="decodeMode" style="flex:0 0 130px;">
+          <option value="auto">🔄 自动(推荐)</option>
+          <option value="chain">⛓️ 链式解码</option>
+          <option value="brute">💥 暴力全试</option>
+          <option value="detect">🔍 仅检测</option>
+        </select>
+        <button id="decodeBtn">解 码</button>
+      </div>
+      <textarea id="decodeInput" placeholder="粘贴要解码的内容…"></textarea>
+    </div>
+    <div class="card">
+      <h3>解码结果 <span class="tag" id="decodeInfo"></span></h3>
+      <div class="output" id="decodeOutput">等待输入…</div>
+    </div>
+    <div class="card">
+      <h3>快速选择编码</h3>
+      <div class="chips" id="decodeChips"></div>
+    </div>
+  </div>
+
+  <!-- ===== Hash 识别 ===== -->
+  <div class="page" id="page-hash">
+    <h2 class="page-title">Hash 识别</h2>
+    <div class="page-sub">40+ 种 Hash 算法自动识别</div>
+    <div class="card">
+      <textarea id="hashInput" placeholder="粘贴 Hash 值…" style="min-height:80px;"></textarea>
+      <div class="row" style="margin-top:12px;">
+        <button id="hashBtn">识 别</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>识别结果</h3>
+      <div class="output" id="hashOutput">等待输入…</div>
+    </div>
+  </div>
+
+  <!-- ===== JWT ===== -->
+  <div class="page" id="page-jwt">
+    <h2 class="page-title">JWT 分析</h2>
+    <div class="page-sub">解析 / None 攻击 / 弱密钥爆破</div>
+    <div class="card">
+      <textarea id="jwtInput" placeholder="粘贴 JWT Token…" style="min-height:80px;"></textarea>
+      <div class="row" style="margin-top:12px;">
+        <select id="jwtAction" style="flex:0 0 160px;">
+          <option value="analyze">🔍 解析分析</option>
+          <option value="none">⚡ None 攻击</option>
+          <option value="brute">💥 弱密钥爆破</option>
+        </select>
+        <button id="jwtBtn">执 行</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>结果</h3>
+      <div class="output" id="jwtOutput">等待输入…</div>
+    </div>
+  </div>
+
+  <!-- ===== 自动攻击 ===== -->
+  <div class="page" id="page-attack">
+    <h2 class="page-title">自动攻击</h2>
+    <div class="page-sub">11 引擎多阶段攻击链 · 静态 Flag 扫描 · 智能指纹识别</div>
+    <div class="card">
+      <div class="row">
+        <input type="text" id="attackUrl" placeholder="目标 URL，如 http://target.com/index.php?id=1">
+        <button id="attackBtn" class="warn">⚔️ 开始攻击</button>
+      </div>
+      <div class="row">
+        <input type="text" id="attackParam" placeholder="参数名(可选)" style="flex:0 0 200px;">
+        <input type="text" id="attackPayload" placeholder="自定义 payload(可选)">
+      </div>
+    </div>
+    <div class="card">
+      <h3>攻击结果 <span class="tag" id="attackFlag"></span></h3>
+      <div class="output" id="attackOutput" style="max-height:600px;">等待攻击…</div>
+    </div>
+  </div>
+
+  <!-- ===== 密码学 ===== -->
+  <div class="page" id="page-crypto">
+    <h2 class="page-title">密码学</h2>
+    <div class="page-sub">AES / RC4 / XOR / Hash / 进制转换</div>
+    <div class="card">
+      <div class="row">
+        <select id="cryptoOp" style="flex:0 0 170px;">
+          <option value="md5">MD5</option>
+          <option value="sha1">SHA1</option>
+          <option value="sha256">SHA256</option>
+          <option value="xor">XOR</option>
+          <option value="rc4_encrypt">RC4 加密</option>
+          <option value="rc4_decrypt">RC4 解密</option>
+        </select>
+        <input type="text" id="cryptoKey" placeholder="密钥/IV(可选)">
+      </div>
+      <textarea id="cryptoInput" placeholder="输入数据…" style="min-height:100px;"></textarea>
+      <div class="row" style="margin-top:12px;">
+        <button id="cryptoBtn">执 行</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>结果</h3>
+      <div class="output" id="cryptoOutput">等待输入…</div>
+    </div>
+  </div>
+
+  <!-- ===== 脚本库 ===== -->
+  <div class="page" id="page-scripts">
+    <h2 class="page-title">脚本库</h2>
+    <div class="page-sub">41+ 个 CTF 脚本 · 分类浏览 · 一键运行</div>
+    <div class="card">
+      <div class="row">
+        <input type="text" id="scriptSearch" placeholder="搜索脚本…">
+        <select id="scriptCat" style="flex:0 0 160px;">
+          <option value="">全部分类</option>
+        </select>
+      </div>
+      <table>
+        <thead><tr><th style="width:40%;">脚本</th><th>分类</th><th>说明</th><th style="width:80px;"></th></tr></thead>
+        <tbody id="scriptBody"><tr><td colspan="4" class="dim">加载中…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== 中文密码 ===== -->
+  <div class="page" id="page-chinese">
+    <h2 class="page-title">中文密码</h2>
+    <div class="page-sub">与佛论禅 / 核心价值观 / 百家姓 / 熊曰 / 兽音 等</div>
+    <div class="card">
+      <textarea id="chineseInput" placeholder="粘贴密文…"></textarea>
+      <div class="row" style="margin-top:12px;">
+        <button id="chineseBtn">解 密</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>结果</h3>
+      <div class="output" id="chineseOutput">等待输入…</div>
+    </div>
+  </div>
+
+  <!-- ===== 高级编码 ===== -->
+  <div class="page" id="page-encode">
+    <h2 class="page-title">高级编码</h2>
+    <div class="page-sub">18 种高级编码引擎</div>
+    <div class="card">
+      <div class="row">
+        <select id="encodeSel" style="flex:0 0 220px;"></select>
+        <button id="encodeBtn">编 码</button>
+      </div>
+      <textarea id="encodeInput" placeholder="输入内容…" style="min-height:100px;"></textarea>
+    </div>
+    <div class="card">
+      <h3>结果</h3>
+      <div class="output" id="encodeOutput">等待输入…</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ─────────────────────────────────────────────
+// 工具函数
+// ─────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const API = '';  // 同源
+
+async function api(path, body, method='POST') {
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json().catch(() => ({ok:false, detail: await res.text()}));
+  if (!res.ok || data.ok === false) throw new Error(data.detail || data.error || `HTTP ${res.status}`);
+  return data.data;
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmt(v, depth=0) {
+  if (v === null || v === undefined) return '<span class="dim">null</span>';
+  if (typeof v === 'object') {
+    if (Array.isArray(v)) {
+      if (v.length === 0) return '<span class="dim">[]</span>';
+      return v.map(x => fmt(x, depth+1)).join('<br>');
+    }
+    const keys = Object.keys(v);
+    if (keys.length === 0) return '<span class="dim">{}</span>';
+    return keys.map(k => `<span class="acc">${esc(k)}</span>: ${fmt(v[k], depth+1)}`).join('<br>');
+  }
+  if (typeof v === 'string') {
+    if (v.includes('flag{') || /ISCC\{|CTF\{/i.test(v)) return `<span class="hl">${esc(v)}</span>`;
+    return esc(v);
+  }
+  return esc(v);
+}
+function setOut(el, content) { el.innerHTML = content; }
+
+// 健康检查
+async function health() {
+  try {
+    const r = await fetch(API + '/api/health');
+    const d = await r.json();
+    if (d.ok) {
+      $('healthDot').classList.add('on');
+      $('healthText').textContent = `服务在线 v${d.version}`;
+    }
+  } catch(e) {
+    $('healthText').textContent = '服务未连接';
+  }
+}
+
+// 导航
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    item.classList.add('active');
+    $('page-' + item.dataset.page).classList.add('active');
+  });
+});
+
+// ─────────────────────────────────────────────
+// 智能解码
+// ─────────────────────────────────────────────
+const DECODE_CHIPS = ['base64','base32','base16','base58','base85','url','html','rot13','rot47','binary','octal','decimal','unicode','morse','brainfuck','ook','uuencode','xxencode','utf7','punycode'];
+
+async function doDecode() {
+  const text = $('decodeInput').value;
+  if (!text.trim()) { setOut($('decodeOutput'), '<span class="err">请输入内容</span>'); return; }
+  const mode = $('decodeMode').value;
+  setOut($('decodeOutput'), '<span class="spin"></span> 解码中…');
+  $('decodeInfo').textContent = mode;
+  try {
+    const d = await api('/api/decode', {text, mode, max_steps:30});
+    let html = '';
+    if (d.detections?.length) {
+      html += '<span class="acc">检测到:</span> ' + d.detections.map(x => esc(x[0]) + ' (' + x[2] + ')').join(' → ') + '<br><br>';
+    }
+    if (d.steps?.length) {
+      html += '<span class="acc">链式解码:</span><br>';
+      d.steps.forEach((s,i) => {
+        html += `${i+1}. <span class="acc">[${esc(s[0])}]</span> → <span class="hl">${esc(s[1])}</span>${s[2] !== undefined ? ' → ' + esc(s[2]) : ''}<br>`;
+      });
+      html += '<br><span class="acc">最终结果:</span><br>' + esc(d.final);
+    } else if (d.results) {
+      html += '<span class="acc">暴力全试结果:</span><br>';
+      d.results.forEach((r,i) => {
+        html += `${i+1}. <span class="acc">[${esc(r[0])}]</span> ${esc(r[1])} ${r[2] ? '→ ' + esc(r[2]) : ''}<br>`;
+      });
+    } else if (d.detections) {
+      html += '<span class="acc">编码检测:</span><br>' + d.detections.map(x => esc(x[0]) + ' (置信度 ' + x[2] + ')').join('<br>');
+    } else {
+      html += fmt(d);
+    }
+    setOut($('decodeOutput'), html);
+  } catch(e) { setOut($('decodeOutput'), '<span class="err">' + esc(e.message) + '</span>'); }
+}
+$('decodeBtn').onclick = doDecode;
+$('decodeChips').innerHTML = DECODE_CHIPS.map(c => `<span class="chip">${c}</span>`).join('');
+$('decodeChips').addEventListener('click', e => {
+  if (e.target.classList.contains('chip')) {
+    $('decodeInput').value += '\n' + e.target.textContent + ':// ';
+    $('decodeInput').focus();
+  }
+});
+
+// ─────────────────────────────────────────────
+// Hash 识别
+// ─────────────────────────────────────────────
+$('hashBtn').onclick = async () => {
+  const text = $('hashInput').value.trim();
+  if (!text) return;
+  setOut($('hashOutput'), '<span class="spin"></span> 识别中…');
+  try {
+    const d = await api('/api/hashid', {text});
+    setOut($('hashOutput'), fmt(d));
+  } catch(e) { setOut($('hashOutput'), '<span class="err">' + esc(e.message) + '</span>'); }
+};
+
+// ─────────────────────────────────────────────
+// JWT
+// ─────────────────────────────────────────────
+$('jwtBtn').onclick = async () => {
+  const token = $('jwtInput').value.trim();
+  if (!token) return;
+  const action = $('jwtAction').value;
+  setOut($('jwtOutput'), '<span class="spin"></span> 处理中…');
+  try {
+    const d = await api('/api/jwt', {token, action});
+    setOut($('jwtOutput'), fmt(d));
+  } catch(e) { setOut($('jwtOutput'), '<span class="err">' + esc(e.message) + '</span>'); }
+};
+
+// ─────────────────────────────────────────────
+// 自动攻击
+// ─────────────────────────────────────────────
+$('attackBtn').onclick = async () => {
+  const url = $('attackUrl').value.trim();
+  if (!url) { setOut($('attackOutput'), '<span class="err">请输入 URL</span>'); return; }
+  const param = $('attackParam').value.trim() || null;
+  const payload = $('attackPayload').value.trim() || null;
+  setOut($('attackOutput'), '<span class="spin"></span> 攻击中… (11 引擎多阶段扫描)');
+  $('attackFlag').textContent = '';
+  try {
+    const d = await api('/api/exploit', {url, param, payload, mode:'auto', timeout:10});
+    let html = '';
+    if (d.flag) {
+      html += `<span class="hl">🎉 FLAG 已找到: ${esc(d.flag)}</span><br>${d.flag_src ? '来源: ' + esc(d.flag_src) + '<br>' : ''}<br>`;
+      $('attackFlag').textContent = '🎉 ' + d.flag;
+    } else {
+      html += '<span class="dim">未发现 flag，以下是扫描结果:</span><br><br>';
+    }
+    html += fmt(d);
+    setOut($('attackOutput'), html);
+  } catch(e) { setOut($('attackOutput'), '<span class="err">' + esc(e.message) + '</span>'); }
+};
+
+// ─────────────────────────────────────────────
+// 密码学
+// ─────────────────────────────────────────────
+$('cryptoBtn').onclick = async () => {
+  const op = $('cryptoOp').value;
+  const data = $('cryptoInput').value;
+  const key = $('cryptoKey').value.trim() || null;
+  if (!data) return;
+  setOut($('cryptoOutput'), '<span class="spin"></span> 计算中…');
+  try {
+    const d = await api('/api/crypto', {op, data, key});
+    setOut($('cryptoOutput'), fmt(d));
+  } catch(e) { setOut($('cryptoOutput'), '<span class="err">' + esc(e.message) + '</span>'); }
+};
+
+// ─────────────────────────────────────────────
+// 脚本库
+// ─────────────────────────────────────────────
+let allScripts = [];
+async function loadScripts() {
+  try {
+    const d = await api('/api/scripts', undefined, 'GET');
+    allScripts = Array.isArray(d.scripts) ? d.scripts : [];
+    const cats = d.categories || {};
+    $('scriptCat').innerHTML = '<option value="">全部分类</option>' +
+      Object.entries(cats).map(([k,v]) => `<option value="${esc(k)}">${esc(v)}</option>`).join('');
+    renderScripts();
+  } catch(e) {
+    $('scriptBody').innerHTML = `<tr><td colspan="4" class="err">加载失败: ${esc(e.message)}</td></tr>`;
+  }
+}
+function renderScripts() {
+  const q = $('scriptSearch').value.toLowerCase();
+  const cat = $('scriptCat').value;
+  const list = allScripts.filter(s => {
+    if (cat && s.category !== cat) return false;
+    if (q && !JSON.stringify(s).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if (!list.length) { $('scriptBody').innerHTML = '<tr><td colspan="4" class="dim">无匹配脚本</td></tr>'; return; }
+  $('scriptBody').innerHTML = list.slice(0, 200).map(s => `
+    <tr>
+      <td>${esc(s.name)}</td>
+      <td class="dim">${esc(s.category || '')}</td>
+      <td class="dim">${esc(s.desc || '')}</td>
+      <td><button class="small ghost" onclick="runScript('${esc(s.key)}')">▶ 运行</button></td>
+    </tr>`).join('');
+}
+async function runScript(key) {
+  const btn = event.target;
+  btn.textContent = '…';
+  btn.disabled = true;
+  try {
+    const d = await api('/api/scripts/run', {key});
+    let html = `<span class="acc">退出码: ${d.returncode}</span><br>`;
+    if (d.stdout) html += '<span class="acc">stdout:</span><br>' + esc(d.stdout);
+    if (d.stderr) html += '<br><span class="err">stderr:</span><br>' + esc(d.stderr);
+    // 输出到 attack 页面
+    setOut($('attackOutput'), html);
+    document.querySelector('.nav-item[data-page=attack]').click();
+  } catch(e) {
+    setOut($('attackOutput'), '<span class="err">' + esc(e.message) + '</span>');
+    document.querySelector('.nav-item[data-page=attack]').click();
+  }
+  btn.textContent = '▶ 运行';
+  btn.disabled = false;
+}
+$('scriptSearch').oninput = renderScripts;
+$('scriptCat').onchange = renderScripts;
+
+// ─────────────────────────────────────────────
+// 中文密码
+// ─────────────────────────────────────────────
+$('chineseBtn').onclick = async () => {
+  const text = $('chineseInput').value.trim();
+  if (!text) return;
+  setOut($('chineseOutput'), '<span class="spin"></span> 解密中…');
+  try {
+    const d = await api('/api/chinese-cipher', {text});
+    if (!d.results?.length) { setOut($('chineseOutput'), '<span class="dim">未识别到中文密码特征</span>'); return; }
+    let html = '';
+    d.results.forEach(r => { html += `<span class="acc">[${esc(r.name)}]</span> → ${esc(r.result)}<br><br>`; });
+    setOut($('chineseOutput'), html);
+  } catch(e) { setOut($('chineseOutput'), '<span class="err">' + esc(e.message) + '</span>'); }
+};
+
+// ─────────────────────────────────────────────
+// 高级编码
+// ─────────────────────────────────────────────
+async function loadEncoders() {
+  try {
+    const d = await api('/api/advanced-encoders', undefined, 'GET');
+    $('encodeSel').innerHTML = d.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  } catch(e) { console.warn('编码器加载失败', e); }
+}
+$('encodeBtn').onclick = async () => {
+  const text = $('encodeInput').value.trim();
+  const mode = $('encodeSel').value;
+  if (!text) return;
+  setOut($('encodeOutput'), '<span class="spin"></span> 编码中…');
+  try {
+    const d = await api('/api/advanced-encode', {text, mode});
+    setOut($('encodeOutput'), `<span class="acc">[${esc(mode)}]</span><br>${esc(d.result)}`);
+  } catch(e) { setOut($('encodeOutput'), '<span class="err">' + esc(e.message) + '</span>'); }
+};
+
+// ─────────────────────────────────────────────
+// 初始化
+// ─────────────────────────────────────────────
+health();
+loadScripts();
+loadEncoders();
+setInterval(health, 15000);
+</script>
+</body>
+</html>
