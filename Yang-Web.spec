@@ -5,6 +5,16 @@ import os
 # SPECPATH 是 PyInstaller 提供的 spec 所在目录
 project_root = os.path.abspath(SPECPATH)
 
+# pythonnet 官方 PyInstaller hook (打包 clr 运行时 DLL)
+import site as _site
+_pn_hook = None
+for _p in _site.getsitepackages() + [_site.getusersitepackages()]:
+    _cand = os.path.join(_p, 'pythonnet', '_pyinstaller')
+    if os.path.isdir(_cand):
+        _pn_hook = _cand
+        break
+print('pythonnet hook dir:', _pn_hook)
+
 a = Analysis(
     [os.path.join(project_root, 'launch_win.py')],
     pathex=[project_root],
@@ -50,7 +60,7 @@ a = Analysis(
         'fastapi',
         'pydantic',
     ],
-    hookspath=[],
+    hookspath=[_pn_hook] if _pn_hook else [],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],

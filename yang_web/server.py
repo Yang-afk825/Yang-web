@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import sys
 import threading
 import time
 import traceback
@@ -525,9 +526,44 @@ def main():
     port = int(os.environ.get("YANGWEB_PORT", "8765"))
     url = f"http://127.0.0.1:{port}"
 
+    # 启动日志 (无窗口 exe 排查用) — 写到 exe/工作目录，不写 _MEI 临时目录
+    import io as _io
+    _LOG = None
+    _log_dir = None
+    if getattr(sys, 'frozen', False):
+        try:
+            _log_dir = os.path.dirname(os.path.abspath(sys.executable))
+        except Exception:
+            _log_dir = None
+    if not _log_dir:
+        _log_dir = os.getcwd()
+    try:
+        _LOG = open(os.path.join(_log_dir, "yangweb_start.log"), "w", encoding="utf-8")
+    except Exception:
+        _LOG = None
+
+    def _log(*args):
+        if _LOG:
+            try:
+                _LOG.write(" ".join(str(a) for a in args) + "\n")
+                _LOG.flush()
+            except Exception:
+                pass
+
+    _log("main() start, port=", port)
+
     # 后台线程启动 API 服务
     def _run_server():
-        uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+        try:
+            _log("uvicorn.run starting...")
+            # log_config=None: 避免 windowed 模式 (sys.stdout=None) 下
+            # uvicorn 日志配置崩溃 (AttributeError: isatty)
+            uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning",
+                        log_config=None, access_log=False)
+        except Exception as e:
+            import traceback
+            _log("uvicorn FAIL:", repr(e))
+            _log(traceback.format_exc())
 
     t = threading.Thread(target=_run_server, daemon=True)
     t.start()
@@ -537,16 +573,19 @@ def main():
     for _ in range(50):
         try:
             urllib.request.urlopen(url + "/api/health", timeout=1)
+            _log("health OK")
             break
-        except Exception:
+        except Exception as e:
             time.sleep(0.2)
+    else:
+        _log("health NOT ready after 10s")
 
     print(f"Yang-Web v4.0 API 服务: {url}")
 
     # 优先用 pywebview 独立窗口 (无浏览器标签栏，工具箱形态)
     try:
         import webview
-        print("启动独立工具箱窗口 (WebView2)…")
+        _log("webview creating window...")
         webview.create_window(
             "Yang-Web v4.0 — CTF 综合工具箱",
             url,
@@ -554,14 +593,19 @@ def main():
             min_size=(980, 640),
             background_color="#0f1117",
         )
+        _log("webview.start()...")
         webview.start()
-        print("窗口已关闭")
+        _log("webview closed")
     except ImportError:
         # 无 pywebview 时回退到默认浏览器
         import webbrowser
         print("pywebview 不可用，改用默认浏览器打开…")
         webbrowser.open(url)
         input("按回车停止服务…")
+    except Exception as e:
+        import traceback
+        _log("webview FAIL:", repr(e))
+        _log(traceback.format_exc())
 
 if __name__ == "__main__":
     main()
