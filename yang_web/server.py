@@ -313,8 +313,23 @@ def api_scripts_run(req: ScriptReq):
             cmd = [py, path] + (req.args or [])
         else:
             cmd = [sys.executable, path] + (req.args or [])
+        # 把 URL 通过环境变量传给脚本 (TARGET_URL), 脚本可用 os.environ 读取
+        env = dict(os.environ)
+        # 强制 UTF-8 输出, 避免 Windows GBK 控制台 UnicodeEncodeError
+        env['PYTHONIOENCODING'] = 'utf-8'
+        env['PYTHONUTF8'] = '1'
+        url_arg = None
+        if req.args:
+            for a in req.args:
+                if a.startswith(('http://', 'https://')):
+                    url_arg = a
+                    break
+        if url_arg:
+            env['TARGET_URL'] = url_arg
+            env['CTF_TARGET'] = url_arg
         proc = subprocess.run(cmd, capture_output=True, text=True,
-                              timeout=60, cwd=os.path.dirname(path))
+                              timeout=120, cwd=os.path.dirname(path),
+                              env=env, encoding='utf-8', errors='replace')
         return _ok({"key": req.key, "returncode": proc.returncode,
                     "stdout": proc.stdout[-8000:], "stderr": proc.stderr[-4000:]})
     except subprocess.TimeoutExpired:

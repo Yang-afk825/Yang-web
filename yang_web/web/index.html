@@ -363,6 +363,9 @@ tr:hover td { background: rgba(255,255,255,.02); }
     <div class="page-sub">41+ 个 CTF 脚本 · 分类浏览 · 一键运行</div>
     <div class="card">
       <div class="row">
+        <input type="text" id="scriptUrl" placeholder="目标 URL (可选) — 填写后作为参数传给脚本，如 http://target.com/">
+      </div>
+      <div class="row" style="margin-top:8px;">
         <input type="text" id="scriptSearch" placeholder="搜索脚本…">
         <select id="scriptCat" style="flex:0 0 160px;">
           <option value="">全部分类</option>
@@ -372,6 +375,10 @@ tr:hover td { background: rgba(255,255,255,.02); }
         <thead><tr><th style="width:40%;">脚本</th><th>分类</th><th>说明</th><th style="width:80px;"></th></tr></thead>
         <tbody id="scriptBody"><tr><td colspan="4" class="dim">加载中…</td></tr></tbody>
       </table>
+    </div>
+    <div class="card">
+      <h3>运行结果</h3>
+      <div class="output" id="scriptOutput">等待运行…</div>
     </div>
   </div>
 
@@ -756,24 +763,25 @@ function renderScripts() {
       <td>${esc(s.name)}</td>
       <td class="dim">${esc(s.category || '')}</td>
       <td class="dim">${esc(s.desc || '')}</td>
-      <td><button class="small ghost" onclick="runScript('${esc(s.key)}')">▶ 运行</button></td>
+      <td><button class="small ghost" onclick="runScript('${esc(s.key)}', this)">▶ 运行</button></td>
     </tr>`).join('');
 }
-async function runScript(key) {
-  const btn = event.target;
+async function runScript(key, el) {
+  const btn = el || event.target;
   btn.textContent = '…';
   btn.disabled = true;
+  const url = $('scriptUrl') ? $('scriptUrl').value.trim() : '';
+  const args = [];
+  if (url) args.push(url);
   try {
-    const d = await api('/api/scripts/run', {key});
-    let html = `<span class="acc">退出码: ${d.returncode}</span><br>`;
-    if (d.stdout) html += '<span class="acc">stdout:</span><br>' + esc(d.stdout);
-    if (d.stderr) html += '<br><span class="err">stderr:</span><br>' + esc(d.stderr);
-    // 输出到 attack 页面
-    setOut($('attackOutput'), html);
-    document.querySelector('.nav-item[data-page=attack]').click();
+    const d = await api('/api/scripts/run', {key, args});
+    let html = `<span class="acc">退出码: ${d.returncode}</span>`;
+    if (d.returncode === 0 && d.stdout) html += '<br><span class="acc">stdout:</span><br><pre style="white-space:pre-wrap;">' + esc(d.stdout) + '</pre>';
+    else if (d.returncode === 0) html += '<br><span class="dim">执行成功，无输出</span>';
+    if (d.stderr) html += '<br><span class="err">stderr:</span><br><pre style="white-space:pre-wrap;">' + esc(d.stderr) + '</pre>';
+    setOut($('scriptOutput'), html);
   } catch(e) {
-    setOut($('attackOutput'), '<span class="err">' + esc(e.message) + '</span>');
-    document.querySelector('.nav-item[data-page=attack]').click();
+    setOut($('scriptOutput'), '<span class="err">' + esc(e.message) + '</span>');
   }
   btn.textContent = '▶ 运行';
   btn.disabled = false;
