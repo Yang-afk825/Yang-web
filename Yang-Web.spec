@@ -25,6 +25,8 @@ a = Analysis(
         # 古典密码参考图 (图片上印着密码表, 查看原图用)
         (os.path.join(project_root, 'yang_web', 'wordlists', 'data', 'misc_crypto'),
          'yang_web/wordlists/data/misc_crypto'),
+        # CTF 脚本库 (registry 按文件名查找并 subprocess 执行)
+        (os.path.join(project_root, 'yang_web', 'scripts'), 'yang_web/scripts'),
     ],
     hiddenimports=[
         # 引擎依赖

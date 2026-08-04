@@ -300,9 +300,19 @@ def api_scripts_run(req: ScriptReq):
         raise _err(f"脚本不存在: {req.key}")
     try:
         path = registry.get_script_path(req.key)
+        if not path:
+            raise _err(f"脚本文件未找到: {req.key} (exe 打包可能未包含 scripts 目录)")
         # 用子进程执行脚本（避免污染 API 进程）
-        import subprocess, sys, os
-        cmd = [sys.executable, path] + (req.args or [])
+        import subprocess, sys, os, shutil
+        # frozen (PyInstaller) 下 sys.executable 指向 Yang-Web.exe 自己,
+        # 不能当解释器 → 回退到系统 Python
+        if getattr(sys, 'frozen', False):
+            py = shutil.which('python') or shutil.which('py')
+            if not py:
+                raise _err("打包模式下找不到系统 Python (PATH 中无 python/py)")
+            cmd = [py, path] + (req.args or [])
+        else:
+            cmd = [sys.executable, path] + (req.args or [])
         proc = subprocess.run(cmd, capture_output=True, text=True,
                               timeout=60, cwd=os.path.dirname(path))
         return _ok({"key": req.key, "returncode": proc.returncode,
