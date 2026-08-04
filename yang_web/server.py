@@ -270,7 +270,26 @@ def api_attack_stream(req: AttackReq):
 def api_scripts():
     try:
         cats = registry.list_scripts()
-        return _ok({"categories": registry.CATEGORIES, "scripts": cats})
+        # list_scripts() 返回 (key, meta) 元组列表 → 转成前端期望的 dict
+        scripts = []
+        for item in cats:
+            if isinstance(item, (tuple, list)) and len(item) == 2:
+                key, meta = item
+                scripts.append({
+                    "key": key,
+                    "name": meta.get("name", ""),
+                    "title": meta.get("title", ""),
+                    "category": meta.get("category", ""),
+                    "desc": meta.get("description", ""),
+                    "description": meta.get("description", ""),
+                    "usage": meta.get("usage", ""),
+                    "deps": meta.get("deps", []),
+                    "input_type": meta.get("input_type", ""),
+                    "output_type": meta.get("output_type", ""),
+                })
+            elif isinstance(item, dict):
+                scripts.append(item)
+        return _ok({"categories": registry.CATEGORIES, "scripts": scripts})
     except Exception as e:
         raise _err(f"加载脚本库失败: {e}")
 
