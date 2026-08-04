@@ -420,13 +420,58 @@ class ProxyReq(BaseModel):
 
 @app.post("/api/proxy")
 def api_proxy(req: ProxyReq):
-    """代理请求任意 URL，返回完整响应供浏览器回显。"""
-    import base64 as _b64
+    """代理请求任意 URL，返回完整响应供浏览器回显。支持自定义 Headers/Cookie。"""
+    import urllib.request as _ur
+    from urllib.error import HTTPError as _HE, URLError as _UE
+    import ssl as _ssl
     try:
-        result = url_analyzer.send_request(
-            req.url, timeout=req.timeout, method=req.method,
-            post_data=req.body.encode("utf-8") if req.body else None)
-        return _ok(result)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) YangWeb/4.0",
+            "Accept": "*/*",
+        }
+        if req.headers:
+            headers.update({k: str(v) for k, v in req.headers.items()})
+        data = None
+        if req.body:
+            data = req.body.encode("utf-8")
+            if "Content-Type" not in headers:
+                headers["Content-Type"] = "application/x-www-form-urlencoded"
+        ctx = _ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = _ssl.CERT_NONE
+        start = time.time()
+        try:
+            r = _ur.Request(req.url, data=data, headers=headers, method=req.method)
+            resp = _ur.urlopen(r, timeout=req.timeout, context=ctx)
+            status = resp.status
+            resp_headers = dict(resp.headers)
+            raw = resp.read()
+        except _HE as e:
+            status = e.code
+            resp_headers = dict(e.headers)
+            raw = e.read()
+        except _UE as e:
+            raise _err(f"网络错误: {e.reason}")
+        elapsed = int((time.time() - start) * 1000)
+        # 解码 body
+        ctype = resp_headers.get("Content-Type", "").lower()
+        charset = "utf-8"
+        if "charset=" in ctype:
+            try:
+                charset = ctype.split("charset=")[-1].split(";")[0].strip()
+            except Exception:
+                pass
+        try:
+            body_str = raw.decode(charset, errors="replace")
+        except Exception:
+            body_str = raw.decode("utf-8", errors="replace")
+        return _ok({
+            "ok": True, "status": status, "headers": resp_headers,
+            "body": body_str[:20000], "body_len": len(raw),
+            "elapsed_ms": elapsed,
+        })
+    except HTTPException:
+        raise
     except Exception as e:
         raise _err(f"代理请求失败: {e}")
 

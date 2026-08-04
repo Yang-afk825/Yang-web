@@ -391,6 +391,13 @@ tr:hover td { background: rgba(255,255,255,.02); }
         <button id="browserOpen" class="ghost">↗ 新窗口打开</button>
       </div>
       <input type="text" id="browserBody" placeholder="POST body (可选)" style="display:none;">
+      <div style="margin-top:8px;">
+        <button id="headersToggle" class="ghost small">⚙️ Headers / Cookie</button>
+      </div>
+      <div id="headersPanel" style="display:none; margin-top:10px;">
+        <div style="font-size:12px; color:var(--text-dim); margin-bottom:6px;">每行一个: <code>Header: value</code> 或 <code>Cookie: name=value</code></div>
+        <textarea id="browserHeadersInput" style="min-height:100px; font-size:12px;" placeholder="User-Agent: Mozilla/5.0...&#10;Cookie: session=abc123&#10;Referer: https://target.com/"></textarea>
+      </div>
     </div>
     <div class="grid2">
       <div class="card">
@@ -799,12 +806,23 @@ async function doBrowserReq() {
   if (!url) { setOut($('browserHeaders'), '<span class="err">请输入 URL</span>'); return; }
   const method = $('browserMethod').value;
   const body = $('browserBody').value;
+  // 解析自定义 headers
+  const headers = {};
+  const hText = $('browserHeadersInput').value.trim();
+  if (hText) {
+    hText.split('\n').forEach(line => {
+      line = line.trim();
+      if (!line) return;
+      const idx = line.indexOf(':');
+      if (idx > 0) headers[line.slice(0, idx).trim()] = line.slice(idx+1).trim();
+    });
+  }
   setOut($('browserHeaders'), '<span class="spin"></span> 请求中…');
   setOut($('browserBody'), '');
   $('browserStatus').textContent = '';
   $('browserFrame').src = 'about:blank';
   try {
-    const d = await api('/api/proxy', {url, method, body: body || null, timeout: 15});
+    const d = await api('/api/proxy', {url, method, body: body || null, timeout: 15, headers: Object.keys(headers).length ? headers : null});
     // Headers
     let h = `<span class="acc">HTTP ${d.status}</span> · <span class="dim">${d.elapsed_ms}ms</span> · ${d.body_len} bytes<br><br>`;
     for (const [k,v] of Object.entries(d.headers || {})) {
@@ -824,6 +842,11 @@ async function doBrowserReq() {
 }
 $('browserGo').onclick = doBrowserReq;
 $('browserUrl').addEventListener('keydown', e => { if (e.key === 'Enter') doBrowserReq(); });
+
+$('headersToggle').onclick = () => {
+  const p = $('headersPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+};
 
 $('browserOpen').onclick = () => {
   const url = getBrowserUrl();
