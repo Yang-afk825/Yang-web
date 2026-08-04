@@ -580,28 +580,104 @@ $('jwtBtn').onclick = async () => {
 };
 
 // ─────────────────────────────────────────────
-// 自动攻击
+// 自动攻击 (SSE 实时事件流)
 // ─────────────────────────────────────────────
-$('attackBtn').onclick = async () => {
+let attackAbort = null;
+
+async function doAttack() {
   const url = $('attackUrl').value.trim();
   if (!url) { setOut($('attackOutput'), '<span class="err">请输入 URL</span>'); return; }
   const param = $('attackParam').value.trim() || null;
   const payload = $('attackPayload').value.trim() || null;
-  setOut($('attackOutput'), '<span class="spin"></span> 攻击中… (11 引擎多阶段扫描)');
+
+  const out = $('attackOutput');
+  setOut(out, '<span class="spin"></span> 攻击中… (SSE 事件流)');
   $('attackFlag').textContent = '';
+  $('attackBtn').disabled = true;
+  $('attackBtn').textContent = '⏳ 攻击中…';
+
+  const ctrl = new AbortController();
+  attackAbort = ctrl;
+  let log = '';
+  let flagFound = false;
+
   try {
-    const d = await api('/api/exploit', {url, param, payload, mode:'auto', timeout:10});
-    let html = '';
-    if (d.flag) {
-      html += `<span class="hl">🎉 FLAG 已找到: ${esc(d.flag)}</span><br>${d.flag_src ? '来源: ' + esc(d.flag_src) + '<br>' : ''}<br>`;
-      $('attackFlag').textContent = '🎉 ' + d.flag;
-    } else {
-      html += '<span class="dim">未发现 flag，以下是扫描结果:</span><br><br>';
+    const resp = await fetch('/api/attack-stream', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({url, param, payload, mode:'auto', timeout:10}),
+      signal: ctrl.signal
+    });
+    if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, {stream:true});
+      // 按 SSE 事件分割
+      const parts = buf.split('\n\n');
+      buf = parts.pop() || '';
+      for (const part of parts) {
+        const line = part.split('\n').find(l => l.startsWith('data: '));
+        if (!line) continue;
+        let evt;
+        try { evt = JSON.parse(line.slice(6)); } catch { continue; }
+        handleAttackEvent(evt, out);
+        if (evt.type === 'flag') flagFound = true;
+      }
     }
-    html += fmt(d);
-    setOut($('attackOutput'), html);
-  } catch(e) { setOut($('attackOutput'), '<span class="err">' + esc(e.message) + '</span>'); }
-};
+  } catch(e) {
+    if (e.name !== 'AbortError') {
+      log += '<span class="err">[错误] ' + esc(e.message) + '</span><br>';
+      setOut(out, log);
+    }
+  } finally {
+    attackAbort = null;
+    $('attackBtn').disabled = false;
+    $('attackBtn').textContent = '⚔️ 开始攻击';
+    if (!flagFound && !log.includes('[错误]')) {
+      log += '<br><span class="dim">— 攻击链执行完毕，未发现 flag —</span>';
+      setOut(out, log);
+    }
+  }
+}
+
+function handleAttackEvent(evt, out) {
+  let html = '';
+  switch(evt.type) {
+    case 'progress':
+      html = `📌 <span class="acc">[${esc(evt.stage)}]</span> <span class="hl">${esc(evt.item)}</span> — <span class="dim">${esc(evt.status)}</span><br>`;
+      break;
+    case 'finding':
+      html = `🔍 <span class="acc">[发现]</span> ${esc(evt.type)} — ${esc(evt.detail||'')}<br>`;
+      break;
+    case 'flag':
+      html = `<br>🎉 <span class="hl" style="font-size:15px;">FLAG: ${esc(evt.flag)}</span><br>` +
+             (evt.src ? `<span class="dim">来源: ${esc(evt.src)}</span><br>` : '') + '<br>';
+      $('attackFlag').textContent = '🎉 ' + evt.flag;
+      break;
+    case 'done':
+      const s = evt.summary || {};
+      html = `<br>✅ <span class="acc">攻击完成</span> · 攻击 ${s.attacks_run||0} 次 · 耗时 ${s.timing_ms||0}ms<br>`;
+      if (s.stages?.length) html += `阶段: ${s.stages.map(esc).join(' → ')}<br>`;
+      break;
+    case 'error':
+      html = `<br>❌ <span class="err">${esc(evt.error)}</span><br>`;
+      break;
+  }
+  const cur = out.innerHTML;
+  // 移除初始的 spinner
+  const base = cur.replace(/<span class="spin"><\/span>.*?<\/span>/, '');
+  setOut(out, base + html);
+  out.scrollTop = out.scrollHeight;
+}
+
+$('attackBtn').onclick = doAttack;
+$('attackUrl').addEventListener('keydown', e => { if (e.key === 'Enter') doAttack(); });
 
 // ─────────────────────────────────────────────
 // 密码学

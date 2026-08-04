@@ -177,29 +177,89 @@ def api_exploit(req: AttackReq):
                 req.url, req.param, {"payload": req.payload}, timeout=req.timeout)
             results["findings"].append({"param": req.param, "payload": req.payload, "result": r})
         else:
-            url_analyzer.auto_exploit(req.url, results)
+            # 先分析再自动攻击
+            try:
+                analysis = url_analyzer.analyze_url(req.url)
+                vuln_list = analysis["results"] if isinstance(analysis, dict) else analysis
+            except Exception:
+                vuln_list = []
+            if not isinstance(vuln_list, list):
+                vuln_list = []
+            url_analyzer.auto_exploit(
+                req.url, vuln_list,
+                on_progress=lambda s, i, t: results.setdefault("progress", []).append([s, i, t]),
+                on_found=lambda f, src=None: results.update({"flag": f, "flag_src": src}))
         return _ok(results)
     except Exception as e:
         raise _err(f"攻击失败: {e}")
 
 @app.post("/api/attack-stream")
 def api_attack_stream(req: AttackReq):
-    """SSE 流式自动攻击 — 进度实时推送。"""
-    async def gen():
+    """SSE 流式自动攻击 — 事件时间线实时推送 (BTFly 风格)。
+
+    事件类型:
+        progress: {stage, item, status}   阶段进度
+        finding:  {type, detail}          漏洞发现
+        flag:     {flag, src}             命中 flag
+        done:     {summary}               完成汇总
+        error:    {error}                 错误
+    """
+    import queue as _queue
+    import concurrent.futures as _futures
+
+    q: _queue.Queue = _queue.Queue()
+
+    def _run():
         results: Dict[str, Any] = {"url": req.url, "findings": [], "flag": None}
-        def on_progress(msg: str):
-            pass  # 进度通过 on_found / findings 汇总
-        def on_found(flag: str, src: str):
-            results["flag"] = flag
-            results["flag_src"] = src
         try:
+            def on_progress(stage, item, status):
+                q.put({"type": "progress", "stage": str(stage),
+                       "item": str(item), "status": str(status)})
+            def on_found(flag, src=None):
+                q.put({"type": "flag", "flag": str(flag), "src": str(src or "")})
+                results["flag"] = flag
+                results["flag_src"] = src
+            # 先做 URL 分析，再取 results 列表传给 auto_exploit
+            try:
+                analysis = url_analyzer.analyze_url(req.url)
+                vuln_list = analysis["results"] if isinstance(analysis, dict) else analysis
+            except Exception:
+                vuln_list = []
+            if not isinstance(vuln_list, list):
+                vuln_list = []
             url_analyzer.auto_exploit(
-                req.url, results,
-                on_progress=lambda m: None,
+                req.url, vuln_list,
+                on_progress=on_progress,
                 on_found=on_found)
-            yield f"data: {json.dumps({'type': 'done', 'data': results}, ensure_ascii=False)}\n\n"
+            q.put({"type": "done", "summary": {
+                "flag": results.get("flag"),
+                "findings": results.get("findings", []),
+                "attacks_run": results.get("attacks_run", 0),
+                "stages": results.get("stages", []),
+                "timing_ms": results.get("timing_ms", 0),
+            }})
         except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'error': str(e)}, ensure_ascii=False)}\n\n"
+            q.put({"type": "error", "error": str(e)})
+
+    executor = _futures.ThreadPoolExecutor(max_workers=1)
+    fut = executor.submit(_run)
+
+    async def gen():
+        try:
+            while True:
+                try:
+                    evt = q.get(timeout=0.5)
+                except _queue.Empty:
+                    if fut.done():
+                        break
+                    yield ": keepalive\n\n"
+                    continue
+                yield f"data: {json.dumps(evt, ensure_ascii=False)}\n\n"
+                if evt.get("type") in ("done", "error"):
+                    break
+        finally:
+            executor.shutdown(wait=False)
+
     return StreamingResponse(gen(), media_type="text/event-stream")
 
 # ---------------------------------------------------------------------------
