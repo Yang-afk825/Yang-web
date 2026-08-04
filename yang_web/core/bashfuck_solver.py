@@ -19,7 +19,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 __all__ = ['auto_solve', 'bashfuck_solve']
 
 _USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-_FLAG_RE = re.compile(r'[A-Za-z0-9_]{2,}\{[^}]{4,}\}')
+_FLAG_RE = re.compile(r'[A-Za-z0-9_]{2,}\{[^{};:#\n]{4,}\}')
 _HTML_BAD = re.compile(r'&nbsp;|&lt;|&gt;|&amp;|else\{|echo[\s"]|function[\s(]|isset\(|preg_match')
 
 

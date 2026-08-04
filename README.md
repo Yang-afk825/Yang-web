@@ -1,23 +1,23 @@
-# Yang-Web 🛠️ v3.0.0
+# Yang-Web 🛠️ v4.0.0
 
-> **CTF 一站式工具箱** — 智能解码 + 50+种密码/编码 + 🆕智能攻击引擎 + JWT攻击 + 反弹Shell + 隐写分析 + Payload库 + 靶场分析 + GUI图形界面
+> **CTF 一站式工具箱** — 智能解码 + 50+种密码/编码 + 12+智能攻击引擎 + JWT攻击 + 反弹Shell + 隐写分析 + Payload库 + 靶场分析 + GUI图形界面 + 独立桌面应用
 
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-green.svg)]()
-[![GUI](https://img.shields.io/badge/GUI-tkinter-purple.svg)]()
+[![GUI](https://img.shields.io/badge/GUI-pywebview-purple.svg)]()
 [![Ciphers](https://img.shields.io/badge/ciphers-50+-orange.svg)]()
-[![Scripts](https://img.shields.io/badge/scripts-41-red.svg)]()
+[![Scripts](https://img.shields.io/badge/scripts-51-red.svg)]()
 [![Payloads](https://img.shields.io/badge/payloads-8_mods-blue.svg)]()
-[![Engines](https://img.shields.io/badge/engines-7-brightgreen.svg)]()
+[![Engines](https://img.shields.io/badge/engines-12-brightgreen.svg)]()
 
 ---
 
 ## 📖 简介
 
-Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密码破解、Payload 生成、靶场分析到攻击利用。内置 **图形界面 (GUI)**，支持 CLI ↔ GUI 一键切换。完全离线，零第三方依赖。
+Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密码破解、Payload 生成、靶场分析到攻击利用。内置 **图形界面 (GUI)**，支持 CLI ↔ GUI 一键切换，打包为 **独立 Windows 桌面应用 (exe)**。完全离线，零第三方依赖。
 
-**14 个子命令 + 智能解码器(14种编码) + 🆕智能攻击引擎(源码指纹→并发攻击→一键解题) + 50+种密码/编码 + 纯Python密码引擎(AES/RC4/RSA) + 中文特色密码 + 反弹Shell/WebShell生成 + 隐写分析 + 41个内嵌CTF脚本 + JWT攻击链 + 8大Payload模块 + 靶场黑名单分析。**
+**14 个子命令 + 智能解码器(14种编码) + 12+智能攻击引擎(源码指纹→并发攻击→一键解题→实时攻击流) + 50+种密码/编码 + 纯Python密码引擎(AES/RC4/RSA) + 中文特色密码 + 反弹Shell/WebShell生成 + 隐写分析 + 51个内嵌CTF脚本 + JWT攻击链 + 8大Payload模块 + 靶场黑名单分析 + 内嵌浏览器 + 脚本库靶场。**
 
 ---
 
@@ -41,28 +41,30 @@ Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密�
 
 - 📴 **完全离线** — 零 pip 依赖，Python 标准库一把梭
 - 🧠 **智能解码器** — 粘贴即用：自动识别14种编码 + 一键解码 + 暴力全试 + 链式递归
-- 🔐 **50+种密码/编码** — Base全系 + 古典(凯撒/栅栏/猪圈/培根/Vigenère/ADFGX/摩斯) + 键盘映射 + 🆕中文特色密码(与佛论禅/核心价值观/百家姓...) + 🆕高级编码(Brainfuck/Ook!/JSFuck/AAencode...18种)
-- 📦 **41个内嵌脚本** — Crypto/Web/Misc/Reverse 全覆盖，一键运行
-- 🎯 **靶场分析(`--analyze`)** — 🆕 粘贴黑名单，自动告诉你哪些后缀/绕过能用
-- 🧠 **🆕 智能攻击引擎** — 粘贴URL→自动分析→一键解题：源码指纹识别 + 并发攻击 + 自适应调度 + 自动读Flag
-- 🖥️ **图形界面** — GUI ↔ CLI 一键切换，密码面板即看即用
+- 🔐 **50+种密码/编码** — Base全系 + 古典(凯撒/栅栏/猪圈/培根/Vigenère/ADFGX/摩斯) + 键盘映射 + 中文特色密码(与佛论禅/核心价值观/百家姓...) + 高级编码(Brainfuck/Ook!/JSFuck/AAencode...18种)
+- 📦 **51个内嵌脚本** — Crypto/Web/Misc/Reverse 全覆盖，一键运行，支持 URL 输入 + 额外参数
+- 🎯 **靶场分析(`--analyze`)** — 粘贴黑名单，自动告诉你哪些后缀/绕过能用
+- 🧠 **12+ 智能攻击引擎** — 粘贴URL→自动分析→一键解题：源码指纹识别 + 并发攻击 + 自适应调度 + 自动读Flag + **SSE 实时攻击流**
+- 🖥️ **独立桌面应用** — pywebview 打包 exe，双击即用，内嵌浏览器（带 Headers 编辑）
 - 🎯 **8大Payload模块** — SSTI/SQLi/LFI/SSRF/XSS/RCE/PHP/Upload
 - 🛡️ **WAF 绕过** — 30+ SQL WAF + 12类 PHP RCE 绕过
 - 🔑 **JWT 攻击链** — 解析→None攻击→弱密钥爆破→伪造令牌
-- 🔒 **🆕 纯Python密码引擎** — AES(ECB/CBC)/RC4/RSA/MD5/SHA全系/BLAKE2/CRC32/HMAC/XOR爆破/进制转换
-- 🐚 **🆕 反弹Shell & 隐写** — 10种语言反弹Shell + 6种WebShell + PNG分析 + LSB提取 + EXIF读取 + 密文特征识别
+- 🔒 **纯Python密码引擎** — AES(ECB/CBC)/RC4/RSA/MD5/SHA全系/BLAKE2/CRC32/HMAC/XOR爆破/进制转换
+- 🐚 **反弹Shell & 隐写** — 10种语言反弹Shell + 6种WebShell + PNG分析 + LSB提取 + EXIF读取 + 密文特征识别
+- 🎮 **脚本库靶场** — 内置 4 关 Web 挑战（时间盲注/布尔盲注/JS硬编码/命令执行），可用脚本库脚本一键解出
 
 ---
 
 ## 📦 安装
 
 ```bash
-pip install yang-web
-
-# 或 GitHub
+# 源码运行
 git clone https://github.com/Yang-afk825/Yang-web.git
 cd Yang-web
-python -m yang_web
+python -m yang_web.server        # 启动 Web 服务 (默认 8765)
+
+# 或直接使用打包好的桌面应用
+dist/Yang-Web.exe                # 独立窗口, 无需 Python
 ```
 
 ---
@@ -107,14 +109,14 @@ $ yang-web ssti --bypass --engine Twig    # 过滤绕过
 
 ### 4. SQL 注入 `sqli`
 
-MySQL/PostgreSQL/MSSQL/Oracle/SQLite + 30种WAF绕过 + 🆕认证绕过。
+MySQL/PostgreSQL/MSSQL/Oracle/SQLite + 30种WAF绕过 + 认证绕过。
 
 ```bash
 $ yang-web sqli --list
 $ yang-web sqli --db MySQL                # 全部MySQL Payload
 $ yang-web sqli --blind                   # 盲注模板
 $ yang-web sqli --waf 空白符绕过           # WAF绕过
-$ yang-web sqli --search "绕过登录"        # 🆕认证绕过Payload
+$ yang-web sqli --search "绕过登录"        # 认证绕过Payload
 ```
 
 ---
@@ -162,48 +164,31 @@ $ yang-web rce --shell bash --ip 10.0.0.1 --port 4444
 
 ### 9. PHP 技巧 `php`
 
-Magic Hash ×27 + 弱类型 ×14 + WAF绕过 ×12。
-
 ```bash
-$ yang-web php --magic
-$ yang-web php --waf-php
-$ yang-web php --rce
+$ yang-web php --weak                     # 弱类型比较
+$ yang-web php --serialize                # 反序列化
+$ yang-web php --md5-collision            # MD5碰撞
 ```
 
 ---
 
-### 10. 🆕 文件上传 `upload`
-
-覆盖文件上传全攻击面 + 🆕靶场分析。
+### 10. 文件上传 `upload`
 
 ```bash
-$ yang-web upload --ext                   # 后缀名绕过
-$ yang-web upload --mime                  # Content-Type伪造
-$ yang-web upload --content               # 图片马内容绕过
-$ yang-web upload --parse apache          # 解析漏洞
-$ yang-web upload --htaccess / --userini  # 配置文件利用
-$ yang-web upload --advanced              # 高级技巧
-
-# 🆕 靶场黑名单分析
-$ yang-web upload --analyze "php,php3,php5,php7,phtml,shtml,cgi"
-→ 🎯 靶场黑名单分析
-  已拦截: cgi, php, php3, php5, php7, phtml, shtml
-  ✅ 可用后缀: phar, php4, php8, phps, pht
-    🎯 推荐 .pht — 最常见的绕过后缀
-  🔤 大小写混合: Php ✅ / PHP ✅ / pHp5 ✅
-  📦 双后缀: shell.php.jpg
-  💾 NTFS 数据流: shell.php::$DATA
+$ yang-web upload --list                  # 全部上传Payload
+$ yang-web upload --bypass                # 黑名单绕过
+$ yang-web upload --analyze               # 🆕 靶场黑名单分析
 ```
 
 ---
 
 ### 11. Hash 识别 `hashid`
 
-40+ 种 Hash 算法识别。
+40+ Hash 算法自动识别。
 
 ```bash
-$ yang-web hashid "e10adc3949ba59abbe56e057f20f883e"
-🔍 MD5 / NTLM / MD4
+$ yang-web hashid "5f4dcc3b5aa765d61d8327deb882cf99"
+→ MD5 (92%)
 ```
 
 ---
@@ -211,9 +196,10 @@ $ yang-web hashid "e10adc3949ba59abbe56e057f20f883e"
 ### 12. JWT 攻击 `jwt`
 
 ```bash
-$ yang-web jwt "eyJ..." --none           # None攻击
-$ yang-web jwt "eyJ..." --brute          # 弱密钥爆破
-$ yang-web jwt "eyJ..." --forge --secret "key" --claim '{"admin":true}'
+$ yang-web jwt --parse <token>            # 解析
+$ yang-web jwt --attack none <token>      # None攻击
+$ yang-web jwt --crack <token>            # 弱密钥爆破 (37条)
+$ yang-web jwt --forge <token> --secret k # 伪造
 ```
 
 ---
@@ -221,21 +207,19 @@ $ yang-web jwt "eyJ..." --forge --secret "key" --claim '{"admin":true}'
 ### 13. 离线扫描 `scan`
 
 ```bash
-$ yang-web scan dir --search flag
-$ yang-web scan file --search backup
+$ yang-web scan --url http://target       # 目录爆破 + 指纹
+$ yang-web scan --sensitive               # 敏感文件检测
 ```
 
 ---
 
 ### 14. 内嵌脚本库 `scripts`
 
-41 个 CTF 脚本（Crypto/Web/Misc/Reverse）。
+51 个 CTF 脚本，Web 界面一键运行，支持 URL 输入 + 额外参数。
 
 ```bash
-$ yang-web scripts                       # 列出全部
-$ yang-web scripts --category crypto     # 按分类
-$ yang-web scripts --run rsa_toolkit     # 运行脚本
-$ yang-web scripts --check-deps          # 依赖检查
+$ yang-web scripts --list                 # 全部脚本
+$ yang-web scripts --run time_sqli --url "http://x/?id={PAYLOAD}" --args "SELECT flag FROM t"
 ```
 
 ---
@@ -243,173 +227,163 @@ $ yang-web scripts --check-deps          # 依赖检查
 ## 🔗 实战工作流
 
 ### SQL 注入 → 登录绕过
+
 ```bash
 # 1. 靶场返回 "用户名或密码错误"
 # 2. Yang-Web 找认证绕过
-$ yang-web sqli --db MySQL | grep "万能密码"
+$ yang-web sqli --search "绕过登录"
 # 3. 用 admin' OR '1'='1 登录 ✅
 ```
 
 ### 文件上传 → 后缀绕过
+
 ```bash
 # 1. 上传 shell.php → BLOCKED: .php not allowed
 # 2. 分析黑名单
-$ yang-web upload --analyze "php,php3,php5,php7,phtml,shtml,cgi"
+$ yang-web upload --analyze
 # 3. 推荐 .pht → 上传成功 ✅
 ```
 
 ### 编码解码
+
 ```bash
-$ yang-web decode "NTI2ZjYyNmY3NDIwNjU2MTczNzk="
+$ yang-web decode "Um9ib3QgZWFzeQ=="
 # Step 1: base64 → Step 2: base16 → "Robot easy" ✅
+```
+
+### 自动攻击 → 一键出 Flag
+
+```bash
+# 粘贴 URL 到自动攻击页, 点击开始
+# 源码指纹 → 引擎路由 → 并发攻击 → 实时 SSE 攻击流 → Flag
 ```
 
 ---
 
 ## 🔐 GUI Misc Crypto 密码面板
 
-**23 种** CTF 常见密码，支持一键 Encode/Decode。
+Web 界面内置完整密码学面板：
 
-| 分类 | 密码 |
-|------|------|
-| 基础编码 | Base64/32/16/58/85, URL, HTML, Unicode, 二进制/八进制/十进制 |
-| 古典替换 | 凯撒、埃特巴什、ROT13、维吉尼亚、ADFGX |
-| 棋盘/坐标 | 猪圈、培根、波利比奥斯、栅栏、键盘QWE/棋盘/坐标 |
-| 中文/特殊 | 当铺、杰斐逊转轮、摩斯、二进制加密、倒序、字母表顺序、数字坐标 |
-| 其他 | 标准银河字母、手机键盘、非斯象形文字、蓝孔打卡 |
-
-### 🆕 智能攻击面板（GUI）
-
-粘贴目标 URL，一键从分析到拿 Flag：
-
-1. **智能分析** — 源码指纹识别（`system()`/`eval()`/`$_POST` 等）+ CMS/WAF 检测 + 漏洞置信度评分
-2. **并发攻击** — 15 线程并发执行 payload，指数退避重试
-3. **自适应调度** — 根据指纹自动排序攻击策略（RCE 优先、自动选 GET/POST）
-4. **一键解题** — 自动攻击 → 自动提权 → 自动读 Flag
-
----
-
-### GUI 启动
-```bash
-yang-web gui
-# 或双击桌面 Yang-Web 快捷方式
-```
+- **智能解码** — 14种编码链式/暴力解码
+- **高级编码** — 18种 (Brainfuck/Ook!/JSFuck/AAencode...)
+- **中文密码** — 与佛论禅/核心价值观/百家姓/古典密码知识库(34种+参考图)
+- **密码学引擎** — AES/RC4/RSA/Hash/XOR/进制转换
+- **Hash 识别** — 40+ 算法
+- **JWT 面板** — 解析/攻击/爆破
+- **Payload 面板** — 8大模块
+- **Shell 面板** — 反弹Shell/WebShell 生成器
+- **隐写面板** — PNG/LSB/EXIF/密文识别
+- **脚本库** — 51脚本 + URL输入 + 额外参数 + 结果本页显示
+- **自动攻击** — SSE 实时攻击流
+- **内嵌浏览器** — Headers 编辑, CORS 代理
 
 ---
 
 ## 📂 项目结构
 
 ```
-Yang-web/
-├── pyproject.toml
-├── README.md
-├── docs/                           # 📚 知识文档
-│   └── ctf-guide/                  # CTF 全分类解题指南
-│       ├── README.md               # 索引导航
-│       ├── CTF-CheatSheet.md       # 速查表
-│       ├── SKILL.md                # 分类路由 + 解题流程
-│       ├── ctf-web.md              # Web安全 (725行)
-│       ├── ctf-crypto.md           # 密码学 (487行)
-│       ├── ctf-reverse.md          # 逆向 (524行)
-│       ├── ctf-pwn.md              # 二进制漏洞 (420行)
-│       ├── ctf-forensics.md        # 取证隐写 (687行)
-│       ├── ctf-misc.md             # 综合 (563行)
-│       ├── ctf-osint.md            # 情报调查 (523行)
-│       ├── ctf-malware.md          # 恶意软件 (541行)
-│       └── ctf-aiml.md             # AI/ML安全 (480行)
+Yang-Web/
+├── Yang-Web.spec          # PyInstaller 打包配置
+├── launch.pyw             # 无窗口启动入口
 ├── yang_web/
-│   ├── __init__.py / __main__.py
-│   ├── cli.py                      # CLI (14子命令)
-│   ├── gui.py                      # GUI (图形界面)
-│   ├── core/                       # 核心引擎 (9个)
-│   │   ├── decoder.py              # 智能解码 (14种编码)
-│   │   ├── misc_crypto.py          # 古典密码 (30+种)
-│   │   ├── hashid.py / jwt.py      # Hash识别 / JWT攻击
-│   │   ├── advanced_engines.py     # 🆕 高级编码 (18种)
-│   │   ├── chinese_ciphers.py      # 🆕 中文特色密码 (7种)
-│   │   ├── crypto_engine.py        # 🆕 密码学引擎
-│   │   ├── shell_stego.py          # 🆕 Shell & 隐写
-│   │   ├── url_analyzer.py          # 🆕 v3.0 智能攻击引擎
-│   ├── payloads/                   # 8大Payload模块
-│   │   ├── sqli.py (🆕认证绕过)
-│   │   ├── upload.py (🆕--analyze)
-│   │   ├── ssti.py / lfi.py / ssrf.py
-│   │   ├── xss.py / rce.py / php.py
-│   ├── scripts/                    # 41个CTF脚本
-│   └── wordlists/                  # 字典数据
+│   ├── server.py          # FastAPI 后端 (:8765)
+│   ├── web/               # Web UI (index.html)
+│   ├── core/              # 核心引擎
+│   │   ├── decoder.py         # 智能解码
+│   │   ├── hashid.py          # Hash识别
+│   │   ├── jwt.py             # JWT攻击
+│   │   ├── misc_crypto.py     # 古典密码
+│   │   ├── crypto_engine.py   # AES/RC4/RSA
+│   │   ├── advanced_engines.py # 18种高级编码
+│   │   ├── chinese_ciphers.py  # 中文特色密码
+│   │   ├── url_analyzer.py     # 自动攻击调度
+│   │   ├── simple_cmd_rce.py   # 简单命令注入探测
+│   │   ├── bashfuck_solver.py  # 无字母RCE
+│   │   ├── ssrf_rebind.py      # SSRF DNS Rebinding
+│   │   ├── php_lfi.py          # PHP文件包含
+│   │   ├── php_eval_rce.py     # PHP eval RCE
+│   │   ├── multi_stage.py      # 多阶段攻击
+│   │   ├── smart_solver.py     # 智能一键解题
+│   │   └── ...                 # 12+ 引擎
+│   ├── scripts/           # 51个CTF脚本
+│   └── wordlists/         # 词库 + 古典密码参考图
+├── 靶场.py                # 内置4关Web靶场 (9999)
+└── dist/Yang-Web.exe      # 独立桌面应用
 ```
 
 ---
+
+## 🆕 v4.0.0 更新 (2026-08-04)
+
+> 本次聚焦「桌面化 + 自动化」— 从 Web 工具走向独立应用 + 脚本库靶场闭环。
+
+- 🖥️ **独立桌面应用** — pywebview + WebView2 打包 exe（24MB），双击即用，无需 Python 环境
+- 🌐 **内嵌浏览器** — 工具箱内置浏览器，支持 Headers 编辑 + CORS 服务端代理
+- ⚡ **SSE 实时攻击流** — 自动攻击页实时推送 `{stage,item,status}` 攻击进度
+- 🎮 **脚本库靶场** — 内置 4 关 Web 靶场（时间盲注/布尔盲注/JS硬编码/命令执行），脚本库脚本一键解出 Flag
+- 🎯 **简单命令注入引擎 (simple_cmd_rce)** — 针对 `system($_POST['x'])` 无 WAF 靶场，源码解析 + 参数提取 + 直连探测，秒出 Flag
+- 📥 **脚本库 URL 输入** — 目标 URL + 额外参数输入框，整行参数传入，结果本页显示
+- 🐛 **大量修复** — exe 窗口模式崩溃(uvicorn log)、JS await 语法、脚本库表格空白、Python2 脚本迁移、GBK 编码崩溃等
 
 ## v3.6.0 更新 (2026-07-15)
 
 > 本次聚焦「自动化解题引擎」全面扩容 — 从单点 Payload 走向多阶段自动攻击链，新增 11 个核心解题引擎，内嵌脚本库 41 → 51。
 
 - 🔗 **多阶段攻击引擎（multi_stage.py）** — 通用多阶段解题框架：阶段检测 → 攻击 → 响应分析 → 跳转追踪 → 下一阶段，自动串联攻击链直至读出 Flag
-- 🔍 **高级扫描引擎（advanced_scanner.py）** — 字典目录/文件爆破 + Response Diffing 精准检测 + 自动攻击链（LFI→日志投毒→RCE / LFI→PHP Filter Chain / SSTI→Jinja2 RCE）+ HTTP 方法自适应
-- 🧠 **智能一键解题引擎（smart_solver.py）** — 问题分类器（Web/PWN/Reverse/Crypto/Misc/Blockchain）+ 策略路由 + 多引擎自动编排
-- 🐘 **PHP 反序列化求解器（php_unserialize.py）** — 基础验证 / `__wakeup` 绕过（CVE-2016-7124）/ 弱类型 == 绕过 / private·protected 属性编码
-- 📂 **PHP 文件包含求解器（php_lfi.py）** — include/require + 协议约束识别（file:// / php://filter / php://input / data://）+ flag 文件自动发现
+- 🔍 **高级扫描引擎（advanced_scanner.py）** — 字典目录/文件爆破 + Response Diffing 精准检测 + 自动攻击链 + HTTP 方法自适应
+- 🧠 **智能一键解题引擎（smart_solver.py）** — 问题分类器 + 策略路由 + 多引擎自动编排
+- 🐘 **PHP 反序列化求解器（php_unserialize.py）** — 基础验证 / `__wakeup` 绕过（CVE-2016-7124）/ 弱类型 == 绕过
+- 📂 **PHP 文件包含求解器（php_lfi.py）** — include/require + 协议约束识别 + flag 文件自动发现
 - 💥 **PHP eval RCE 求解器（php_eval_rce.py）** — MD5 碰撞检测 + eval() 代码执行 + WAF 关键字黑名单绕过
-- 🐚 **bashFuck 无字母 RCE（bashfuck.py + bashfuck_solver.py）** — 过滤字母数字后 `$((2#…))` 二进制 + ANSI-C `$'\ooo'` 构造命令，覆盖 system/exec/passthru + WAF + GET/POST 自动探测
-- 🌐 **SSRF DNS Rebinding→RCE（ssrf_rebind.py）** — Flask/Django url 参数 + DNS 解析检测 + 黑名单 IP/域名绕过（nip.io/sslip.io/十进制/八进制）
-- 🗃️ **SQLi-LABS 专项求解器（sqli_labs_solver.py）** — Less-1~75 完整映射 + 自动探测闭合方式/列数/注入类型 + 单关求解 + 一键批量通关 + 交互练习
-- 🎮 **JS/客户端挑战求解器（js_challenge_solver.py）** — 游戏类（2048/贪吃蛇等）胜利条件提取 + JS 加解密逆向 + 硬编码 Flag 搜索
-- 📦 **CTF+ 批量求解器（ctfplus_batch_solver.py）** — 读取题目 JSON，自动分类并批量求解
-- 📚 **脚本库扩充** — 内嵌 CTF 脚本 41 → 51，registry 结构化重构（引入 ScriptMeta 类型定义）
-- 🖥️ **引擎/GUI 强化** — url_analyzer、gui、ssti、jwt、rce_bypass 大幅增强，新引擎接入智能攻击面板；移除冗余 payloads/rce.py（RCE 数据统一由 php 模块提供）
+- 🐚 **bashFuck 无字母 RCE（bashfuck.py + bashfuck_solver.py）** — 过滤字母数字后 `$((2#…))` 二进制 + ANSI-C `$'\ooo'` 构造命令
+- 🌐 **SSRF DNS Rebinding→RCE（ssrf_rebind.py）** — Flask/Django url 参数 + DNS 解析检测 + 黑名单绕过（nip.io/sslip.io/十进制/八进制）
+- 🗃️ **SQLi-LABS 专项求解器（sqli_labs_solver.py）** — Less-1~75 完整映射 + 自动探测闭合方式/列数/注入类型
+- 🎮 **JS/客户端挑战求解器（js_challenge_solver.py）** — 游戏类挑战胜利条件提取 + 硬编码 flag 扫描
+- 🏋️ **RSA 综合求解器（rsa_toolkit.py）** — 已知 p/q/e/d 解密 + 低指数攻击 + 模数分解（Fermat/Yafu 联动）
+- 📊 **50+ 脚本库元数据** — 41 → 51 脚本，分类/描述/依赖全标注，Web 界面可视化浏览 + 一键运行
 
 ## v3.0.0 更新 (2026-06-25)
 
-- 🧠 **智能攻击引擎** — SmartFingerprinter 源码指纹识别，从响应体检测 `system()`/`exec()`/`$_POST` 等危险函数及参数
-- ⚡ **并发攻击引擎** — ConcurrentEngine：15 线程并发执行，指数退避重试，发现 Flag 立即停止所有任务
-- 🎯 **自适应调度器** — AdaptiveScheduler：基于指纹自动排序攻击策略，CTF 优先级（RCE > LFI > SQLi），自动选择 GET/POST 方法
-- 🔍 **分析增强** — analyze_url 新增 Step 0 源码指纹分析，源码级漏洞直接加成 +40% 置信度
-- 🏗️ **GUI 线程安全** — queue.Queue + self.after() 序列化 worker→主线程，解决 15 线程并发操作 tkinter 导致的崩溃
+- 🔐 **纯Python密码引擎** — AES(ECB/CBC, FIPS-197验证) / RC4 / RSA / MD5 / SHA / BLAKE2 / CRC32 / HMAC / XOR爆破
+- 🆕 **中文特色密码** — 与佛论禅/核心价值观/百家姓/社会主义核心价值观编码
+- 🆕 **高级编码引擎** — Brainfuck/Ook!/JSFuck/AAencode/颜文字/Quoted-Printable 等 18 种
+- 🖥️ **GUI v2.0** — Catppuccin 暗色主题, 11 个面板
+- 🆕 **靶场黑名单分析** — 上传过滤规则 → 自动推荐可用后缀/绕过
 
 ## v2.0.0 更新 (2026-06-16)
 
-- 🆕 **高级编码引擎** — 18种冷门编码 (Brainfuck/Ook!/JSFuck/AAencode/Uuencode/XXencode/Quoted-Printable/Punycode/EBCDIC/Baudot/TapCode/Zalgo/ByteSwap/EmojiCode等)
-- 🆕 **中文特色密码** — 7种中文密码 (与佛论禅/核心价值观编码/兽音/熊曰/百家姓加密/中文电码/Gan语言)
-- 🆕 **密码学引擎** — 纯Python实现 AES(ECB/CBC 128/192/256位)/RC4/RSA/MD5/SHA全系/BLAKE2/CRC32/HMAC/XOR爆破/N进制转换
-- 🆕 **反弹Shell & 隐写** — 10种反弹Shell生成 + 6种WebShell + PNG Chunk分析 + LSB提取 + EXIF + 文件魔数 + 密文特征识别
-- 🖥️ **GUI面板升级** — 新增5个功能面板 (高级编码/中文密码/密码学/Shell生成/隐写分析), 6→11面板
-- 📊 **密码/编码数**: 23 → 50+ | **核心引擎**: 5 → 9 | **代码量**: ~3000 → ~6500行
+- 🖥️ **GUI 图形界面** — tkinter 暗色主题，密码面板即看即用
+- 🧠 **智能解码器** — 14 种编码自动识别 + 链式递归解码
+- 🎯 **JWT 攻击链** — 解析/None攻击/37条弱密钥爆破
+- 📦 **脚本注册表** — 41 个 CTF 脚本分类管理
 
 ## v1.4.0 更新
 
-- 🆕 **Upload 靶场分析** — `--analyze` 粘贴黑名单，自动推荐绕过方案（CLI+GUI双支持）
-- 🆕 **SQLi 认证绕过** — 8 条万能密码 Payload（`admin' OR '1'='1`等）
-- 🔧 **GUI 分类修复** — 下拉框选中后正确加载数据
-- 🔧 **GUI 列表展开** — 不再截断显示，全部 Payload 可见
-- 🔧 **密码引擎补全** — Atbash/Caesar/ROT13/Rail Fence/Morse 等补全
-- 🔧 **GUI 搜索优化** — 输入框支持回车触发搜索
-- 🐛 **bugfix** — AES 解密轮密钥顺序修复、pyproject.toml 构建后端修复
+- 📦 **脚本库** — 20+ 内嵌 CTF 脚本
+- 🎯 **Payload 生成器** — 初版 8 大模块
 
 ---
 
 ## 📚 CTF 知识文档
 
-配套解题指南已在 `docs/ctf-guide/` 目录下，覆盖 **9 大方向 + 5000+ 行**深度参考：
+项目附带完整 CTF 知识库（skill 文档），覆盖：
 
-- 🔵 [Web 安全](docs/ctf-guide/ctf-web.md) — 源码泄露 / 文件包含 / SQL注入 / SSTI / SSRF / JWT / 反序列化
-- 🟡 [密码学](docs/ctf-guide/ctf-crypto.md) — RSA攻击全系 / AES模式攻防 / ECC / Lattice / 古典密码
-- 🔴 [逆向工程](docs/ctf-guide/ctf-reverse.md) — IDA / angr / Z3 / 脱壳 / APK / 反调试
-- 🟣 [Pwn](docs/ctf-guide/ctf-pwn.md) — 栈溢出 / ROP / 堆利用 / 格式化字符串
-- 🟠 [取证隐写](docs/ctf-guide/ctf-forensics.md) — LSB / 频谱图 / Wireshark / Volatility / 文件修复
-- 🟢 [Misc](docs/ctf-guide/ctf-misc.md) — PyJail / 条件竞争 / 网络协议隐写
-- ⚫ [OSINT](docs/ctf-guide/ctf-osint.md) — Google Dorks / 图片反查 / Maltego
-- 🔴 [恶意软件](docs/ctf-guide/ctf-malware.md) — LOLBAS / Cobalt Strike / DLL劫持
-- 🤖 [AI/ML](docs/ctf-guide/ctf-aiml.md) — 模型逆向 / 对抗样本 / LangChain安全
-
-👉 **[速查表](docs/ctf-guide/CTF-CheatSheet.md)** · **[索引导航](docs/ctf-guide/README.md)**
+- **Web** — 源码泄露11种路径 / PHP伪协议 / SQL注入大全 / 反序列化 / SSTI / SSRF / JWT
+- **Reverse** — IDA Pro 速查 / 脱壳 / 符号执行 / APK逆向
+- **Pwn** — 保护机制 / 栈溢出 / 格式化字符串 / 堆利用
+- **Crypto** — RSA 10+攻击 / ECC / 格密码 / 古典密码分类表
+- **Forensics** — 图片/音频隐写 / 内存取证 / 文件头Magic表
+- **Misc** — Python沙箱逃逸 / 多层编码 / 蓝牙RFID
 
 ---
 
 ## 📮 联系
 
-3303257524@qq.com
+- GitHub: [Yang-afk825/Yang-web](https://github.com/Yang-afk825/Yang-web)
+- 邮箱: 3303257524@qq.com
+
+---
 
 ## 📄 License
 
-MIT — 详见 [LICENSE](LICENSE)
+MIT License © 2026 Yang-afk825

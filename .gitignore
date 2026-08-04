@@ -7,3 +7,9 @@ build/
 .venv/
 venv/
 *.ico
+
+# 靶场运行时生成
+flag.txt
+# 调试/备份
+README_v3.6_backup.md
+_chrome_profile*/

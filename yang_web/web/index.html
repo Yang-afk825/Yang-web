@@ -366,6 +366,9 @@ tr:hover td { background: rgba(255,255,255,.02); }
         <input type="text" id="scriptUrl" placeholder="目标 URL (可选) — 填写后作为参数传给脚本，如 http://target.com/">
       </div>
       <div class="row" style="margin-top:8px;">
+        <input type="text" id="scriptArgs" placeholder="额外参数 (可选) — 每行一个参数，整行作为一个整体传入；如: SELECT secret FROM users WHERE id=1">
+      </div>
+      <div class="row" style="margin-top:8px;">
         <input type="text" id="scriptSearch" placeholder="搜索脚本…">
         <select id="scriptCat" style="flex:0 0 160px;">
           <option value="">全部分类</option>
@@ -771,8 +774,13 @@ async function runScript(key, el) {
   btn.textContent = '…';
   btn.disabled = true;
   const url = $('scriptUrl') ? $('scriptUrl').value.trim() : '';
+  const argsRaw = $('scriptArgs') ? $('scriptArgs').value.trim() : '';
   const args = [];
   if (url) args.push(url);
+  // 额外参数: 每行一个参数 (整行作为一个整体, 保留空格)
+  if (argsRaw) {
+    argsRaw.split(/\n+/).map(a => a.trim()).filter(x => x).forEach(a => args.push(a));
+  }
   try {
     const d = await api('/api/scripts/run', {key, args});
     let html = `<span class="acc">退出码: ${d.returncode}</span>`;
