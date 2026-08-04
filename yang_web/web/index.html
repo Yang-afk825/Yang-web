@@ -431,6 +431,26 @@ tr:hover td { background: rgba(255,255,255,.02); }
       <h3>结果</h3>
       <div class="output" id="chineseOutput">等待输入…</div>
     </div>
+    <div class="card">
+      <h3>古典密码知识库 <span class="dim" style="font-weight:normal;font-size:12px;">20+ 种密码 — 参考图上印着密码表，点“查看原图”对照解密</span></h3>
+      <div class="row" style="margin-bottom:10px;">
+        <select id="miscCatSel" style="flex:0 0 180px;">
+          <option value="">全部分类</option>
+        </select>
+        <input id="miscSearch" placeholder="搜索密码…" style="flex:1;">
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <select id="miscList" size="12" style="flex:0 0 240px;width:240px;font-family:'Cascadia Code',monospace;"></select>
+        <div style="flex:1;min-width:0;">
+          <div class="output" id="miscInfo" style="min-height:90px;white-space:pre-wrap;">← 选择左侧密码类型查看详情</div>
+          <div class="row" style="margin-top:8px;">
+            <button id="miscViewImgBtn" disabled style="opacity:.5;">🖼 查看原图</button>
+            <button id="miscViewImg2Btn" disabled style="opacity:.5;">🖼 辅图</button>
+            <span class="dim" id="miscImgName" style="margin-left:8px;align-self:center;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ===== 高级编码 ===== -->
@@ -776,6 +796,63 @@ $('chineseBtn').onclick = async () => {
     setOut($('chineseOutput'), html);
   } catch(e) { setOut($('chineseOutput'), '<span class="err">' + esc(e.message) + '</span>'); }
 };
+
+// ─────────────────────────────────────────────
+// 古典密码知识库 (含参考图/查看原图)
+// ─────────────────────────────────────────────
+let miscAll = [];
+let miscSel = null;
+async function loadMisc() {
+  try {
+    const d = await api('/api/ciphers', undefined, 'GET');
+    miscAll = d.ciphers || [];
+    const cats = d.categories || [];
+    $('miscCatSel').innerHTML = '<option value="">全部分类</option>' +
+      cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    renderMiscList();
+  } catch(e) { console.warn('古典密码加载失败', e); }
+}
+function renderMiscList() {
+  const cat = $('miscCatSel').value;
+  const q = $('miscSearch').value.trim().toLowerCase();
+  const list = miscAll.filter(c => (!cat || c.category === cat) &&
+    (!q || (c.name||'').toLowerCase().includes(q) || (c.id||'').includes(q) ||
+     (c.aliases||[]).join(',').toLowerCase().includes(q)));
+  $('miscList').innerHTML = list.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  if (!list.length) { $('miscList').innerHTML = '<option disabled>无匹配</option>'; miscSel = null; return; }
+  $('miscList').value = list[0].id;
+  showMiscDetail(list[0].id);
+}
+function showMiscDetail(cid) {
+  miscSel = miscAll.find(c => c.id === cid);
+  if (!miscSel) return;
+  const c = miscSel;
+  let lines = [];
+  lines.push('名称: ' + (c.name||cid));
+  if (c.aliases) lines.push('别名: ' + c.aliases.join(', '));
+  lines.push('分类: ' + c.category);
+  lines.push('描述: ' + (c.description||'无'));
+  if (c.features) lines.push('特征: ' + c.features.join(', '));
+  lines.push('状态: ' + (c.encode ? '支持编码/解码' : '仅提供参考图/说明'));
+  $('miscInfo').textContent = lines.join('\n');
+  const img = c.image, img2 = c.image2;
+  $('miscViewImgBtn').disabled = !img;
+  $('miscViewImgBtn').style.opacity = img ? 1 : .5;
+  $('miscViewImg2Btn').disabled = !img2;
+  $('miscViewImg2Btn').style.opacity = img2 ? 1 : .5;
+  $('miscImgName').textContent = img ? img : (img2 ? img2 : '');
+}
+$('miscCatSel').onchange = renderMiscList;
+$('miscSearch').oninput = renderMiscList;
+$('miscList').onchange = () => { if ($('miscList').value) showMiscDetail($('miscList').value); };
+function viewMiscImage(imgName) {
+  if (!imgName) return;
+  const url = '/api/ciphers/image/' + encodeURIComponent(imgName);
+  window.open(url, '_blank');
+}
+$('miscViewImgBtn').onclick = () => miscSel && viewMiscImage(miscSel.image);
+$('miscViewImg2Btn').onclick = () => miscSel && viewMiscImage(miscSel.image2);
+loadMisc();
 
 // ─────────────────────────────────────────────
 // 高级编码

@@ -428,6 +428,21 @@ def api_ciphers():
     except Exception as e:
         raise _err(f"加载古典密码失败: {e}")
 
+
+@app.get("/api/ciphers/image/{name}")
+def api_cipher_image(name: str):
+    """返回古典密码参考图（图片上印着密码表，供解密对照/查看原图）"""
+    import re as _re
+    # 防路径穿越: 只允许纯文件名
+    if not _re.fullmatch(r"[\w\-.]+", name):
+        raise _err("非法文件名")
+    img_path = misc_crypto.DATA_DIR / name
+    if not img_path.exists():
+        raise _err("图片不存在")
+    from fastapi.responses import FileResponse
+    mime = "image/png" if img_path.suffix.lower() == ".png" else "image/jpeg"
+    return FileResponse(str(img_path), media_type=mime)
+
 # ---------------------------------------------------------------------------
 # 内嵌浏览器代理 — 请求/响应回显 (BP 风格)
 # ---------------------------------------------------------------------------
