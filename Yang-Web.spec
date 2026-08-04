@@ -22,6 +22,9 @@ a = Analysis(
     datas=[
         # Web UI 静态资源
         (os.path.join(project_root, 'yang_web', 'web'), 'yang_web/web'),
+        # 古典密码参考图 (图片上印着密码表, 查看原图用)
+        (os.path.join(project_root, 'yang_web', 'wordlists', 'data', 'misc_crypto'),
+         'yang_web/wordlists/data/misc_crypto'),
     ],
     hiddenimports=[
         # 引擎依赖

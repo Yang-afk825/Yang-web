@@ -848,7 +848,28 @@ $('miscList').onchange = () => { if ($('miscList').value) showMiscDetail($('misc
 function viewMiscImage(imgName) {
   if (!imgName) return;
   const url = '/api/ciphers/image/' + encodeURIComponent(imgName);
-  window.open(url, '_blank');
+  showImageModal(url, imgName);
+}
+function showImageModal(url, title) {
+  let ov = document.getElementById('imgOverlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'imgOverlay';
+    ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+    ov.innerHTML = '<div style="width:100%;padding:8px 16px;display:flex;align-items:center;background:#1e1e2e;border-bottom:1px solid #45475a;">' +
+      '<span id="imgModalTitle" style="color:#cdd6f4;font:14px \'Cascadia Code\',monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>' +
+      '<button id="imgModalClose" style="background:#45475a;color:#cdd6f4;border:none;padding:4px 14px;cursor:pointer;border-radius:4px;font:13px sans-serif;">✕ 关闭</button></div>' +
+      '<div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:16px;">' +
+      '<img id="imgModalImg" style="max-width:95%;max-height:95%;object-fit:contain;box-shadow:0 4px 24px rgba(0,0,0,.6);"></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.style.display = 'none'; });
+    document.getElementById('imgModalClose').onclick = () => ov.style.display = 'none';
+  }
+  document.getElementById('imgModalTitle').textContent = title || '参考图';
+  const img = document.getElementById('imgModalImg');
+  img.src = url;
+  img.onerror = () => { document.getElementById('imgModalTitle').textContent = '图片加载失败: ' + (title||'') + ' (文件未打包进 exe?)'; };
+  ov.style.display = 'flex';
 }
 $('miscViewImgBtn').onclick = () => miscSel && viewMiscImage(miscSel.image);
 $('miscViewImg2Btn').onclick = () => miscSel && viewMiscImage(miscSel.image2);
