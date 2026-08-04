@@ -413,7 +413,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
     </div>
     <div class="card">
       <h3>📄 响应源码</h3>
-      <div class="output" id="browserBody" style="min-height:200px;">等待请求…</div>
+      <div class="output" id="browserBodyOut" style="min-height:200px;">等待请求…</div>
     </div>
   </div>
 
@@ -463,7 +463,12 @@ async function api(path, body, method='POST') {
   const opts = { method, headers: {'Content-Type':'application/json'} };
   if (body !== undefined) opts.body = JSON.stringify(body);
   const res = await fetch(API + path, opts);
-  const data = await res.json().catch(() => ({ok:false, detail: await res.text()}));
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    data = {ok: false, detail: await res.text().catch(() => '')};
+  }
   if (!res.ok || data.ok === false) throw new Error(data.detail || data.error || `HTTP ${res.status}`);
   return data.data;
 }
@@ -818,7 +823,7 @@ async function doBrowserReq() {
     });
   }
   setOut($('browserHeaders'), '<span class="spin"></span> 请求中…');
-  setOut($('browserBody'), '');
+  setOut($('browserBodyOut'), '');
   $('browserStatus').textContent = '';
   $('browserFrame').src = 'about:blank';
   try {
@@ -831,7 +836,7 @@ async function doBrowserReq() {
     setOut($('browserHeaders'), h);
     $('browserStatus').textContent = `HTTP ${d.status}`;
     // Body 源码
-    if (d.body) setOut($('browserBody'), esc(d.body).slice(0, 20000));
+    if (d.body) setOut($('browserBodyOut'), esc(d.body).slice(0, 20000));
     // iframe 预览 (走 proxy-view 避免 CORS)
     if (d.status >= 200 && d.status < 400) {
       $('browserFrame').src = `/api/proxy-view?url=${encodeURIComponent(url)}`;
