@@ -2,8 +2,8 @@
 *.pyc
 *.pyo
 *.egg-info/
-dist/
 build/
+dist/*.log
 .venv/
 venv/
 *.ico
