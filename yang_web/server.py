@@ -423,8 +423,15 @@ def _list_chinese_funcs():
 # ---------------------------------------------------------------------------
 @app.get("/api/advanced-encoders")
 def api_advanced_encoders():
-    names = [n for n in dir(advanced_engines)
-             if not n.startswith("_") and callable(getattr(advanced_engines, n))]
+    # 用 ADVANCED_ENCODERS 的 key 列表（权威编码器清单），
+    # 避免 dir() 混入 Optional/Tuple 等 typing 垃圾导致前端下拉框报错
+    encoders = getattr(advanced_engines, "ADVANCED_ENCODERS", None)
+    if isinstance(encoders, dict):
+        names = list(encoders.keys())
+    else:
+        names = [n for n in dir(advanced_engines)
+                 if not n.startswith("_") and callable(getattr(advanced_engines, n))
+                 and getattr(getattr(advanced_engines, n), "__module__", "") == advanced_engines.__name__]
     return _ok(names)
 
 @app.post("/api/advanced-encode")
@@ -432,13 +439,12 @@ def api_advanced_encode(req: DecodeReq):
     if not req.text.strip():
         raise _err("输入不能为空")
     try:
-        fn = getattr(advanced_engines, req.mode)
-        if not callable(fn):
+        encoders = getattr(advanced_engines, "ADVANCED_ENCODERS", {})
+        enc = encoders.get(req.mode)
+        if not enc or not callable(enc.get("encode")):
             raise _err(f"编码器不存在: {req.mode}")
-        res = fn(req.text)
+        res = enc["encode"](req.text)
         return _ok({"encoder": req.mode, "result": res})
-    except AttributeError:
-        raise _err(f"编码器不存在: {req.mode}")
     except Exception as e:
         raise _err(f"编码失败: {e}")
 

@@ -77,7 +77,7 @@ SCRIPTS: Dict[str, ScriptMeta] = {
 
         "usage": 'echo "sometext" | python scripts/base64批量加解密.py',
 
-        "deps": [],
+        "deps": ["colorama", "py3base92", "base58"],
 
         "input_type": "text",
 
