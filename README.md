@@ -1,6 +1,6 @@
 # Yang-Web 🛠️ v4.0.0
 
-> **CTF 一站式工具箱** — 智能解码 + 50+种密码/编码 + 12+智能攻击引擎 + JWT攻击 + 反弹Shell + 隐写分析 + Payload库 + 靶场分析 + GUI图形界面 + 独立桌面应用
+> **CTF 一站式工具箱** — 智能解码 + 95种密码/编码 + 文件分析 + CTF知识库检索 + 12+智能攻击引擎 + JWT攻击 + 反弹Shell + 隐写分析 + Payload库 + 靶场分析 + GUI图形界面 + 独立桌面应用
 
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -17,7 +17,7 @@
 
 Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密码破解、Payload 生成、靶场分析到攻击利用。内置 **图形界面 (GUI)**，支持 CLI ↔ GUI 一键切换，打包为 **独立 Windows 桌面应用 (exe)**。完全离线，零第三方依赖。
 
-**14 个子命令 + 智能解码器(14种编码) + 12+智能攻击引擎(源码指纹→并发攻击→一键解题→实时攻击流) + 50+种密码/编码 + 纯Python密码引擎(AES/RC4/RSA) + 中文特色密码 + 反弹Shell/WebShell生成 + 隐写分析 + 51个内嵌CTF脚本 + JWT攻击链 + 8大Payload模块 + 靶场黑名单分析 + 内嵌浏览器 + 脚本库靶场。**
+**14 个子命令 + 智能解码器(14种编码) + 12+智能攻击引擎(源码指纹→并发攻击→一键解题→实时攻击流) + 95种密码/编码 + 文件分析(签名识别/ZIP伪加密/文件雕刻/字符串提取) + CTF知识库(12篇深度文章+Payload速查+1150+篇WP+46类脚本) + 在线加解密 + 纯Python密码引擎(AES/RC4/RSA) + 中文特色密码 + 反弹Shell/WebShell生成 + 隐写分析 + 51个内嵌CTF脚本 + JWT攻击链 + 8大Payload模块 + 靶场黑名单分析 + 内嵌浏览器 + 脚本库靶场。**
 
 ---
 
