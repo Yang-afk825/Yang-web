@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-green.svg)]()
 [![GUI](https://img.shields.io/badge/GUI-pywebview-purple.svg)]()
-[![Ciphers](https://img.shields.io/badge/ciphers-50+-orange.svg)]()
+[![Ciphers](https://img.shields.io/badge/ciphers-95-orange.svg)]()
 [![Scripts](https://img.shields.io/badge/scripts-51-red.svg)]()
 [![Payloads](https://img.shields.io/badge/payloads-8_mods-blue.svg)]()
 [![Engines](https://img.shields.io/badge/engines-12-brightgreen.svg)]()
@@ -41,7 +41,7 @@ Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密�
 
 - 📴 **完全离线** — 零 pip 依赖，Python 标准库一把梭
 - 🧠 **智能解码器** — 粘贴即用：自动识别14种编码 + 一键解码 + 暴力全试 + 链式递归
-- 🔐 **50+种密码/编码** — Base全系 + 古典(凯撒/栅栏/猪圈/培根/Vigenère/ADFGX/摩斯) + 键盘映射 + 中文特色密码(与佛论禅/核心价值观/百家姓...) + 高级编码(Brainfuck/Ook!/JSFuck/AAencode...18种)
+- 🔐 **95种密码/编码** — Base全系 + 古典(凯撒/栅栏/猪圈/培根/Vigenère/ADFGX/摩斯) + 键盘映射 + 中文特色密码 + 高级编码(Brainfuck/Ook!/JSFuck/AAencode...) + 经典编码(DNA/A1Z26/盲文/BWT...) + 带key密码(仿射/Hill/Enigma/ADFGVX...) + esoteric(Whitespace/Deadfish/Spoon...) + 进制编码(BCD/格雷码/海明码...)
 - 📦 **51个内嵌脚本** — Crypto/Web/Misc/Reverse 全覆盖，一键运行，支持 URL 输入 + 额外参数
 - 🎯 **靶场分析(`--analyze`)** — 粘贴黑名单，自动告诉你哪些后缀/绕过能用
 - 🧠 **12+ 智能攻击引擎** — 粘贴URL→自动分析→一键解题：源码指纹识别 + 并发攻击 + 自适应调度 + 自动读Flag + **SSE 实时攻击流**
@@ -58,14 +58,16 @@ Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密�
 ## 📦 安装
 
 ```bash
-# 源码运行
-git clone https://github.com/Yang-afk825/Yang-web.git
+# 源码运行（--recurse-submodules 会一并拉取 CTF 知识库）
+git clone --recurse-submodules https://github.com/Yang-afk825/Yang-web.git
 cd Yang-web
 python -m yang_web.server        # 启动 Web 服务 (默认 8765)
 
 # 或直接使用打包好的桌面应用
 dist/Yang-Web.exe                # 独立窗口, 无需 Python
 ```
+
+> 📚 **CTF 知识库（内置检索）**：接入 [Des-CTF-Knowledge](https://github.com/Dest1ny-Sec/Des-CTF-Knowledge)（12 篇深度文章 + Payload 速查 + 1150+ 篇大赛 WP + 46 类脚本）。源码版用 `--recurse-submodules` 会自动拉取到 `knowledge/Des-CTF-Knowledge`；若单独 clone 了知识库，可用环境变量 `CTF_KB_DIR` 指向其根目录。exe 版需手动 clone 知识库到 `~/.qclaw/workspace/Des-CTF-Knowledge` 或设 `CTF_KB_DIR`。
 
 ---
 
@@ -266,7 +268,9 @@ Web 界面内置完整密码学面板：
 
 - **智能解码** — 14种编码链式/暴力解码
 - **高级编码** — 18种 (Brainfuck/Ook!/JSFuck/AAencode...)
-- **中文密码** — 与佛论禅/核心价值观/百家姓/古典密码知识库(34种+参考图)
+- **中文密码** — 与佛论禅/核心价值观/百家姓/古典密码知识库(95种+参考图)
+- **文件分析** — 文件签名识别/ZIP伪加密检测/文件雕刻/字符串提取(拖拽上传)
+- **知识库检索** — Des-CTF-Knowledge(12篇深度文章+Payload速查+1150+篇WP+46类脚本)
 - **密码学引擎** — AES/RC4/RSA/Hash/XOR/进制转换
 - **Hash 识别** — 40+ 算法
 - **JWT 面板** — 解析/攻击/爆破

@@ -43,6 +43,7 @@ a = Analysis(
         'yang_web.core.esoteric_lang',
         'yang_web.core.binary_codes',
         'yang_web.core.file_tools',
+        'yang_web.core.knowledge_base',
         'yang_web.core.shell_stego',
         'yang_web.core.url_analyzer',
         'yang_web.core.bashfuck',
