@@ -1,0 +1,3 @@
+[submodule "knowledge/Des-CTF-Knowledge"]
+	path = knowledge/Des-CTF-Knowledge
+	url = https://github.com/Dest1ny-Sec/Des-CTF-Knowledge.git

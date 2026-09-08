@@ -5,8 +5,8 @@
 - list_articles(): 列出 12 篇深度文章清单
 - search(query, kind): 按类型检索
     kind=payload  → 检索 PAYLOAD-CHEATSHEET.md 高频 Payload 速查
-    kind=wp       → 检索 1156 篇历年大赛 WriteUp
-    kind=script   → 检索 50+ 现成脚本
+    kind=wp       → 检索 1150+ 篇历年大赛 WriteUp
+    kind=script   → 检索 46 类 / 110+ 现成脚本
     kind=article  → 检索 12 篇深度文章（含 .idx.md 章节导航）
     kind=all      → 全部
 纯 Python 标准库实现，零外部依赖。
@@ -18,11 +18,36 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List
 
-# 知识库根目录（可用环境变量 CTF_KB_DIR 覆盖）
-_KB_ROOT = os.environ.get(
-    "CTF_KB_DIR",
-    "C:/Users/阳/.qclaw/workspace/Des-CTF-Knowledge",
-)
+# 知识库根目录探测（优先级：环境变量 CTF_KB_DIR > 仓库内 submodule > 常见位置）
+def _find_kb_root() -> Path:
+    """探测 Des-CTF-Knowledge 根目录，返回 Path（可能不存在）。"""
+    # 1. 环境变量 CTF_KB_DIR
+    env = os.environ.get("CTF_KB_DIR")
+    if env:
+        p = Path(env)
+        if (p / "PAYLOAD-CHEATSHEET.md").exists():
+            return p
+    # 2. 仓库内 submodule / 同级目录（Yang-web/knowledge/Des-CTF-Knowledge）
+    here = Path(__file__).resolve()
+    repo_root = here.parent.parent.parent  # yang_web/core → yang_web → repo_root
+    for cand in (
+        repo_root / "knowledge" / "Des-CTF-Knowledge",
+        repo_root / "Des-CTF-Knowledge",
+    ):
+        if (cand / "PAYLOAD-CHEATSHEET.md").exists():
+            return cand
+    # 3. 常见位置（向后兼容旧路径 / 手动 clone）
+    for cand in (
+        Path.home() / ".qclaw" / "workspace" / "Des-CTF-Knowledge",
+        Path.home() / "Des-CTF-Knowledge",
+    ):
+        if (cand / "PAYLOAD-CHEATSHEET.md").exists():
+            return cand
+    # 4. 默认返回仓库内 submodule 位置（可能不存在，available() 会判 false）
+    return repo_root / "knowledge" / "Des-CTF-Knowledge"
+
+
+_KB_ROOT: Path = _find_kb_root()
 
 # 12 篇深度文章（文件名 → 一句话描述）
 ARTICLES: List[tuple] = [
