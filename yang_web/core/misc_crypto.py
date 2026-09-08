@@ -14,6 +14,14 @@ from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "wordlists" / "data" / "misc_crypto"
 
+try:
+    from . import cipher_classic, cipher_keyed, chinese_ciphers2, esoteric_lang, binary_codes
+except ImportError:
+    import cipher_classic, cipher_keyed, chinese_ciphers2, esoteric_lang, binary_codes
+
+# 扩展模块列表：encode/decode/list_ciphers 等统一 fallback 遍历
+EXTRA_MODULES = [cipher_classic, cipher_keyed, chinese_ciphers2, esoteric_lang, binary_codes]
+
 # ═══════════════════════════════════════════
 # 数据表 / 常量
 # ═══════════════════════════════════════════
@@ -1150,7 +1158,7 @@ def jefferson_decode(cipher_text: str, key: list, rotors: list = None) -> list:
 # ═══════════════════════════════════════════
 
 def list_ciphers(category: str = None) -> list:
-    """列出所有已注册的密码类型。"""
+    """列出所有已注册的密码类型（含扩展的经典编码/带key密码）。"""
     result = []
     for cid, info in CIPHER_TYPES.items():
         if category and info.get("category") != category:
@@ -1159,12 +1167,32 @@ def list_ciphers(category: str = None) -> list:
             "id": cid,
             **info,
         })
+    for mod in EXTRA_MODULES:
+        for c in mod.list_ciphers(category):
+            result.append(_pad_ext(c))
     return result
+
+
+def _pad_ext(info: dict) -> dict:
+    """为扩展密码补上 GUI 需要的默认字段。"""
+    d = dict(info)
+    d.setdefault("description", d["name"] + " 编码/解码")
+    d.setdefault("features", [])
+    d.setdefault("encode", True)
+    return d
 
 
 def get_cipher(cipher_id: str) -> dict:
     """返回指定密码类型的完整信息。"""
-    return CIPHER_TYPES.get(cipher_id.lower())
+    cid = cipher_id.lower()
+    info = CIPHER_TYPES.get(cid)
+    if info:
+        return info
+    for mod in EXTRA_MODULES:
+        info = mod.get_cipher(cid)
+        if info:
+            return info
+    return None
 
 
 def search_ciphers(query: str) -> list:
@@ -1175,6 +1203,8 @@ def search_ciphers(query: str) -> list:
         text = cid + " " + info["name"] + " " + " ".join(info.get("aliases", [])) + " " + info["category"]
         if q in text.lower():
             results.append({"id": cid, **info})
+    for mod in EXTRA_MODULES:
+        results.extend(_pad_ext(c) for c in mod.search_ciphers(query))
     return results
 
 
@@ -1203,6 +1233,8 @@ def get_categories() -> list:
     cats = set()
     for info in CIPHER_TYPES.values():
         cats.add(info["category"])
+    for mod in EXTRA_MODULES:
+        cats.update(mod.get_categories())
     return sorted(cats)
 
 
@@ -1247,6 +1279,10 @@ def encode(cipher_id: str, text: str, **kwargs) -> str:
     }
     if cid in funcs:
         return funcs[cid](text)
+    # 扩展：经典编码 / 带key密码 / 中文特色 / esoteric 语言
+    for mod in EXTRA_MODULES:
+        if cid in mod._FUNCS:
+            return mod.encode(cid, text, key=kwargs.get("key", ""))
     return f"[!] 不支持编码: {cipher_id}"
 
 
@@ -1291,6 +1327,10 @@ def decode(cipher_id: str, cipher_text: str, **kwargs) -> str:
     }
     if cid in funcs:
         return funcs[cid](cipher_text)
+    # 扩展：经典编码 / 带key密码 / 中文特色 / esoteric 语言
+    for mod in EXTRA_MODULES:
+        if cid in mod._FUNCS:
+            return mod.decode(cid, cipher_text, key=kwargs.get("key", ""))
     return f"[!] 不支持解码: {cipher_id}"
 
 

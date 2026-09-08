@@ -30,7 +30,9 @@ from pydantic import BaseModel
 
 from .core import decoder, hashid, jwt as jwt_mod
 from .core import misc_crypto, crypto_engine, chinese_ciphers, advanced_engines
+from .core import file_tools, shell_stego
 from .core import url_analyzer
+from .core import knowledge_base
 from .scripts import registry
 
 app = FastAPI(title="Yang-Web API", version="4.0.0")
@@ -72,6 +74,25 @@ class CryptoReq(BaseModel):
     key: Optional[str] = None
     iv: Optional[str] = None
     mode: Optional[str] = None
+
+class KbSearchReq(BaseModel):
+    query: str
+    kind: str = "all"           # all | payload | wp | script | article
+
+class KbReadReq(BaseModel):
+    path: str                   # 相对知识库根目录的文件路径
+    offset: int = 0             # 起始行号 (0-based)
+    limit: int = 200            # 读取行数
+
+class FileReq(BaseModel):
+    data: str                   # base64 编码的文件内容
+    tool: str = "file_magic"    # file_magic | zip_analyze | file_carve | bin_text | list
+
+class CipherOpReq(BaseModel):
+    cipher_id: str              # 密码 id (如 dna/affine/hill/spoon)
+    text: str                   # 明文或密文
+    op: str = "encode"          # encode | decode
+    key: Optional[str] = None   # 带 key 密码的密钥
 
 # ---------------------------------------------------------------------------
 # 工具
@@ -338,6 +359,34 @@ def api_scripts_run(req: ScriptReq):
         raise _err(f"脚本执行失败: {e}")
 
 # ---------------------------------------------------------------------------
+# 知识库检索 (Des-CTF-Knowledge)
+# ---------------------------------------------------------------------------
+@app.get("/api/kb/articles")
+def api_kb_articles():
+    try:
+        return _ok({
+            "available": knowledge_base.available(),
+            "root": str(knowledge_base.kb_root()),
+            "articles": knowledge_base.list_articles(),
+        })
+    except Exception as e:
+        raise _err(f"知识库读取失败: {e}")
+
+@app.post("/api/kb/search")
+def api_kb_search(req: KbSearchReq):
+    try:
+        return _ok(knowledge_base.search(req.query, req.kind))
+    except Exception as e:
+        raise _err(f"知识库检索失败: {e}")
+
+@app.post("/api/kb/read")
+def api_kb_read(req: KbReadReq):
+    try:
+        return _ok(knowledge_base.read_file(req.path, req.offset, req.limit))
+    except Exception as e:
+        raise _err(f"知识库读取失败: {e}")
+
+# ---------------------------------------------------------------------------
 # 密码学 / 编码引擎
 # ---------------------------------------------------------------------------
 @app.post("/api/crypto")
@@ -460,6 +509,22 @@ def api_ciphers():
         raise _err(f"加载古典密码失败: {e}")
 
 
+@app.post("/api/cipher")
+def api_cipher(req: CipherOpReq):
+    """古典密码/编码在线加密解密 (misc_crypto 统一分发, 含 95 种密码)。"""
+    if not req.text.strip():
+        raise _err("输入不能为空")
+    try:
+        key = req.key or ""
+        if req.op == "decode":
+            res = misc_crypto.decode(req.cipher_id, req.text, key=key)
+        else:
+            res = misc_crypto.encode(req.cipher_id, req.text, key=key)
+        return _ok({"cipher_id": req.cipher_id, "op": req.op, "result": res})
+    except Exception as e:
+        raise _err(f"密码运算失败: {e}")
+
+
 @app.get("/api/ciphers/image/{name}")
 def api_cipher_image(name: str):
     """返回古典密码参考图（图片上印着密码表，供解密对照/查看原图）"""
@@ -473,6 +538,25 @@ def api_cipher_image(name: str):
     from fastapi.responses import FileResponse
     mime = "image/png" if img_path.suffix.lower() == ".png" else "image/jpeg"
     return FileResponse(str(img_path), media_type=mime)
+
+# ---------------------------------------------------------------------------
+# 文件分析 / 隐写（base64 输入）
+# ---------------------------------------------------------------------------
+@app.post("/api/file/analyze")
+def api_file_analyze(req: FileReq):
+    """文件分析工具：file_magic / zip_analyze / file_carve / bin_text。"""
+    import base64
+    if req.tool == "list":
+        return _ok({"tools": file_tools.list_tools(), "shell_stego": shell_stego.list_webshell_types()})
+    try:
+        data = base64.b64decode(req.data)
+    except Exception:
+        raise _err("base64 解码失败")
+    try:
+        result = file_tools.run_tool(req.tool, data)
+        return _ok({"tool": req.tool, "result": result})
+    except Exception as e:
+        raise _err(f"文件分析失败: {e}")
 
 # ---------------------------------------------------------------------------
 # 内嵌浏览器代理 — 请求/响应回显 (BP 风格)

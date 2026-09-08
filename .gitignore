@@ -13,3 +13,10 @@ flag.txt
 # 调试/备份
 README_v3.6_backup.md
 _chrome_profile*/
+
+# 临时文件/构建日志/filter-repo 备份
+build_log.txt
+yangweb_start.log
+yangweb_error.log
+.git-rewrite/
+tests/_*

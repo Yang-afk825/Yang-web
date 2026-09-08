@@ -237,9 +237,11 @@ tr:hover td { background: rgba(255,255,255,.02); }
   <div class="nav-item" data-page="attack"><span class="ico">⚔️</span>自动攻击</div>
   <div class="nav-item" data-page="crypto"><span class="ico">🧮</span>密码学</div>
   <div class="nav-item" data-page="scripts"><span class="ico">📜</span>脚本库</div>
+  <div class="nav-item" data-page="kb"><span class="ico">📚</span>知识库</div>
   <div class="nav-item" data-page="browser"><span class="ico">🌐</span>内嵌浏览器</div>
   <div class="nav-item" data-page="chinese"><span class="ico">🀄</span>中文密码</div>
   <div class="nav-item" data-page="encode"><span class="ico">🔢</span>高级编码</div>
+  <div class="nav-item" data-page="file"><span class="ico">📁</span>文件分析</div>
   <div class="spacer"></div>
   <div class="status-line"><span class="dot" id="healthDot"></span><span id="healthText">连接中…</span></div>
 </aside>
@@ -385,6 +387,34 @@ tr:hover td { background: rgba(255,255,255,.02); }
     </div>
   </div>
 
+  <!-- ===== 知识库 ===== -->
+  <div class="page" id="page-kb">
+    <h2 class="page-title">知识库</h2>
+    <div class="page-sub">Des-CTF-Knowledge · Payload 速查 / 大赛 WP / 现成脚本 / 深度文章</div>
+    <div class="card">
+      <div class="row">
+        <input type="text" id="kbQuery" placeholder="搜索关键词，如：SQL注入 / wakeup / RSA / LSB / 反弹shell / gopher…">
+        <select id="kbKind" style="flex:0 0 150px;">
+          <option value="all">🔎 全部</option>
+          <option value="payload">🧪 Payload 速查</option>
+          <option value="wp">📝 大赛 WP</option>
+          <option value="script">📜 现成脚本</option>
+          <option value="article">📖 深度文章</option>
+        </select>
+        <button id="kbBtn">🔍 检索</button>
+      </div>
+      <div style="margin-top:8px; font-size:12px; color:var(--text-dim);" id="kbStatus">知识库状态检测中…</div>
+    </div>
+    <div class="card">
+      <h3>检索结果 <span class="tag" id="kbCount"></span></h3>
+      <div class="output" id="kbOutput">输入关键词开始检索…</div>
+    </div>
+    <div class="card">
+      <h3>深度文章 <span class="tag" id="kbArtCount"></span></h3>
+      <div id="kbArticles" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    </div>
+  </div>
+
   <!-- ===== 内嵌浏览器 ===== -->
   <div class="page" id="page-browser">
     <h2 class="page-title">内嵌浏览器</h2>
@@ -458,6 +488,16 @@ tr:hover td { background: rgba(255,255,255,.02); }
             <button id="miscViewImg2Btn" disabled style="opacity:.5;">🖼 辅图</button>
             <span class="dim" id="miscImgName" style="margin-left:8px;align-self:center;"></span>
           </div>
+          <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
+            <div class="dim" style="font-size:12px;margin-bottom:6px;">在线运算（加密 / 解密）</div>
+            <textarea id="miscOpText" rows="2" placeholder="输入明文或密文…" style="width:100%;box-sizing:border-box;margin-bottom:6px;background:#11111b;color:#cdd6f4;border:1px solid var(--border);border-radius:6px;padding:8px;font-family:'Cascadia Code',monospace;resize:vertical;"></textarea>
+            <div class="row" style="margin-bottom:6px;">
+              <input id="miscOpKey" placeholder="密钥（无密钥密码可留空）" style="flex:1;">
+              <button id="miscEncBtn" style="flex:0 0 auto;">🔒 加密</button>
+              <button id="miscDecBtn" style="flex:0 0 auto;">🔓 解密</button>
+            </div>
+            <div class="output" id="miscOpOut" style="min-height:40px;white-space:pre-wrap;font-family:'Cascadia Code',monospace;">结果…</div>
+          </div>
         </div>
       </div>
     </div>
@@ -477,6 +517,30 @@ tr:hover td { background: rgba(255,255,255,.02); }
     <div class="card">
       <h3>结果</h3>
       <div class="output" id="encodeOutput">等待输入…</div>
+    </div>
+  </div>
+
+  <!-- ===== 文件分析 ===== -->
+  <div class="page" id="page-file">
+    <h2 class="page-title">文件分析</h2>
+    <div class="page-sub">文件签名识别 / ZIP 分析（含伪加密检测） / 文件雕刻 / 字符串提取</div>
+    <div class="card">
+      <div class="row">
+        <select id="fileTool" style="flex:0 0 200px;">
+          <option value="file_magic">🔍 文件签名识别</option>
+          <option value="zip_analyze">🗜 ZIP 分析</option>
+          <option value="file_carve">🪓 文件雕刻</option>
+          <option value="bin_text">🔤 字符串提取</option>
+        </select>
+        <button id="fileBtn">选择文件并分析</button>
+      </div>
+      <div id="fileDrop" style="margin-top:12px;text-align:center;color:var(--dim);padding:22px;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s;">📂 点击选择文件，或拖拽文件到此处</div>
+      <input type="file" id="fileInput" style="display:none;">
+      <div class="dim" style="margin-top:8px;font-size:12px;">文件仅在本地转为 base64 传输到本机后端，不上传外网</div>
+    </div>
+    <div class="card">
+      <h3>分析结果 <span class="tag" id="fileInfo"></span></h3>
+      <div class="output" id="fileOutput" style="white-space:pre-wrap;font-family:'Cascadia Code',Consolas,monospace;">等待文件…</div>
     </div>
   </div>
 
@@ -891,6 +955,22 @@ $('miscViewImgBtn').onclick = () => miscSel && viewMiscImage(miscSel.image);
 $('miscViewImg2Btn').onclick = () => miscSel && viewMiscImage(miscSel.image2);
 loadMisc();
 
+async function miscOp(op) {
+  const cid = $('miscList').value;
+  if (!cid) { setOut($('miscOpOut'), '<span class="err">请先选择密码类型</span>'); return; }
+  const text = $('miscOpText').value;
+  if (!text.trim()) { setOut($('miscOpOut'), '<span class="err">请输入文本</span>'); return; }
+  const key = $('miscOpKey').value.trim();
+  try {
+    const d = await api('/api/cipher', {cipher_id: cid, text, op, key});
+    setOut($('miscOpOut'), esc(d.result) || '(空结果)');
+  } catch(e) {
+    setOut($('miscOpOut'), '<span class="err">' + esc(e.message) + '</span>');
+  }
+}
+$('miscEncBtn').onclick = () => miscOp('encode');
+$('miscDecBtn').onclick = () => miscOp('decode');
+
 // ─────────────────────────────────────────────
 // 高级编码
 // ─────────────────────────────────────────────
@@ -910,6 +990,46 @@ $('encodeBtn').onclick = async () => {
     setOut($('encodeOutput'), `<span class="acc">[${esc(mode)}]</span><br>${esc(d.result)}`);
   } catch(e) { setOut($('encodeOutput'), '<span class="err">' + esc(e.message) + '</span>'); }
 };
+
+// ─────────────────────────────────────────────
+// 文件分析
+// ─────────────────────────────────────────────
+function readFileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1] || '');
+    r.onerror = () => reject(new Error('读取文件失败'));
+    r.readAsDataURL(file);
+  });
+}
+
+async function doFileAnalyze(file) {
+  if (!file) { setOut($('fileOutput'), '<span class="err">请先选择文件</span>'); return; }
+  $('fileInfo').textContent = `${file.name} (${file.size} bytes)`;
+  $('fileOutput').textContent = '读取中…';
+  let b64;
+  try { b64 = await readFileToBase64(file); } catch(e) { $('fileOutput').textContent = '读取失败: ' + e.message; return; }
+  const tool = $('fileTool').value;
+  $('fileOutput').textContent = '分析中…';
+  try {
+    const d = await api('/api/file/analyze', {data: b64, tool});
+    $('fileOutput').textContent = d.result || '(空结果)';
+  } catch(e) {
+    $('fileOutput').textContent = '分析失败: ' + e.message;
+  }
+}
+
+$('fileBtn').onclick = () => $('fileInput').click();
+$('fileInput').onchange = () => doFileAnalyze($('fileInput').files[0]);
+$('fileDrop').onclick = () => $('fileInput').click();
+$('fileDrop').addEventListener('dragover', e => { e.preventDefault(); $('fileDrop').style.borderColor = 'var(--accent)'; });
+$('fileDrop').addEventListener('dragleave', () => { $('fileDrop').style.borderColor = 'var(--border)'; });
+$('fileDrop').addEventListener('drop', e => {
+  e.preventDefault();
+  $('fileDrop').style.borderColor = 'var(--border)';
+  const f = e.dataTransfer.files[0];
+  if (f) doFileAnalyze(f);
+});
 
 // ─────────────────────────────────────────────
 // 内嵌浏览器
@@ -971,6 +1091,137 @@ $('browserOpen').onclick = () => {
   const url = getBrowserUrl();
   if (url) window.open(url, '_blank');
 };
+
+// ─────────────────────────────────────────────
+// 知识库 (Des-CTF-Knowledge)
+// ─────────────────────────────────────────────
+const KB_KIND_NAME = { payload:'Payload', wp:'WP', script:'脚本', article:'文章' };
+const KB_KIND_ICON = { payload:'🧪', wp:'📝', script:'📜', article:'📖' };
+
+function kbReadPath(p) {
+  if (!p) return '';
+  if (p.endsWith('.idx.md')) return p.slice(0, -7) + '.md';
+  return p;
+}
+
+function renderKbResult(r) {
+  const icon = KB_KIND_ICON[r.type] || '🔎';
+  const typeName = KB_KIND_NAME[r.type] || r.type;
+  const readPath = kbReadPath(r.path || '');
+  const readBtn = readPath
+    ? `<button class="kb-read-btn" data-kbpath="${esc(readPath)}" data-kbtitle="${esc(r.title)}" style="margin-left:10px;background:var(--accent);color:#0f1117;border:none;padding:2px 10px;border-radius:4px;cursor:pointer;font-size:12px;">📖 查看全文</button>`
+    : '';
+  return `<div style="margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid var(--border);">
+    <div style="font-size:13px; margin-bottom:6px;">
+      <span style="color:var(--accent2); font-weight:600;">${icon} ${esc(r.title)}</span>
+      <span class="tag" style="margin-left:8px;">${typeName}</span>
+      <span class="dim" style="margin-left:8px; font-size:11px;">${esc(r.path||'')}</span>${readBtn}
+    </div>
+    <pre style="font-size:12px; color:var(--text); white-space:pre-wrap; word-break:break-all; margin:0;">${esc(r.content||'')}</pre>
+  </div>`;
+}
+
+async function loadKbStatus() {
+  try {
+    const d = await api('/api/kb/articles', undefined, 'GET');
+    if (d.available) {
+      $('kbStatus').innerHTML = `<span style="color:var(--green);">● 知识库在线</span> · ${esc(d.root)} · ${d.articles.length} 篇深度文章`;
+      $('kbArtCount').textContent = `${d.articles.length} 篇`;
+      $('kbArticles').innerHTML = d.articles.map(a =>
+        `<span class="kb-art" data-file="${esc(a.file)}" title="${esc(a.desc)} · ${a.lines} 行" style="padding:6px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:20px; font-size:12px; cursor:pointer; transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">${esc(a.file.replace('.md',''))}</span>`
+      ).join('');
+    } else {
+      $('kbStatus').innerHTML = `<span style="color:var(--red);">● 知识库未找到</span> · ${esc(d.root)}<br><span class="dim">请确认已克隆 Des-CTF-Knowledge，或设置环境变量 CTF_KB_DIR 指向其根目录</span>`;
+      $('kbArticles').innerHTML = '<span class="dim">知识库不可用</span>';
+    }
+  } catch(e) {
+    $('kbStatus').innerHTML = `<span style="color:var(--red);">● 知识库接口异常</span> ${esc(e.message)}`;
+  }
+}
+
+$('kbArticles').addEventListener('click', e => {
+  const t = e.target.closest('.kb-art');
+  if (t) openKbReader(t.dataset.file, t.dataset.file.replace('.md',''));
+});
+
+$('kbOutput').addEventListener('click', e => {
+  const btn = e.target.closest('.kb-read-btn');
+  if (btn) openKbReader(btn.dataset.kbpath, btn.dataset.kbtitle);
+});
+
+// ── 文章阅读器（分页加载完整内容） ──
+const KB_PAGE = 300;
+const kbReader = { path: '', offset: 0, total: 0 };
+
+function openKbReader(path, title) {
+  let ov = document.getElementById('kbReaderOverlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'kbReaderOverlay';
+    ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:10000;display:flex;flex-direction:column;';
+    ov.innerHTML =
+      '<div style="display:flex;align-items:center;padding:10px 16px;background:#1e1e2e;border-bottom:1px solid #45475a;">' +
+        '<span id="kbReaderTitle" style="color:#cdd6f4;font:14px \'Cascadia Code\',monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>' +
+        '<button id="kbReaderClose" style="background:#45475a;color:#cdd6f4;border:none;padding:4px 14px;cursor:pointer;border-radius:4px;font:13px sans-serif;">✕ 关闭</button>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:10px;padding:8px 16px;background:#181825;border-bottom:1px solid #45475a;">' +
+        '<button id="kbReaderPrev" style="background:#313244;color:#cdd6f4;border:none;padding:4px 12px;cursor:pointer;border-radius:4px;font:13px sans-serif;">◀ 上一页</button>' +
+        '<span id="kbReaderInfo" style="color:#a6adc8;font:12px monospace;flex:1;text-align:center;"></span>' +
+        '<button id="kbReaderNext" style="background:#313244;color:#cdd6f4;border:none;padding:4px 12px;cursor:pointer;border-radius:4px;font:13px sans-serif;">下一页 ▶</button>' +
+      '</div>' +
+      '<pre id="kbReaderBody" style="flex:1;overflow:auto;margin:0;padding:16px;color:#cdd6f4;background:#11111b;font:13px/1.6 \'Cascadia Code\',Consolas,monospace;white-space:pre-wrap;word-break:break-all;">加载中…</pre>';
+    document.body.appendChild(ov);
+    document.getElementById('kbReaderClose').onclick = () => ov.style.display = 'none';
+    document.getElementById('kbReaderPrev').onclick = () => kbReaderLoad(kbReader.offset - KB_PAGE);
+    document.getElementById('kbReaderNext').onclick = () => kbReaderLoad(kbReader.offset + KB_PAGE);
+  }
+  kbReader.path = path;
+  $('kbReaderTitle').textContent = title || path;
+  ov.style.display = 'flex';
+  kbReaderLoad(0);
+}
+
+async function kbReaderLoad(offset) {
+  if (offset < 0) offset = 0;
+  const body = $('kbReaderBody');
+  body.textContent = '加载中…';
+  try {
+    const d = await api('/api/kb/read', { path: kbReader.path, offset, limit: KB_PAGE });
+    if (!d.ok) { body.textContent = d.error || '读取失败'; return; }
+    kbReader.offset = d.offset;
+    kbReader.total = d.total;
+    body.textContent = d.content || '';
+    const start = d.offset + 1;
+    const end = d.offset + (d.content ? d.content.split('\n').length : 0);
+    $('kbReaderInfo').textContent = `第 ${start}-${end} 行 / 共 ${d.total} 行`;
+    $('kbReaderPrev').disabled = d.offset <= 0;
+    $('kbReaderNext').disabled = !d.has_more;
+  } catch(e) {
+    body.textContent = '读取失败: ' + e.message;
+  }
+}
+
+async function doKbSearch() {
+  const query = $('kbQuery').value.trim();
+  if (!query) { setOut($('kbOutput'), '<span class="err">请输入搜索关键词</span>'); return; }
+  const kind = $('kbKind').value;
+  setOut($('kbOutput'), '<span class="spin"></span> 检索中…');
+  try {
+    const d = await api('/api/kb/search', {query, kind});
+    $('kbCount').textContent = `${d.count} 条命中`;
+    if (!d.count) {
+      setOut($('kbOutput'), '<span class="dim">无结果，换个关键词试试（如 SQL注入 / wakeup / RSA / LSB / gopher）</span>');
+      return;
+    }
+    setOut($('kbOutput'), d.results.map(renderKbResult).join(''));
+  } catch(e) {
+    setOut($('kbOutput'), '<span class="err">' + esc(e.message) + '</span>');
+  }
+}
+
+$('kbBtn').onclick = doKbSearch;
+$('kbQuery').addEventListener('keydown', e => { if (e.key === 'Enter') doKbSearch(); });
+loadKbStatus();
 
 // ─────────────────────────────────────────────
 // 初始化
