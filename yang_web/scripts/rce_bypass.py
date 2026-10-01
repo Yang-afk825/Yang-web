@@ -5,7 +5,7 @@ CTF 常见考点: 过滤了字母数字, 用异或/或/取反/二进制替换绕
 
 技术分类:
     - OR/XOR/NOT: 适用于 PHP assert/system 等场景
-    - bashFuck:    适用于 bash/sh 终端的 $((2#binary)) + $'\ooo' + <<< 链式执行
+    - bashFuck:    适用于 bash/sh 终端的 $((2#binary)) + $'\\ooo' + <<< 链式执行
 """
 
 from __future__ import annotations
@@ -104,7 +104,7 @@ def not_rce_payload(cmd: str) -> str:
 def bashfuck_rce_payload(cmd: str, form: str = 'bit') -> str:
     """Generate bashFuck RCE payload for bash shell.
 
-    Uses $((2#binary)) + $'\ooo' + here-string to execute arbitrary
+    Uses $((2#binary)) + $'\\ooo' + here-string to execute arbitrary
     commands without letters/digits 2-9.
 
     Supports all forms: 'bit' | 'zero' | 'c' | 'heredoc' | 'y'

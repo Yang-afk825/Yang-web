@@ -141,7 +141,7 @@ def bashfuck_heredoc(cmd: str, form: str = 'bit') -> str:
 def bashfuck_y(cmd: str) -> str:
     """bashFuck 'y' 形式：用 ~ 位运算构造数字 0-7 替代二进制。
     
-    仅使用：! $ & ' ( ) < = \ _ { } ~ 字符（无数字 0-1）。
+    仅使用：! $ & ' ( ) < = \\ _ { } ~ 字符（无数字 0-1）。
     
     注意：此形式包含 = 字符，某些 WAF 可能过滤。
     """
