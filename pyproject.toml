@@ -2,19 +2,17 @@
 requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools_scm]
-
 [project]
 name = "yang-web"
-version = "2.0.0"
-description = "Yang Web Arsenal — 离线 CTF Web 瑞士军刀"
+version = "4.0.0"
+description = "Yang Web Arsenal — CTF 一站式离线工具箱（智能解码 / 95 种密码 / Payload / 攻击引擎）"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.8"
 authors = [
-    {name = "XiaoYang", email = "xiaoyang@example.com"}
+    {name = "XiaoYang", email = "3303257524@qq.com"}
 ]
-keywords = ["ctf", "web", "security", "pentest", "payload", "decoder", "jwt"]
+keywords = ["ctf", "web", "security", "pentest", "payload", "decoder", "jwt", "crypto"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -30,13 +28,38 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
+# 核心引擎（解码 / 密码 / Payload / 攻击分析）零第三方依赖，仅用 Python 标准库。
+# 安装 Web UI 或桌面窗口能力时，按需安装下面的 optional-dependencies。
+dependencies = []
+
+[project.optional-dependencies]
+# Web UI 后端：python -m yang_web.server / python launch.pyw
+web = ["fastapi>=0.110", "uvicorn>=0.27"]
+# 独立桌面窗口（无浏览器标签栏的 pywebview 形态）
+desktop = ["pywebview>=4.4"]
+# 少数网络类内置脚本（scripts/ 下 requests 系）
+scripts = ["requests>=2.28"]
+# 一次性装齐全部可选能力
+all = [
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+    "pywebview>=4.4",
+    "requests>=2.28",
+]
+
 [project.scripts]
 yang-web = "yang_web.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/XiaoYang/yang-web"
-Repository = "https://github.com/XiaoYang/yang-web.git"
-Issues = "https://github.com/XiaoYang/yang-web/issues"
+Homepage = "https://github.com/Yang-afk825/Yang-web"
+Repository = "https://github.com/Yang-afk825/Yang-web.git"
+Issues = "https://github.com/Yang-afk825/Yang-web/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["yang_web*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q"

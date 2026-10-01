@@ -4,7 +4,7 @@
 
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Zero Dependencies](https://img.shields.io/badge/dependencies-0-green.svg)]()
+[![Core Dependencies](https://img.shields.io/badge/core%20deps-0-green.svg)]()
 [![GUI](https://img.shields.io/badge/GUI-pywebview-purple.svg)]()
 [![Ciphers](https://img.shields.io/badge/ciphers-95-orange.svg)]()
 [![Scripts](https://img.shields.io/badge/scripts-51-red.svg)]()
@@ -15,7 +15,7 @@
 
 ## 📖 简介
 
-Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密码破解、Payload 生成、靶场分析到攻击利用。内置 **图形界面 (GUI)**，支持 CLI ↔ GUI 一键切换，打包为 **独立 Windows 桌面应用 (exe)**。完全离线，零第三方依赖。
+Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密码破解、Payload 生成、靶场分析到攻击利用。内置 **图形界面 (GUI)**，支持 CLI ↔ GUI 一键切换，打包为 **独立 Windows 桌面应用 (exe)**。**核心引擎完全离线、零第三方依赖**（纯 Python 标准库）；Web 界面基于 FastAPI，可选安装，详见 [安装](#-安装)。
 
 **14 个子命令 + 智能解码器(14种编码) + 12+智能攻击引擎(源码指纹→并发攻击→一键解题→实时攻击流) + 95种密码/编码 + 文件分析(签名识别/ZIP伪加密/文件雕刻/字符串提取) + CTF知识库(12篇深度文章+Payload速查+1150+篇WP+46类脚本) + 在线加解密 + 纯Python密码引擎(AES/RC4/RSA) + 中文特色密码 + 反弹Shell/WebShell生成 + 隐写分析 + 51个内嵌CTF脚本 + JWT攻击链 + 8大Payload模块 + 靶场黑名单分析 + 内嵌浏览器 + 脚本库靶场。**
 
@@ -31,7 +31,7 @@ Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密�
 
 **一个工具，搞定 CTF 全流程**——从拿到题目到读出 Flag，编码解码、漏洞分析、payload 生成、攻击利用一气呵成。
 
-选择 **MIT 开源、零依赖、永久免费**，是因为我相信好的安全工具不该有门槛。不管你是刚入门的新手，还是打了好几年的老选手，打开终端就能用，不需要折腾环境、不需要掏钱。
+选择 **MIT 开源、永久免费、核心零依赖**，是因为我相信好的安全工具不该有门槛。不管你是刚入门的新手，还是打了好几年的老选手，命令行打开就能用，不需要折腾环境、不需要掏钱。
 
 如果你觉得这个工具有用，顺手点个 ⭐ Star，或者提个 PR 一起完善。让更多人知道：**好用的 CTF 工具，可以免费，也可以开源。**
 
@@ -39,7 +39,7 @@ Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密�
 
 ## ✨ 核心优势
 
-- 📴 **完全离线** — 零 pip 依赖，Python 标准库一把梭
+- 📴 **核心零依赖** — 解码 / 95 种密码 / Payload / 攻击引擎全部基于 Python 标准库，离线可用；仅 Web 界面需 FastAPI（见[安装](#-安装)）
 - 🧠 **智能解码器** — 粘贴即用：自动识别14种编码 + 一键解码 + 暴力全试 + 链式递归
 - 🔐 **95种密码/编码** — Base全系 + 古典(凯撒/栅栏/猪圈/培根/Vigenère/ADFGX/摩斯) + 键盘映射 + 中文特色密码 + 高级编码(Brainfuck/Ook!/JSFuck/AAencode...) + 经典编码(DNA/A1Z26/盲文/BWT...) + 带key密码(仿射/Hill/Enigma/ADFGVX...) + esoteric(Whitespace/Deadfish/Spoon...) + 进制编码(BCD/格雷码/海明码...)
 - 📦 **51个内嵌脚本** — Crypto/Web/Misc/Reverse 全覆盖，一键运行，支持 URL 输入 + 额外参数
@@ -57,14 +57,29 @@ Yang-Web 是一把 **CTF 全方向的瑞士军刀**，覆盖编码解码、密�
 
 ## 📦 安装
 
+**核心引擎零依赖** —— clone 下来就能直接用命令行，无需安装任何第三方包：
+
 ```bash
-# 源码运行（--recurse-submodules 会一并拉取 CTF 知识库）
+git clone https://github.com/Yang-afk825/Yang-web.git
+cd Yang-web
+python -m yang_web decode "ZmxhZ3t0ZXN0fQ=="     # → flag{test}
+```
+
+**Web 界面 / 桌面窗口**需要额外依赖（FastAPI，可选 pywebview）：
+
+```bash
+# --recurse-submodules 会一并拉取 CTF 知识库
 git clone --recurse-submodules https://github.com/Yang-afk825/Yang-web.git
 cd Yang-web
-python -m yang_web.server        # 启动 Web 服务 (默认 8765)
+pip install -r requirements.txt   # fastapi + uvicorn (+ pywebview / requests)
+python -m yang_web.server         # 启动 Web 服务 (默认 8765)
+python launch.pyw                 # 或：独立窗口（缺 pywebview 时回退到浏览器）
+```
 
-# 或直接使用打包好的桌面应用
-dist/Yang-Web.exe                # 独立窗口, 无需 Python
+**免安装**：直接使用打包好的桌面应用。
+
+```bash
+dist/Yang-Web.exe                 # 独立窗口, 无需 Python
 ```
 
 > 📚 **CTF 知识库（内置检索）**：接入 [Des-CTF-Knowledge](https://github.com/Dest1ny-Sec/Des-CTF-Knowledge)（12 篇深度文章 + Payload 速查 + 1150+ 篇大赛 WP + 46 类脚本）。源码版用 `--recurse-submodules` 会自动拉取到 `knowledge/Des-CTF-Knowledge`；若单独 clone 了知识库，可用环境变量 `CTF_KB_DIR` 指向其根目录。exe 版需手动 clone 知识库到 `~/.qclaw/workspace/Des-CTF-Knowledge` 或设 `CTF_KB_DIR`。

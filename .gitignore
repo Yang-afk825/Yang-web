@@ -1,22 +1,40 @@
-﻿__pycache__/
+﻿# ══════════════════════════════════════════════
+#  Python
+# ══════════════════════════════════════════════
+__pycache__/
 *.pyc
 *.pyo
 *.egg-info/
-build/
-dist/*.log
 .venv/
 venv/
+
+# ══════════════════════════════════════════════
+#  构建产物
+#  (dist/ 下的 exe 需要发布到仓库，故只忽略日志)
+# ══════════════════════════════════════════════
+build/
+dist/*.log
 *.ico
 
-# 靶场运行时生成
+# ══════════════════════════════════════════════
+#  运行 / 调试产物（不再入库）
+# ══════════════════════════════════════════════
+*.log
+*_debug.*
+full_response.html
+bypass_response.txt
+php_logic_test.json
 flag.txt
-# 调试/备份
-README_v3.6_backup.md
 _chrome_profile*/
-
-# 临时文件/构建日志/filter-repo 备份
 build_log.txt
-yangweb_start.log
-yangweb_error.log
+
+# ══════════════════════════════════════════════
+#  归档 / 备份 / 临时
+# ══════════════════════════════════════════════
+_archive_*/
+*.bak
+*.bak-*
 .git-rewrite/
-tests/_*
+# 一次性调试脚本（正式测试为 tests/test_*.py，__init__.py 需入库）
+tests/_test_*.py
+tests/_*.txt

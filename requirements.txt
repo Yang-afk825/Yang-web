@@ -1,0 +1,16 @@
+# Yang-Web 可选依赖清单
+#
+# 核心引擎（智能解码 / 95 种密码 / Payload / 攻击分析 / JWT / 隐写 / 文件分析）
+# 零第三方依赖，仅使用 Python 标准库 —— 只用命令行时无需安装这里的任何内容。
+#
+# 安装方式： pip install -r requirements.txt
+
+# --- Web UI 后端（python -m yang_web.server / python launch.pyw）---
+fastapi>=0.110
+uvicorn>=0.27
+
+# --- 独立桌面窗口（pywebview 形态；未安装时自动回退到系统浏览器）---
+pywebview>=4.4
+
+# --- scripts/ 下少数网络类 CTF 脚本（requests 系）---
+requests>=2.28
