@@ -73,6 +73,23 @@ def is_printable(text: str) -> bool:
     return printable / len(text) > 0.95
 
 
+def text_quality(text: str) -> float:
+    """评估解码结果的可读性 (0.0 ~ 1.0).
+
+    用途：链式解码中判断「这一步解码是否让结果变差」。
+    U+FFFD (REPLACEMENT CHARACTER) 是解码字节流失败时的典型产物，
+    且 ``str.isprintable()`` 对它返回 True，因此必须单独重罚，
+    否则「把已解出的明文又当成别的编码解成乱码」的操作不会被拦截。
+    """
+    if not text:
+        return 0.0
+    printable = sum(1 for c in text if c.isprintable() or c in "\n\r\t")
+    ratio = printable / len(text)
+    if "\ufffd" in text:
+        ratio *= 0.3
+    return ratio
+
+
 def entropy(data: bytes) -> float:
     """计算字节数据的香农熵 (0-8)."""
     if not data:

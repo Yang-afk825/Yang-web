@@ -15,7 +15,7 @@ import string
 import html as html_mod
 import codecs
 from typing import Optional, List, Tuple, Callable
-from .utils import is_printable
+from .utils import is_printable, text_quality
 from .advanced_engines import (
     brainfuck_decode, ook_decode,
     quoted_printable_decode, uudecode, xxdecode,
@@ -132,8 +132,14 @@ def _is_base16(text: str) -> int:
 
 def _is_base58(text: str) -> int:
     charset = set("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
-    if not all(c in charset for c in text):
+    text = text.strip()
+    # 过短的纯字母数字串多为普通单词 / ID，不足以判定为 base58。
+    if len(text) < 6 or not all(c in charset for c in text):
         return 0
+    # 纯 hex 串(0-9a-f)整体落在 base58 字母表内，会抢占 base16 的识别，
+    # 故显式降分让位给 base16。
+    if re.fullmatch(r"[0-9a-fA-F]+", text):
+        return 40
     return 85
 
 def _is_base85(text: str) -> int:
@@ -390,12 +396,14 @@ def _is_base91(text: str) -> int:
     if not text:
         return 0
     match = sum(1 for c in text if c in charset)
-    if match / len(text) > 0.95:
-        # Check for special chars that distinguish from base64
-        special = sum(1 for c in text if c in '!#$%&()*+,./:;<=>?@[]^_`{|}~')
-        if special > len(text) * 0.05:
-            return 80
-        return 50
+    if match / len(text) <= 0.95:
+        return 0
+    # base91 产物的「非常见符号」占比显著高于自然文本。
+    # 注意 { } _ . 在 flag / 明文 / 代码中极常见，不能计入判据，
+    # 否则 "flag{test}" 这类明文会被误判为 base91 并继续解码成乱码。
+    special = sum(1 for c in text if c in '!#$%&()*+,/:;<=>?@[]^`|~"')
+    if len(text) >= 6 and special > len(text) * 0.15:
+        return 80
     return 0
 
 def _is_base92(text: str) -> int:
@@ -409,7 +417,7 @@ def _is_base92(text: str) -> int:
         # Has backslash or single quote (not in base91)
         if "'" in text or '\\' in text or '|' in text:
             return 85
-        return 55
+    # 不再对普通可打印文本返回兜底分(原 55)，否则任意明文都会被判为 base92。
     return 0
 
 # ═══════════════════════════════════════════════════════════
@@ -423,10 +431,12 @@ ENCODING_DETECTORS: List[Tuple[str, str, Callable[[str], int]]] = [
     ("morse",      "摩斯电码 .-",          _is_morse),
     ("base16",     "Base16 / HEX",         _is_base16),
     ("base32",     "Base32",               _is_base32),
-    ("base58",     "Base58 (Bitcoin)",     _is_base58),
     ("base64",     "Base64",               _is_base64),
     ("base64url",  "Base64 URL-safe",      _is_base64_urlsafe),
     ("base85",     "Base85 / ASCII85",     _is_base85),
+    # base58 的判据最弱(仅字符集匹配，且其字母表是 base64 的子集)，
+    # 与 base64 同分时必须让位，故注册在 base64 之后。
+    ("base58",     "Base58 (Bitcoin)",     _is_base58),
     ("base91",     "Base91",               _is_base91),
     ("base92",     "Base92",               _is_base92),
     ("url",        "URL 编码 %xx",        _is_url_encoded),
@@ -824,6 +834,12 @@ def chain_decode(text: str, max_depth: int = 10) -> List[Tuple[str, str, str]]:
         if not decoded or decoded == current:
             break
         if decoded in seen:
+            break
+        # 质量回退保护：链式解码已产出可读结果后，若下一步解码反而让可读性下降
+        # （典型情形是把已解出的明文又误判成 base91/base92 等编码、再解成乱码），
+        # 则丢弃该步并终止。首步不启用——base58 等类型的解码产物本就是二进制，
+        # 不应因此被吞掉。
+        if chain and text_quality(decoded) < text_quality(current):
             break
         seen.add(decoded)
 
