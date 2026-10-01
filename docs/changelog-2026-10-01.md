@@ -192,3 +192,126 @@ $ yang-web decode "ZmxhZ3t0ZXN0fQ==" --raw | yang-web solve
 - `knowledge/Des-CTF-Knowledge` 子模块 17 处未提交改动，仍未擅自恢复；
 - 巨型文件拆分（`gui.py`、`url_analyzer.py`）待单独评估。
 
+---
+
+# 第三轮：结构化整理（2026-10-01 再续）
+
+本轮处理上一轮明确挂起的遗留项。**核心原则：拆包是"搬运"，不是"改写"**——
+每一行代码原样移动，用可验证的手段证明语义未变，而不是靠"看起来没问题"。
+
+## 十、`gui.py` 冗余空行折叠
+
+- 原文件 5217 行中空行占 38%，`DecodePanel` / `PayloadPanel` / `HashPanel` 等区域
+  达到"每个语句间夹一个空行"的双倍行距。
+- 用 **AST 驱动**的规范化器按作用域决定允许空行数（模块级 2、方法间 1、
+  密集函数体内 0~1），并跳过跨行字符串字面量内部、跳过 `:` 结尾的块头部之后。
+- 手工还原两处字符串内部排版（模块 docstring、CLI 帮助文本）。
+- 结果：**5217 → 3715 行**；`ast.dump(include_attributes=False)` 比对证明**语义零改动**。
+
+## 十一、`url_analyzer.py` → 分层包（2626 行 → 5 个子模块）
+
+按"依赖分层"切分，且**剩余依赖必须构成 DAG**：
+
+| 子模块 | 行数 | 职责 | 依赖 |
+|---|---|---|---|
+| `_http.py` | 417 | 传输原语 / HTML 解析 / `FLAG_RE` 等常量 | — |
+| `_signatures.py` | 221 | 参数·路径·payload 签名表 | — |
+| `_engines.py` | 521 | 指纹 + 单次执行 + 并发 + 调度 | `_http` `_signatures` |
+| `_attacks.py` | 1165 | 具体利用尝试 + `auto_exploit` | `_http` `_signatures` `_engines` |
+| `_analyze.py` | 375 | 题型判定与攻击指南 | 上述全部 |
+
+关键点：切分前实测存在反向依赖 `ConcurrentEngine -> FLAG_RE`，
+会把引擎层与攻击层连成环；把 `FLAG_RE` 下沉到 `_http` 即可打破。
+
+`__init__.py` **逐字保留原 header 导入并重导出全部顶层名**，
+因此 `from yang_web.core.url_analyzer import X`、`import *`、
+`from .core import url_analyzer` 三种既有调用方式全部无需改动。
+
+> 注：`PARAM_SIGNATURES` / `PATH_PATTERNS` / `ATTACK_PAYLOADS` 三个约 210 行的数据表
+> 用的是**带类型注解的赋值**（`AnnAssign`），第一版分析脚本只识别 `Assign` 而漏掉它们，
+> 差点把数据表与使用方判成同一层。已修正分析口径。
+
+## 十二、`gui.py` → 分层包（3715 行 → 11 个文件）
+
+`gui.py` 的 15 个面板经 AST 分析**彼此零互相引用**，因此可以干净切分：
+
+| 文件 | 行数 | 职责 |
+|---|---|---|
+| `_deps.py` | 91 | 全部外部依赖与 `try/except ImportError` 可选引擎导入 |
+| `_theme.py` | 48 | 配色常量与主题 |
+| `_widgets.py` | 135 | 控件工厂 / 输出区助手 |
+| `_routing.py` | 149 | 「送到下一步」路由总线 + `_SendBar` |
+| `_panels_codec.py` | 578 | 编解码 / 古典密码面板 |
+| `_panels_crypto.py` | 573 | Hash / JWT / Misc Crypto / Payload |
+| `_panels_tools.py` | 809 | Shell / 隐写 / 脚本 / 文档 / JS 小游戏 |
+| `_panels_attack.py` | 976 | URL 攻击 + SQLi 靶场 |
+| `_app.py` | 486 | 窗口组装与 GUI/CLI 切换 |
+| `__init__.py` / `__main__.py` | 89 / 6 | 对外符号重导出 / `python -m yang_web.gui` 入口 |
+
+拆包时**必须把相对导入升一层**：`from .core.decoder` 原本 `.` == `yang_web`，
+进包后 `.` 变成 `yang_web.gui`，需改为 `..core.decoder`——**包括函数体内的惰性导入**
+（`_panels_tools` 里的 `from ..scripts.registry import ...` 等）。
+
+## 十三、修掉的 4 处非法转义
+
+`invalid escape sequence` 在 Python 3.12+ 是 `SyntaxWarning`，未来版本将报错。
+统一用**反斜杠双写**（`\o` → `\\o`）而非 `r"""`：因为 `_gen_octal` 的 docstring 里
+已存在 `\\143` 这类**合法**转义，改成 raw 会把 `\\143` 变成字面双反斜杠、反而改变值。
+
+| 文件 | 位置 | 内容 |
+|---|---|---|
+| `core/bashfuck.py` | L144 | `\ _` |
+| `core/url_analyzer/_attacks.py` | L123 / L125 | `$'\ooo'` |
+| `scripts/rce_bypass.py` | L8 / L107 | `$'\ooo'` |
+
+修完 `yang_web/` 全范围**零残留告警**，且所有字符串常量经 AST 比对**逐一保值**。
+
+## 十四、拆分过程中发现并修掉的既有缺陷
+
+这三处都不是拆分引入的，是拆分时**被迫逐个核对才浮出来**的：
+
+1. **`SQLLabsPanel._solve_batch` 的 `time.sleep(0.3)` 从未导入 `time`**
+   （原 `gui.py` 全文只有两处函数内 `import time as _t`）。
+   该分支一执行就 `NameError`，批处理解靶场会在第一课后中断。→ 已在 `_deps.py` 补上。
+2. **`DocsPanel._DOCS_ROOT` 用 `dirname(dirname(__file__))` 定位仓库根**，
+   进包后 `__file__` 深一层，会指向 `yang_web/docs`。→ 改用 `_deps._REPO_ROOT` 统一算准。
+3. **`_try_bashfuck_exploit` 在 `url_analyzer.py` 里定义了两次**
+   （L1804 的 v3.3 版与 L2597 的 solver 版），后者遮蔽前者，**前者是死代码**。
+   本次**保持原样未动**（同模块同序 → 行为不变），仅在此记录，待后续单独清理。
+
+## 十五、验证方法（拆包等价性）
+
+拆包最大的风险是"编译期查不出、单测又覆盖不到"的静默失效。本轮建立四道检查：
+
+1. **逐顶层单元字节比对**：把原文与拆包后的所有顶层 `def/class/赋值` 单元
+   按源码文本做多重集比对，必须**逐字节相同**（强于 AST 等价性）；
+2. **命名空间 diff**：`dir()` 比对，公开名必须**零缺失**；
+3. **相对导入解析器**（新增 `tools/check_relative_imports.py`）：
+   把每条相对导入解析成绝对模块名并找 spec，区分硬失效与 `try/except` 兜底；
+4. **静态未定义名扫描**：用 `symtable` 找出"非局部、非模块级绑定、非内置"的全局引用——
+   第 1 处既有缺陷就是被它逮到的。
+
+外加 `compileall`、双解释器全量测试、无头 GUI 数据流验证。
+
+> 第 3 项检查器本身也曾失效两次（`sys.path` 未含仓库根 → 全部误报；未排除
+> `try/except` 兜底 → 把设计内的可选依赖算作失效）。**检查器必须先自证可用**
+> 才能用来判断结果，否则"全红"会被误读成"全坏"。
+
+## 十六、测试
+
+75 → **82 项**。新增 `tests/test_package_layout.py`（7 项），
+专门锁住拆包类改动最容易破坏、而常规单测覆盖不到的结构化契约：
+对外符号仍在、子模块可独立导入、文档根指向正确、`time` 可解析、入口函数一致。
+
+两个解释器都跑通：系统 Python 3.12 带 tkinter **82 通过**；
+托管 Python 3.13 无 tkinter **71 通过 + 11 跳过**。
+
+## 十七、本轮仍未处理
+
+- `knowledge/Des-CTF-Knowledge` 子模块 17 处未提交改动 ——
+  diff 显示是 Windows Defender **活体查杀**在截断 webshell 样本，
+  本地反复 checkout 会被反复截断，**从代码层面无解**，未擅自恢复；
+- `knowledge/` 内第三方资料里的非 UTF-8 文件与 Python 2 脚本，属外部资料，不修；
+- `_try_bashfuck_exploit` 重复定义（见第十四节第 3 条），保留待后续清理。
+
+

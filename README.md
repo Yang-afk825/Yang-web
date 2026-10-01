@@ -392,6 +392,13 @@ Yang-Web/
 ├── yang_web/
 │   ├── server.py          # FastAPI 后端 (:8765)
 │   ├── web/               # Web UI (index.html)
+│   ├── gui/               # tkinter 界面（分层包）
+│   │   ├── _theme.py          # 配色与主题
+│   │   ├── _widgets.py        # 控件工厂 / 输出区助手
+│   │   ├── _routing.py        # 「送到下一步」路由总线 + _SendBar
+│   │   ├── _panels_*.py       # 15 个功能面板（编解码/密码学/工具/攻击）
+│   │   ├── _deps.py           # 外部依赖与可选引擎导入（try/except 兜底）
+│   │   └── _app.py            # 窗口组装、Tab 布局与 GUI/CLI 切换
 │   ├── core/              # 核心引擎
 │   │   ├── decoder.py         # 智能解码
 │   │   ├── hashid.py          # Hash识别
@@ -400,7 +407,12 @@ Yang-Web/
 │   │   ├── crypto_engine.py   # AES/RC4/RSA
 │   │   ├── advanced_engines.py # 18种高级编码
 │   │   ├── chinese_ciphers.py  # 中文特色密码
-│   │   ├── url_analyzer.py     # 自动攻击调度
+│   │   ├── url_analyzer/       # 自动攻击调度（分层包）
+│   │   │   ├── _http.py           # 传输原语 / HTML 解析 / FLAG 识别
+│   │   │   ├── _signatures.py     # 参数·路径·payload 签名表
+│   │   │   ├── _engines.py        # 指纹 + 单次执行 + 并发 + 调度
+│   │   │   ├── _attacks.py        # 具体利用尝试（PHP/LFI/SQLi/bashFuck）
+│   │   │   └── _analyze.py        # 题型判定与攻击指南
 │   │   ├── simple_cmd_rce.py   # 简单命令注入探测
 │   │   ├── bashfuck_solver.py  # 无字母RCE
 │   │   ├── ssrf_rebind.py      # SSRF DNS Rebinding
