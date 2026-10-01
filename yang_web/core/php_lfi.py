@@ -43,7 +43,7 @@ def _http_raw(url: str, timeout: int = 8) -> Tuple[Optional[int], Optional[bytes
     except urllib.error.HTTPError as e:
         try:
             return e.code, e.read(), None
-        except:
+        except Exception:
             return e.code, None, str(e)
     except Exception as e:
         return None, None, str(e)
@@ -56,10 +56,10 @@ def _http_text(url: str, timeout: int = 8) -> Optional[str]:
         return None
     try:
         return body.decode('utf-8', errors='replace')
-    except:
+    except Exception:
         try:
             return body.decode('latin-1')
-        except:
+        except Exception:
             return body.decode('utf-8', errors='replace')
 
 
@@ -364,7 +364,7 @@ def php_lfi_solve(url: str, on_progress: Callable = None) -> dict:
                                             f'flag! → {flag}')
                             return {'flag': flag, 'param': param, 'path': fpath,
                                     'strategy': 'php_filter_b64decode', 'status': 'solved'}
-                except:
+                except Exception:
                     pass
 
                 # Also try alternate filter syntax
@@ -428,7 +428,7 @@ def _generic_lfi_scan(url: str, on_progress: Callable, _log: Callable) -> dict:
                             if flag:
                                 return {'flag': flag, 'param': param,
                                         'strategy': 'php_filter_source', 'status': 'solved'}
-                    except:
+                    except Exception:
                         pass
             break
 

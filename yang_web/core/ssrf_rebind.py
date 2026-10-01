@@ -45,14 +45,14 @@ def _http_text(url, timeout=8):
         with urllib.request.urlopen(req, timeout=timeout, context=_make_ctx()) as resp:
             body = resp.read()
             try: return body.decode('utf-8', errors='replace')
-            except: return body.decode('latin-1', errors='replace')
+            except Exception: return body.decode('latin-1', errors='replace')
     except urllib.error.HTTPError as e:
         try:
             body = e.read()
             try: return body.decode('utf-8', errors='replace')
-            except: return body.decode('latin-1', errors='replace')
-        except: return None
-    except: return None
+            except Exception: return body.decode('latin-1', errors='replace')
+        except Exception: return None
+    except Exception: return None
 
 
 def _extract_flag(text):
@@ -206,7 +206,7 @@ def ssrf_rebind_solve(url, on_progress=None):
         try:
             on_progress('ssrf_rebind', 'detected',
                         f'target={info["target_ip"]} blacklist={info["blacklist"]}')
-        except: pass
+        except Exception: pass
 
     # Generate bypass URLs
     bypasses = _generate_bypass_payloads(info['target_ip'], info['blacklist'])
@@ -215,7 +215,7 @@ def ssrf_rebind_solve(url, on_progress=None):
         try:
             on_progress('ssrf_rebind', 'bypasses',
                         f'{len(bypasses)} candidates: {[n for n,_ in bypasses]}')
-        except: pass
+        except Exception: pass
 
     # Build base URL for the SSRF endpoint
     base = url.rstrip('/')
@@ -240,7 +240,7 @@ def ssrf_rebind_solve(url, on_progress=None):
                                 try:
                                     on_progress('ssrf_rebind', 'flag!',
                                                 f'{bypass_name} + {cmd}: {flag}')
-                                except: pass
+                                except Exception: pass
                             return {
                                 'flag': flag,
                                 'bypass': bypass_name,
@@ -248,7 +248,7 @@ def ssrf_rebind_solve(url, on_progress=None):
                                 'cmd': cmd,
                                 'status': 'solved',
                             }
-                    except:
+                    except Exception:
                         continue
 
     return {'flag': None, 'status': 'no_flag'}

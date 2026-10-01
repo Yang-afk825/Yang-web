@@ -1695,7 +1695,7 @@ def auto_exploit(url, results, on_progress=None, on_found=None, fingerprint=None
     if sr_result and sr_result.get('flag'):
         if on_found:
             try: on_found(sr_result['flag'])
-            except: pass
+            except Exception: pass
         return {
             'flag': sr_result['flag'],
             'stages': ['ssrf_dns_rebind'],

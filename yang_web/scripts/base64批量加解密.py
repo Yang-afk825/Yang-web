@@ -30,32 +30,32 @@ while(i):
         flag = base64.b16decode(flag).decode()
         print(Fore.GREEN+ '【第{0}次|base16解密结果】:'.format(number)  + flag)
         print(Fore.RESET+ '-'*30)
-    except:
+    except Exception:
         try:
             flag = base64.b32decode(flag).decode()
             print(Fore.BLUE+ '【第{0}次|base32解密结果】:'.format(number) + flag)
             print(Fore.RESET+'-'*30)
-        except:
+        except Exception:
             try:
                 flag = base58.b58decode(flag).decode()
                 print(Fore.CYAN+ '【第{0}次|base58解密结果】:'.format(number) +flag)
                 print(Fore.RESET+'-'*30) 
-            except:
+            except Exception:
                 try:
                     flag = base64.b64decode(flag).decode()
                     print(Fore.RED+ '【第{0}次|base64解密结果】:'.format(number) + flag) 
                     print(Fore.RESET+'-'*30)
-                except:
+                except Exception:
                     try:
                         flag = base64.b85decode(flag).decode()
                         print(Fore.YELLOW+ '【第{0}次|base85解密结果】:'.format(number) +flag)
                         print(Fore.RESET+'-'*30) 
-                    except:
+                    except Exception:
                         try:
                             flag = py3base92.decode(flag)
                             print(Fore.WHITE+ '【第{0}次|base92解密结果】:'.format(number) + flag) 
                             print(Fore.RESET+'-'*30)                        
-                        except:
+                        except Exception:
                             i=i-1
 
                 
