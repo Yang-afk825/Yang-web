@@ -97,6 +97,15 @@ $ yang-web decode "ZmxhZ3t0ZXN0fQ=="
 → flag{test}
 
 $ yang-web decode --brute "dGVzdA=="      # 暴力全试
+$ yang-web decode --manual base32 "MZWGCZ33ORSXG5D5"   # 指定编码
+$ yang-web decode "ZmxhZ3t0ZXN0fQ==" --raw             # 管道模式：只输出明文
+```
+
+`--raw` 只打印最终明文（解不出来则原样透传），因此可以直接接进管道：
+
+```bash
+$ yang-web decode "ZmxhZ3t0ZXN0fQ==" --raw | yang-web solve
+$ cat secret.b64 | yang-web decode --raw > plain.txt
 ```
 
 ---
@@ -108,6 +117,7 @@ $ yang-web decode --brute "dGVzdA=="      # 暴力全试
 ```bash
 $ yang-web encode base64 "hello world"
 $ yang-web encode url "admin' OR 1=1--"
+$ yang-web encode base64 "flag{test}" --raw          # 管道模式：只输出结果
 ```
 
 ---
@@ -241,7 +251,73 @@ $ yang-web scripts --run time_sqli --url "http://x/?id={PAYLOAD}" --args "SELECT
 
 ---
 
+### 15. 题型识别 / 一键解题 `solve`
+
+**先识别，再行动。** `solve` 不再盲目试跑脚本库，而是先从输入的字面特征判断题型
+（RSA 参数 / 散列 / 编码 / 密文 / 明文 / URL / 文件魔数），给出判断依据与置信度，
+列出**可直接复制执行**的下一步命令，再自动执行其中安全的离线动作。
+
+```bash
+$ yang-web solve "ZmxhZ3t0ZXN0fQ=="
+[解题] 题型识别
+  判断: 🔤 encoded  置信度 85%
+  依据: 编码检测首选 Base64（置信度 85）；输入预览: ZmxhZ3t0ZXN0fQ==
+
+[路径] 推荐动作:
+  [1] decode   智能链式解码（可多层）
+      $ yang-web decode "ZmxhZ3t0ZXN0fQ=="
+  [2] decode   暴力尝试所有解码器
+      $ yang-web decode --brute "ZmxhZ3t0ZXN0fQ=="
+
+[尝试] 自动执行首选动作:
+  v 链式解码 (base64)
+      flag{test}
+
+$ yang-web solve --file challenge.png    # 按魔数识别，给出对应工具链
+$ yang-web solve "ZmxhZ3t0ZXN0fQ==" --plan   # 只看识别与路径，不执行
+$ echo "$CT" | yang-web solve --json         # 结构化输出，便于脚本消费
+```
+
+自动执行的部分**只做本地计算**（解码 / 散列识别 / RSA 运算），涉及目标的
+`url`、`scan` 路径只作为建议列出，不会替你发起请求。
+
+---
+
+### 16. RSA 攻击引擎 `crypto`
+
+密码学攻击引擎，纯标准库实现。覆盖：已知 p/q 解密、低加密指数、共模、Wiener、
+Fermat 分解、Håstad 广播。
+
+```bash
+$ yang-web crypto --list                     # 列出全部攻击及所需参数
+$ yang-web crypto --p <p> --q <q> --e <e> --c <c>     # 已知分解直接解密
+$ yang-web crypto --n <n> --e 3 --c <c>               # 低指数 / Wiener / Fermat 自动试
+$ yang-web crypto --n <n> --c <c>                     # e 未知时自动枚举 65537/3/17/5/7
+$ yang-web crypto --fermat <n>                        # 只做 Fermat 分解
+$ yang-web crypto --broadcast --e 3 --n <n1,n2,n3> --c <c1,c2,c3>
+$ yang-web crypto --n <n> --c <c> --raw               # 管道模式：只输出明文
+```
+
+参数解析同时支持带标签（`n = ...` / `e: 65537`）与裸大整数串两种题面；
+`--json` 给出结构化结果，`tried` 字段会说明"尝试过哪些攻击"。
+
+---
+
 ## 🔗 实战工作流
+
+### 把输出直接喂给下一步（管道）
+
+```bash
+# 1. 拿到一段编码串，解码后再让分类器判断结果是什么
+$ yang-web decode "ZmxhZ3t0ZXN0fQ==" --raw | yang-web solve
+
+# 2. RSA 参数从文件里读出来，自动攻击并只取明文
+$ yang-web solve --file params.txt --json | python -c "..."   # 结构化消费
+
+# 3. 明文 → 编码 → 再解码，验证环回
+$ yang-web encode base64 "flag{x}" --raw | yang-web decode --raw
+flag{x}
+```
 
 ### SQL 注入 → 登录绕过
 
@@ -295,6 +371,15 @@ Web 界面内置完整密码学面板：
 - **脚本库** — 51脚本 + URL输入 + 额外参数 + 结果本页显示
 - **自动攻击** — SSE 实时攻击流
 - **内嵌浏览器** — Headers 编辑, CORS 代理
+
+### 🔗 面板间「送到下一步」
+
+解码 / 高级编码 / 中文密码 / 加解密 / Misc Crypto 五个面板的输出区下方都有一排
+**「送到 →」** 按钮。一处解出来的结果（明文、hex、Base64 串）可以一键推进另一个面板
+继续处理，不用手工复制粘贴。送到目标面板时自动填入输入框并切换到该标签页。
+
+送出的内容优先取对应的最终结果；没有显式结果时回退到输出区最后一行有效文本
+（纯分隔线不计），再回退到输入框原文。
 
 ---
 

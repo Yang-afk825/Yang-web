@@ -15,13 +15,19 @@
     jwt      JWT 解析 / 攻击
     scan     目录扫描 (离线词库)
     scripts  内嵌 CTF 脚本库 (41 个脚本)
-    solve    一键智能解题
+    solve    一键智能解题（题型识别 → 路径推荐 → 自动尝试）
+    crypto   RSA / 现代密码学攻击引擎
     misc     20+ 常见密码类型知识库（编码/解码/参考图）
+
+管道示例:
+    yang-web decode "ZmxhZ3t0ZXN0fQ==" --raw | yang-web solve
+    yang-web decode --raw "$(cat secret.txt)" | yang-web crypto --raw
 """
 import argparse
 import sys
 import json
 import os
+import re
 
 from .core.utils import banner, bold, red, green, yellow, blue, magenta, cyan, dim
 from .core.decoder import (
@@ -29,6 +35,8 @@ from .core.decoder import (
     DECODERS, ENCODING_DETECTORS,
 )
 from .core.hashid import identify as hash_identify
+from .core.triage import triage, parse_rsa_params
+from .core.crypto_attack import RSA_ATTACKS, attack_fermat, solve_rsa_auto
 from .core.jwt import (
     decode_jwt, analyze_jwt, none_attack,
     brute_jwt, BUILTIN_WORDLIST, forge_hs256,
@@ -46,7 +54,7 @@ from .core.misc_crypto import (
 )
 from .scripts import (
     list_scripts, search_scripts, get_script, get_script_path,
-    run_script, auto_solve, SCRIPTS, CATEGORIES,
+    run_script, CATEGORIES,
     check_all_deps, get_missing_deps, install_all_missing,
     install_deps_for_script,
 )
@@ -78,19 +86,24 @@ def cmd_decode(args):
     text = args.text
     if not text:
         text = sys.stdin.read().strip()
+    raw = getattr(args, "raw", False)
 
     if not text:
         print(red("错误: 请提供要解码的文本"))
         return
 
-    print(bold("\n📋 输入:"))
-    print(f"  {text[:200]}{'...' if len(text) > 200 else ''}")
-    print()
-
     if args.brute:
         # 尝试所有解码器
-        print(bold("🔍 尝试所有解码器:"))
         results = brute_decode(text)
+        if raw:
+            # 管道模式: 每行 "<编码>\t<结果>", 无结果则静默退出
+            for enc_id, enc_desc, result, _readable in results:
+                print(f"{enc_id}\t{result}")
+            return
+        print(bold("\n📋 输入:"))
+        print(f"  {text[:200]}{'...' if len(text) > 200 else ''}")
+        print()
+        print(bold("🔍 尝试所有解码器:"))
         if not results:
             print(yellow("  ── 无结果"))
             return
@@ -108,13 +121,25 @@ def cmd_decode(args):
             return
         decoder = DECODERS[enc_id][0]
         result = decoder(text)
+        if raw:
+            print(result)
+            return
         print(bold(f"\n🔓 使用 {cyan(enc_id)} 解码:"))
         print(f"  {result}")
         return
 
     # 自动链式解码
-    print(bold("🔓 智能链式解码:"))
     chain = chain_decode(text)
+
+    if raw:
+        # 管道模式: 只输出最终明文; 解不出来就原样透传, 保证管道不断流
+        print(chain[-1][2] if chain else text)
+        return
+
+    print(bold("\n📋 输入:"))
+    print(f"  {text[:200]}{'...' if len(text) > 200 else ''}")
+    print()
+    print(bold("🔓 智能链式解码:"))
 
     if not chain:
         print(yellow("  ── 未能识别编码, 尝试 --brute 暴力尝试所有解码器"))
@@ -158,6 +183,9 @@ def cmd_encode(args):
     _, encoder = DECODERS[enc_id]
     try:
         result = encoder(text)
+        if getattr(args, "raw", False):
+            print(result)
+            return
         print(bold(f"\n🔒 {enc_id} 编码结果:"))
         print(f"  {result}")
     except Exception as e:
@@ -998,50 +1026,227 @@ def cmd_misc(args):
         return
 
 
+# ═══════════════════════════════════════════════════════════
+#  RSA / 现代密码学攻击引擎
+# ═══════════════════════════════════════════════════════════
+
+def _to_int(value):
+    """宽松整数解析: 空值 / 非法值一律当 0。"""
+    if value is None or value == "":
+        return 0
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return 0
+
+
+def cmd_crypto(args):
+    """RSA / 现代密码学攻击命令."""
+    if getattr(args, "list", False):
+        print(bold("\n🔐 RSA 攻击引擎 — 可用攻击"))
+        for name, (desc, need) in RSA_ATTACKS.items():
+            print(f"  {cyan(name):16s} {desc}")
+            print(f"  {dim(' ' * 16 + '需要: ' + ', '.join(need))}")
+        print(dim("\n用法:"))
+        print(dim("  yang-web crypto --n <n> --e <e> --c <c>"))
+        print(dim("  yang-web crypto --p <p> --q <q> --e <e> --c <c>"))
+        print(dim("  yang-web crypto --fermat <n>"))
+        print(dim("  yang-web crypto --broadcast --e <e> --n <n1,n2,..> --c <c1,c2,..>"))
+        return
+
+    as_json = getattr(args, "json", False)
+    as_raw = getattr(args, "raw", False)
+
+    # ── Fermat 单点分解 ──
+    if getattr(args, "fermat", None):
+        pair = attack_fermat(_to_int(args.fermat))
+        if as_json:
+            print_json({"fermat": {"p": pair[0], "q": pair[1]} if pair else None})
+        elif pair:
+            print(bold("\n🔓 Fermat 分解成功"))
+            print(f"  p = {pair[0]}")
+            print(f"  q = {pair[1]}")
+        else:
+            print(yellow("\n  ── Fermat 分解失败 (p、q 差距较大, 不是近似分解题)"))
+        return
+
+    n_raw = getattr(args, "n", None)
+    c_raw = getattr(args, "c", None)
+    e = _to_int(getattr(args, "e", None))
+
+    # ── stdin: 从上游管道抓大整数, 依次视作 n、e、c ──
+    if not any((n_raw, c_raw, e)) and not sys.stdin.isatty():
+        nums = [int(x) for x in re.findall(r"\d+", sys.stdin.read())]
+        if len(nums) >= 3:
+            n_raw, e, c_raw = nums[0], nums[1], nums[2]
+        elif len(nums) == 2:
+            n_raw, e = nums
+        elif len(nums) == 1:
+            n_raw = nums[0]
+
+    if getattr(args, "broadcast", False):
+        moduli = [_to_int(x) for x in str(n_raw).split(",") if x.strip()]
+        ciphers = [_to_int(x) for x in str(c_raw).split(",") if x.strip()]
+        result = solve_rsa_auto(broadcast_cs=ciphers, broadcast_ns=moduli, broadcast_e=e or 3)
+    else:
+        result = solve_rsa_auto(
+            n=_to_int(n_raw), e=e, c=_to_int(c_raw),
+            p=_to_int(getattr(args, "p", None)), q=_to_int(getattr(args, "q", None)),
+            e1=_to_int(getattr(args, "e1", None)), e2=_to_int(getattr(args, "e2", None)),
+            c1=_to_int(getattr(args, "c1", None)), c2=_to_int(getattr(args, "c2", None)),
+        )
+
+    if as_json:
+        print_json(result)
+        return
+
+    if as_raw:
+        plain = result["results"].get("plaintext")
+        if plain is not None:
+            print(plain)
+        return
+
+    print(bold("\n🔐 RSA 攻击结果"))
+    print(f"  {dim('已尝试:')} {', '.join(result['tried']) or '(无可行攻击)'}")
+
+    if not result["success"]:
+        print(yellow("\n  ── 未命中任何攻击"))
+        print(dim("  可能原因: 需要已知 p/q、公钥文件, 或密文不止一组"))
+        print(dim("  yang-web crypto --list   查看全部可用攻击"))
+        return
+
+    res = result["results"]
+    if res.get("plaintext") is not None:
+        print(green(f"\n  ✅ 明文: {res['plaintext']}"))
+    for name, value in res.items():
+        if name == "plaintext":
+            continue
+        if isinstance(value, dict):
+            print(f"  {cyan(name):16s} " + ", ".join(f"{k}={v}" for k, v in value.items()))
+        else:
+            print(f"  {cyan(name):16s} {value}")
+
+
+# ═══════════════════════════════════════════════════════════
+#  智能解题 —— 先识别题型, 再给路径
+# ═══════════════════════════════════════════════════════════
+
+_KIND_ICON = {
+    "rsa": "🧮", "hash": "#", "encoded": "🔤", "ciphertext": "🔐",
+    "plaintext": "🏁", "url": "🌐", "text": "📄", "unknown": "❓",
+}
+
+
+def _solve_attempt(text, report):
+    """对识别结果执行**安全的离线**首选动作, 返回 [(label, ok, output)]。
+
+    只做本地计算, 绝不发起网络请求 —— 涉及目标的路径 (url / scan) 仅作建议列出。
+    """
+    attempts = []
+    kind = report["kind"]
+
+    if kind == "encoded" and text:
+        chain = chain_decode(text)
+        if chain:
+            steps = " → ".join(step[0] for step in chain)
+            attempts.append((f"链式解码 ({steps})", True, chain[-1][2]))
+        else:
+            attempts.append(("链式解码", False, "未能自动解码, 可试 --brute"))
+        return attempts
+
+    if kind == "hash" and text:
+        results = hash_identify(re.sub(r"\s+", "", text))
+        if results:
+            listing = ", ".join(f"{algo}[{cat}]" for algo, cat, _ in results[:6])
+            attempts.append((f"Hash 识别 ({len(results)} 个匹配)", True, listing))
+        else:
+            attempts.append(("Hash 识别", False, "未匹配已知散列算法"))
+        return attempts
+
+    if kind == "rsa" and text:
+        params = {
+            key: value for key, value in parse_rsa_params(text).items()
+            if key in ("n", "e", "c", "p", "q", "e1", "e2", "c1", "c2")
+        }
+        if not params:
+            attempts.append(("RSA 参数解析", False,
+                             "未能解析出 n / p —— 需要形如 n = <大整数> 的输入"))
+            return attempts
+        r = solve_rsa_auto(**params)
+        if r["success"]:
+            plain = r["results"].get("plaintext")
+            attempts.append((f"RSA 自动攻击 (命中 {', '.join(r['results'])})", True,
+                             plain if plain is not None else str(r["results"])))
+        else:
+            attempts.append((f"RSA 自动攻击 (尝试 {', '.join(r['tried']) or '无可行攻击'})", False,
+                             "未命中 —— 可能需要已知 p/q、公钥文件或更多密文组"))
+        return attempts
+
+    return attempts
+
+
 def cmd_solve(args):
-    """一键智能解题命令."""
-    input_data = args.input
-    input_type = args.type or "text"
-
+    """一键智能解题 —— 先识别题型, 再给路径, 并自动尝试首选离线动作."""
+    text = args.input
+    file_path = None
     if args.file:
-        input_type = "file"
-        input_data = args.file
-        if not os.path.isfile(input_data):
-            print(red(f"文件不存在: {input_data}"))
+        file_path = args.file
+        if not os.path.isfile(file_path):
+            print(red(f"文件不存在: {file_path}"))
             return
+    elif not text and not sys.stdin.isatty():
+        text = sys.stdin.read().strip()
 
-    if not input_data:
+    if not text and not file_path:
         print(red("请提供输入文本或文件路径"))
         print(dim("  yang-web solve <文本>"))
         print(dim("  yang-web solve --file <文件路径>"))
+        print(dim("  echo <文本> | yang-web solve"))
         return
 
-    print(bold(f"\n[解题] 一键智能解题"))
-    print(f"  {dim('输入类型:')} {cyan(input_type)}")
-    print(f"  {dim('输入内容:')} {input_data[:100]}{'...' if len(input_data) > 100 else ''}")
-    print(f"\n  {dim('正在尝试相关脚本...')}\n")
+    plan_only = getattr(args, "plan", False)
+    as_json = getattr(args, "json", False)
 
-    results = auto_solve(input_data, input_type=input_type)
+    report = triage(text=text or "", file_path=file_path)
 
-    if not results["results"]:
-        print(yellow("  -- 无匹配脚本"))
+    if as_json:
+        payload = {"triage": report}
+        if not plan_only:
+            payload["attempts"] = [
+                {"label": label, "ok": ok, "output": output}
+                for label, ok, output in _solve_attempt(text or "", report)
+            ]
+        print_json(payload)
         return
 
-    for i, entry in enumerate(results["results"], 1):
-        status = green("v") if entry["success"] else red("x")
-        print(f"  [{i}] {status} {entry['title']} ({entry['category']})")
-        if entry["output"]:
-            for line in entry["output"].strip().split("\n")[:10]:
-                print(f"      {dim(line)}")
-        print()
+    print(bold("\n[解题] 题型识别" + ("（--plan 不执行）" if plan_only else "")))
+    icon = _KIND_ICON.get(report["kind"], "•")
+    print(f"  {dim('判断:')} {icon} {green(report['kind'])}  {dim('置信度')} {report['confidence']}%")
+    print(f"  {dim('依据:')} {report['evidence']}")
 
-    print(bold(f"\n[统计] {len(results['results'])} 个脚本, "
-               f"{green(str(results['successes']))} 成功, "
-               f"{red(str(results['tried'] - results['successes']))} 失败"))
+    if report["paths"]:
+        print(bold("\n[路径] 推荐动作:"))
+        for i, path in enumerate(report["paths"], 1):
+            print(f"  [{i}] {cyan(path['tool']):10s} {path['hint']}")
+            if path["cmd"]:
+                print(f"      {dim('$ ' + path['cmd'])}")
 
-    if results["successes"] == 0:
-        print(yellow("\n  [提示] 尝试 --file 模式, 或手动指定脚本"))
-        print(dim("     yang-web scripts --list  查看所有脚本"))
+    if report["alternatives"]:
+        print(bold("\n[其他可能]:"))
+        for alt in report["alternatives"][:3]:
+            print(f"  {dim('•')} {alt['kind']} ({alt['confidence']}%) — {alt['evidence']}")
+
+    if plan_only:
+        return
+
+    attempts = _solve_attempt(text or "", report)
+    if attempts:
+        print(bold("\n[尝试] 自动执行首选动作:"))
+        for label, ok, output in attempts:
+            print(f"  {green('v') if ok else yellow('-')} {label}")
+            if output:
+                for line in str(output).strip().split("\n")[:8]:
+                    print(f"      {dim(line)}")
 
 
 # ═══════════════════════════════════════════════════════════
@@ -1058,6 +1263,7 @@ def build_parser():
 示例:
   yang_web decode "ZmxhZ3t0ZXN0fQ=="      智能链式解码
   yang_web decode --brute "dGVzdA=="      暴力尝试所有解码器
+  yang_web decode "ZmxhZ3t0ZXN0fQ==" --raw  管道模式: 只输出明文
   yang_web encode base64 "hello"          编码
   yang_web ssti --exploit --engine "Jinja2"  SSTI 利用 Payload
   yang_web sqli --db MySQL                 SQL 注入 Payload
@@ -1065,7 +1271,14 @@ def build_parser():
   yang_web hashid "5d41402abc4b2a76b9719d911017c592"
   yang_web jwt "eyJ..."                   JWT 分析
   yang_web php --magic                     PHP Magic Hash
+  yang_web solve "ZmxhZ3t0ZXN0fQ=="       先识别题型, 再给路径并自动试
+  yang_web solve --file challenge.png      按文件魔数识别
+  yang_web crypto --n <n> --e <e> --c <c>  RSA 攻击引擎
+  yang_web crypto --list                   列出全部 RSA 攻击
   yang_web scan dir --search config        搜索敏感目录
+
+管道:
+  yang_web decode "ZmxhZ3t0ZXN0fQ==" --raw | yang_web solve
         """,
     )
 
@@ -1076,12 +1289,15 @@ def build_parser():
     p_decode.add_argument("text", nargs="?", help="待解码文本 (或通过管道 stdin)")
     p_decode.add_argument("--brute", action="store_true", help="暴力尝试所有解码器")
     p_decode.add_argument("--manual", metavar="ENCODING", help="指定编码类型手动解码")
+    p_decode.add_argument("--raw", action="store_true",
+                          help="管道模式: 只输出最终明文 (解不出则原样透传)")
 
     # ── encode ──
     p_encode = sub.add_parser("encode", help="编码文本")
     p_encode.add_argument("type", nargs="?", help="编码类型 (如 base64/base32/hex/url)")
     p_encode.add_argument("text", nargs="?", help="待编码文本 (或通过管道 stdin)")
     p_encode.add_argument("--list", action="store_true", help="列出可用编码类型")
+    p_encode.add_argument("--raw", action="store_true", help="管道模式: 只输出编码结果")
 
     # ── ssti ──
     p_ssti = sub.add_parser("ssti", help="SSTI Payload 生成")
@@ -1179,11 +1395,28 @@ def build_parser():
                             help="Install deps (default: all, or script name)")
 
     # ── solve ──
-    p_solve = sub.add_parser("solve", help="一键智能解题")
-    p_solve.add_argument("input", nargs="?", help="输入文本 (编码串/密文等)")
-    p_solve.add_argument("--type", metavar="TYPE", choices=["text", "file", "apk"],
-                          help="输入类型 (默认: text)")
-    p_solve.add_argument("--file", metavar="PATH", help="文件路径模式")
+    p_solve = sub.add_parser("solve", help="一键智能解题 (先识别题型, 再给路径)")
+    p_solve.add_argument("input", nargs="?", help="输入文本 (编码串/密文等, 或通过管道 stdin)")
+    p_solve.add_argument("--file", metavar="PATH", help="文件路径模式 (按魔数识别)")
+    p_solve.add_argument("--plan", action="store_true", help="只识别并给出路径, 不执行")
+    p_solve.add_argument("--json", action="store_true", help="结构化 JSON 输出")
+
+    # ── crypto ──
+    p_crypto = sub.add_parser("crypto", help="RSA / 现代密码学攻击引擎")
+    p_crypto.add_argument("--n", metavar="N", help="模数 n (广播模式可用逗号分隔多组)")
+    p_crypto.add_argument("--e", metavar="E", help="公钥指数 e")
+    p_crypto.add_argument("--c", metavar="C", help="密文 c (广播模式可用逗号分隔多组)")
+    p_crypto.add_argument("--p", metavar="P", help="素因子 p (已知分解)")
+    p_crypto.add_argument("--q", metavar="Q", help="素因子 q (已知分解)")
+    p_crypto.add_argument("--e1", metavar="E1", help="共模攻击: 第一个指数")
+    p_crypto.add_argument("--e2", metavar="E2", help="共模攻击: 第二个指数")
+    p_crypto.add_argument("--c1", metavar="C1", help="共模攻击: 第一组密文")
+    p_crypto.add_argument("--c2", metavar="C2", help="共模攻击: 第二组密文")
+    p_crypto.add_argument("--fermat", metavar="N", help="仅执行 Fermat 分解")
+    p_crypto.add_argument("--broadcast", action="store_true", help="Håstad 广播攻击")
+    p_crypto.add_argument("--list", action="store_true", help="列出所有可用攻击")
+    p_crypto.add_argument("--json", action="store_true", help="结构化 JSON 输出")
+    p_crypto.add_argument("--raw", action="store_true", help="管道模式: 只输出明文")
 
     # ── misc ──
     p_misc = sub.add_parser("misc", help="Misc Crypto 知识库 (20+ 密码类型)")
@@ -1237,6 +1470,7 @@ def main():
         "scripts": cmd_scripts,
         "misc": cmd_misc,
         "solve": cmd_solve,
+        "crypto": cmd_crypto,
     }
 
     func = commands.get(args.command)
