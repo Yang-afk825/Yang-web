@@ -1,0 +1,14 @@
+# 统一文本行尾，避免 \r\r\n 之类的畸形行尾再次入库。
+# 仓库内以 LF 存储，检出时遵循 core.autocrlf。
+* text=auto
+
+# 明确二进制，避免被行尾转换破坏
+*.ico   binary
+*.png   binary
+*.jpg   binary
+*.zip   binary
+*.pyz   binary
+*.pyc   binary
+*.pkg   binary
+*.exe   binary
+*.dll   binary
