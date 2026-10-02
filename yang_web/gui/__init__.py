@@ -2,7 +2,7 @@
 """Yang-Web 图形界面 (tkinter).
 
 零外部依赖，Python 自带 tkinter。
-布局: 左侧功能树 + 右侧内容区，Tab 式切换。
+布局: 顶部标题栏 + Notebook 标签页切换功能模块。
 """
 
 import tkinter as tk
