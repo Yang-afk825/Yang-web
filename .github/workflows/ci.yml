@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: unittest (py${{ matrix.python-version }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.8 = pyproject.toml 声明的 requires-python 下限，必须实测；
+        # 3.10 = 使用 PEP 604 注解的模块首次可"无 __future__"运行的版本；
+        # 3.12 = 当前开发环境。
+        python-version: ["3.8", "3.10", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: 语法编译检查
+        run: python -m compileall -q yang_web
+
+      - name: 运行单元测试（纯标准库，零第三方依赖）
+        run: python -m unittest discover -s tests -t .
+
+      - name: CLI 冒烟
+        run: |
+          python -m yang_web --help
+          $out = python -m yang_web decode "ZmxhZ3t0ZXN0fQ==" --raw
+          if ($out -ne "flag{test}") {
+            Write-Error "decode 输出异常: $out"
+            exit 1
+          }
+          Write-Host "decode OK: $out"
