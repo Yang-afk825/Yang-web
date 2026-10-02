@@ -403,7 +403,7 @@ Yang-Web/
 │   │   ├── decoder.py         # 智能解码
 │   │   ├── hashid.py          # Hash识别
 │   │   ├── jwt.py             # JWT攻击
-│   │   ├── misc_crypto.py     # 古典密码
+│   │   ├── misc_crypto/       # 古典密码（拆分为 9 个原子模块）
 │   │   ├── crypto_engine.py   # AES/RC4/RSA
 │   │   ├── advanced_engines.py # 18种高级编码
 │   │   ├── chinese_ciphers.py  # 中文特色密码
@@ -419,6 +419,7 @@ Yang-Web/
 │   │   ├── php_lfi.py          # PHP文件包含
 │   │   ├── php_eval_rce.py     # PHP eval RCE
 │   │   ├── multi_stage.py      # 多阶段攻击
+│   │   ├── advanced_scanner/   # 高级扫描（字典爆破/Diff/攻击链，9 个原子模块）
 │   │   ├── smart_solver/       # 智能一键解题（拆分为 8 个原子模块 + 6 个 Mixin）
 │   │   └── ...                 # 12+ 引擎
 │   ├── scripts/           # 51个CTF脚本
@@ -439,6 +440,7 @@ Yang-Web/
 - 📦 **exe 改走 GitHub Releases** — 不再把 32MB 二进制写进 git 历史（PyInstaller 产物每次构建都不同、无法去重）；发布由 workflow 自动完成，且**发布前先跑全量测试**
 - ✅ **新增 CI** — Python 3.8 / 3.10 / 3.12 三版本跑编译检查 + 82 项单元测试 + CLI 冒烟
 - 🧹 **仓库瘦身** — `.git` 133MB → 61MB（回收松散对象）；本地构建残留移出仓库
+- 🧩 **4 个巨型文件拆为分层包** — `cli.py`(1482 行) → 6 模块、`core/smart_solver.py`(2004 行) → 8 原子模块 + 6 Mixin、`core/advanced_scanner.py`(1335 行) → 9 模块、`core/misc_crypto.py`(1381 行) → 8 模块；单文件最大规模从 2004 行降到 602 行。拆分后逐个比对：**类方法集合、方法签名、顶层函数签名全部一致**，无行为变更
 - 📉 **文档数字对齐事实** — README 中的 exe 体积改为按可复现构建的实测值给出
 
 ## v4.0.0 更新 (2026-08-04)
@@ -458,7 +460,7 @@ Yang-Web/
 > 本次聚焦「自动化解题引擎」全面扩容 — 从单点 Payload 走向多阶段自动攻击链，新增 11 个核心解题引擎，内嵌脚本库 41 → 51。
 
 - 🔗 **多阶段攻击引擎（multi_stage.py）** — 通用多阶段解题框架：阶段检测 → 攻击 → 响应分析 → 跳转追踪 → 下一阶段，自动串联攻击链直至读出 Flag
-- 🔍 **高级扫描引擎（advanced_scanner.py）** — 字典目录/文件爆破 + Response Diffing 精准检测 + 自动攻击链 + HTTP 方法自适应
+- 🔍 **高级扫描引擎（advanced_scanner/）** — 字典目录/文件爆破 + Response Diffing 精准检测 + 自动攻击链 + HTTP 方法自适应
 - 🧠 **智能一键解题引擎（smart_solver.py）** — 问题分类器 + 策略路由 + 多引擎自动编排
 - 🐘 **PHP 反序列化求解器（php_unserialize.py）** — 基础验证 / `__wakeup` 绕过（CVE-2016-7124）/ 弱类型 == 绕过
 - 📂 **PHP 文件包含求解器（php_lfi.py）** — include/require + 协议约束识别 + flag 文件自动发现

@@ -129,6 +129,7 @@ PyInstaller 每次构建产物都不同、**无法去重**，等于每发一版�
   **未擅自恢复**。10-01 记录判定为 Windows Defender 活体查杀截断 webshell 样本；
 - **巨型文件拆分**：`core/smart_solver.py` 84KB、`cli.py` 61KB、
   `core/advanced_scanner.py` 56KB、`core/misc_crypto.py` 52KB——动静最大，单独确认。
+  **→ 已于本日完成，见第八节。**
 
 ## 七、本轮提交
 
@@ -143,3 +144,50 @@ PyInstaller 每次构建产物都不同、**无法去重**，等于每发一版�
 | `11b7df2` | docs: 按 Release 实测值修正 exe 体积（约 32MB → 约 23MB） |
 
 同批推送的 10-01 积压提交：`6494a70`、`7886b98`、`2604c08`、`540b9b8`、`15d5d73`。
+
+## 八、巨型文件拆分（本轮补完）
+
+四个巨型文件全部拆为分层包。拆分标准是 **对外契约零变化**——类方法集合、方法签名、
+顶层函数签名、顶层数据对象逐项与拆分前比对，全部一致。
+
+| 原文件 | 行数 | 拆分为 | 最大单文件 |
+|---|---|---|---|
+| `yang_web/cli.py` | 1482 | `cli/` 6 模块（`_codec`/`_entry`/`_solve`/`_web`/`__init__`/`__main__`） | 602 |
+| `yang_web/core/smart_solver.py` | 2004 | `smart_solver/` 8 原子模块（16 文件）+ `WebSmartSolver` 再拆 6 Mixin | 250 |
+| `yang_web/core/advanced_scanner.py` | 1335 | `advanced_scanner/` 9 模块（按引擎一间一模块，11 文件） | 292 |
+| `yang_web/core/misc_crypto.py` | 1381 | `misc_crypto/` 8 模块（按密码族分组，9 文件） | 326 |
+
+单文件最大规模从 **2004 行降到 602 行**。
+
+### 拆分中踩到并修掉的三个坑
+
+1. **「第一个 def 之前」不等于头部。** `smart_solver.py` 的 `import urllib.*` 与
+   `from typing import ...` 写在第一个函数**之后**；`misc_crypto.py` 则有 443 行常量
+   排在所有函数之前。按位置判断会把 import 关进某个子模块、或把 300 行常量表复制进
+   每个子模块。改为：头部只取「编码行 + module docstring + 全部模块级 import」，
+   常量赋值一律作为可分组节点。
+
+2. **正则找引用会被字符串误伤。** `_http_headers` 里的
+   `"User-Agent": "Mozilla/5.0 Yang-Web SmartSolver/2.1"` 让 `_common` 被判定引用了
+   `_solver`，进而报出假的循环依赖。改为 AST 采集真实 `Name` 节点。
+
+3. **嵌在 `try/except` 里的相对导入会漏改。** `misc_crypto.py` 的
+   `try: from . import cipher_classic, ... except ImportError: import ...` 不是模块级
+   `Import` 节点，`tree.body` 扫不到。拆成包后 `from .` 会指向错误的层级。
+   改为 `ast.walk` 全树扫描 `ImportFrom(level>0)`，按行精确升一层。
+
+### 顺带修掉的对外引用
+
+- `scripts/registry.py` 中 6 条记录把 `../core/smart_solver.py` 当**可执行文件路径**
+  （`runner.py` 用 `subprocess.run([sys.executable, path])` 直接跑文件），拆包后该路径
+  失效。改为指向 `../core/smart_solver/__main__.py`，并让 `__main__.py` 同时支持
+  `python -m yang_web.core.smart_solver` 与按文件路径直接执行两种方式。
+- README 目录树与 `usage` 说明同步更新。
+
+### 验证方式
+
+- AST 顶层符号差集：**零缺失**；
+- `inspect.signature` 逐类方法、逐顶层函数比对：**全部 MATCH**；
+- `python -m compileall` 全绿；82 项单元测试全绿；
+- 功能冒烟：`misc_crypto` 95 种密码注册正常、base64/morse 编解码正确；
+  `advanced_scanner` 双模式入口打印用法正常。
