@@ -30,27 +30,34 @@ OOK_MAP = {
 # ═══════════════════════════════════════════
 
 def brainfuck_encode(text: str) -> str:
-    """Encode text to Brainfuck program."""
+    """Encode text to Brainfuck program.
+
+    Brainfuck 的 ``.`` 输出的是**字节**，因此按 UTF-8 字节逐位生成。
+    旧实现用 ``ord(c)`` 取码点 —— 中文会被当作 20013 这种大数，
+    生成上千个 ``+``，解出来必然是乱码。
+
+    每个字节取「模 256 更短的一侧」：从 200 到 10 用 ``-`` 走 190 步
+    不如 ``+`` 走 66 步，两者在 8 位磁带里等价。
+    """
     result = []
     prev = 0
-    for c in text:
-        cur = ord(c)
-        diff = cur - prev
-        if diff > 0:
+    for byte in text.encode('utf-8'):
+        diff = (byte - prev) % 256
+        if diff and diff <= 128:
             result.append('+' * diff)
-        elif diff < 0:
-            result.append('-' * (-diff))
+        elif diff:
+            result.append('-' * (256 - diff))
         result.append('.')
-        prev = cur
+        prev = byte
     return ''.join(result)
 
 
 def brainfuck_decode(code: str) -> str:
-    """Decode Brainfuck program."""
+    """Decode Brainfuck program（输出按 UTF-8 还原为文本）。"""
     tape = [0] * 30000
     ptr = 0
     pc = 0
-    result = []
+    result = bytearray()
     code_clean = ''.join(c for c in code if c in '><+-.,[]')
     code_len = len(code_clean)
     loop_stack = []
@@ -77,7 +84,7 @@ def brainfuck_decode(code: str) -> str:
         elif cmd == '-':
             tape[ptr] = (tape[ptr] - 1) % 256
         elif cmd == '.':
-            result.append(chr(tape[ptr]))
+            result.append(tape[ptr])
         elif cmd == ',':
             pass  # No input support in decode mode
         elif cmd == '[':
@@ -88,7 +95,7 @@ def brainfuck_decode(code: str) -> str:
                 pc = match.get(pc, 0) - 1
         pc += 1
 
-    return ''.join(result)
+    return bytes(result).decode('utf-8', errors='replace')
 
 
 def ook_encode(text: str) -> str:
@@ -124,27 +131,39 @@ def ook_decode(code: str) -> str:
 # ═══════════════════════════════════════════
 
 def jsfuck_encode(text: str) -> str:
-    """Encode text to JSFuck subset (basic mapping). Returns a JS string that evals to the text."""
-    # Use simple number-to-string approach
-    result = []
-    for c in text:
-        code = ord(c)
-        if 32 <= code <= 126:
-            # Use minimum JSFuck: (+([]+(+!![]+!![]+!![]+!![]+!![]+!![]+!![]+!![]+!![]+!![])))
-            # Simplified: we encode each char as String.fromCharCode(code)
-            result.append(f"([]+[])[\"constructor\"][\"fromCharCode\"]({code})")
-        else:
-            result.append(f"\"{c}\"")
-    return '+'.join(result) if result else '[]'
+    """Encode text into a JS expression that evaluates back to the text.
+
+    逐 **UTF-16 码元** 生成 ``String.fromCharCode(...)`` 并串联。
+    JS 字符串本就是 UTF-16，用码元（而非 Python 码点）才能让
+    BMP 之外的字符（emoji 等）也正确往返。
+    """
+    if not text:
+        return '[]'
+    data = text.encode('utf-16-be')
+    parts = []
+    for i in range(0, len(data), 2):
+        code = int.from_bytes(data[i:i + 2], 'big')
+        parts.append(f"([]+[])[\"constructor\"][\"fromCharCode\"]({code})")
+    return '+'.join(parts)
 
 
 def jsfuck_decode(code: str) -> str:
-    """Attempt to decode JSFuck by evaluating common patterns."""
-    # Try extracting numbers from fromCharCode() calls
+    """Decode JSFuck / fromCharCode 链。
+
+    旧实现的正则写的是 ``fromCharCode\\)\\(`` —— 但编码器产出的是
+    ``["fromCharCode"](72)``，属性名后跟的是引号再跟着括号，
+    所以正则永远匹配不到，连自己编出来的东西都解不回去。
+    """
     import re as re_mod
-    codes = re_mod.findall(r'fromCharCode\]\((\d+)\)', code)
+    codes = re_mod.findall(r'fromCharCode\D{0,10}\(\s*(\d+)\s*\)', code)
     if codes:
-        return ''.join(chr(int(c)) for c in codes if 32 <= int(c) < 65536)
+        raw = bytearray()
+        for c in codes:
+            value = int(c)
+            if 0 <= value < 0x10000:
+                raw.extend(value.to_bytes(2, 'big'))
+        if raw:
+            return bytes(raw).decode('utf-16-be', errors='replace')
 
     # Try extracting quoted strings
     strings = re_mod.findall(r'"([^"]*)"', code)

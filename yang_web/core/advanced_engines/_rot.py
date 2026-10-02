@@ -53,9 +53,7 @@ def rot5_decode(cipher: str) -> str:
 
 
 def rot18_encode(text: str) -> str:
-    """ROT18 = ROT13 + ROT5."""
-    return rot5_encode(rot47_encode(text)[:0])  # Not reversible this way
-    # Actually: ROT18 = ROT13 for letters + ROT5 for digits
+    """ROT18 = ROT13（字母）+ ROT5（数字）。"""
     result = []
     for c in text:
         if 'A' <= c <= 'Z':

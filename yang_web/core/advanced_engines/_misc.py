@@ -33,11 +33,18 @@ ZW_TO_BITS = {c: f"{i:02b}" for i, c in enumerate(ZW_MAP)}
 
 
 def zerowidth_encode(text: str) -> str:
-    """Encode text as zero-width characters."""
-    binary = ''.join(f"{ord(c):016b}" for c in text)
+    """Encode text as zero-width characters（每个 UTF-16 码元占 16 bit）。
+
+    旧实现用 ``ord(c):016b`` —— 宽度 16 只是**下限**，
+    码点超过 U+FFFF（emoji 等）会输出 17 位，整个比特流从此错位。
+    改用 UTF-16 码元，BMP 内外一律 16 位。
+    """
+    data = text.encode('utf-16-be')
+    binary = ''.join(format(int.from_bytes(data[i:i + 2], 'big'), '016b')
+                     for i in range(0, len(data), 2))
     result = []
     for i in range(0, len(binary), 2):
-        pair = binary[i:i+2]
+        pair = binary[i:i + 2]
         idx = int(pair, 2) if len(pair) == 2 else 0
         result.append(ZW_MAP[idx])
     return ''.join(result)
@@ -45,18 +52,11 @@ def zerowidth_encode(text: str) -> str:
 
 def zerowidth_decode(cipher: str) -> str:
     """Decode zero-width characters to text."""
-    binary = []
-    for c in cipher:
-        if c in ZW_TO_BITS:
-            binary.append(ZW_TO_BITS[c])
-    bit_string = ''.join(binary)
-    result = []
-    for i in range(0, len(bit_string) - 15, 16):
-        try:
-            result.append(chr(int(bit_string[i:i+16], 2)))
-        except (ValueError, OverflowError):
-            pass
-    return ''.join(result)
+    binary = ''.join(ZW_TO_BITS[c] for c in cipher if c in ZW_TO_BITS)
+    out = bytearray()
+    for i in range(0, len(binary) - 15, 16):
+        out.extend(int(binary[i:i + 16], 2).to_bytes(2, 'big'))
+    return bytes(out).decode('utf-16-be', errors='replace')
 
 
 # ═══════════════════════════════════════════
@@ -92,8 +92,13 @@ def punycode_decode(cipher: str) -> str:
 # ═══════════════════════════════════════════
 
 def shellcode_encode(text: str) -> str:
-    """Convert text to shellcode hex format."""
-    return ''.join(f'\\x{ord(c):02x}' for c in text)
+    """Convert text to shellcode hex format.
+
+    按 UTF-8 **字节** 展开。旧实现用 ``f'\\\\x{ord(c):02x}'``——
+    ``02x`` 只是最小宽度，中文会写成 ``\\x4e2d`` 这种 4 位「伪字节」，
+    而解码端只认 2 位十六进制，必然错位。
+    """
+    return ''.join(f'\\x{b:02x}' for b in text.encode('utf-8'))
 
 
 def shellcode_decode(cipher: str) -> str:
@@ -101,7 +106,7 @@ def shellcode_decode(cipher: str) -> str:
     import re as re_mod
     hex_pairs = re_mod.findall(r'\\x([0-9a-fA-F]{2})', cipher)
     if hex_pairs:
-        return ''.join(chr(int(h, 16)) for h in hex_pairs)
+        return bytes(int(h, 16) for h in hex_pairs).decode('utf-8', errors='replace')
     # Also try without \x prefix
     clean = cipher.replace('\\x', '').replace('0x', '').replace(' ', '')
     try:
