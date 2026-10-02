@@ -433,7 +433,7 @@ Yang-Web/
 
 > 本次聚焦「桌面化 + 自动化」— 从 Web 工具走向独立应用 + 脚本库靶场闭环。
 
-- 🖥️ **独立桌面应用** — pywebview + WebView2 打包 exe（约 32MB），双击即用，无需 Python 环境
+- 🖥️ **独立桌面应用** — pywebview + WebView2 打包 exe（约 23MB），双击即用，无需 Python 环境
 - 🌐 **内嵌浏览器** — 工具箱内置浏览器，支持 Headers 编辑 + CORS 服务端代理
 - ⚡ **SSE 实时攻击流** — 自动攻击页实时推送 `{stage,item,status}` 攻击进度
 - 🎮 **脚本库靶场** — 内置 4 关 Web 靶场（时间盲注/布尔盲注/JS硬编码/命令执行），脚本库脚本一键解出 Flag
