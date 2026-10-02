@@ -13,7 +13,7 @@ from ..advanced_engines import (
     quoted_printable_decode, uudecode, xxdecode,
     utf7_decode, punycode_decode, shellcode_decode,
     base91_decode, base92_decode,
-    rot47_decode, rot5_decode, rot18_decode,    rot47_decode, rot5_decode, rot18_decode,
+    rot47_decode, rot5_decode, rot18_decode,
 )
 from ..chinese_ciphers import (
     _decode_buddha, core_values_decode, beast_decode,
