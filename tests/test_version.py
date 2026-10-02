@@ -36,7 +36,8 @@ def norm(v):
 class TestVersionConsistency(unittest.TestCase):
     def test_pyproject_matches_dunder(self):
         path = os.path.join(REPO, 'pyproject.toml')
-        text = open(path, encoding='utf-8').read()
+        with open(path, encoding='utf-8') as fh:
+            text = fh.read()
         m = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', text, re.M)
         self.assertIsNotNone(m, 'pyproject.toml 里找不到 version 字段')
         self.assertEqual(norm(m.group(1)), norm(yang_web.__version__),
@@ -56,7 +57,8 @@ class TestVersionConsistency(unittest.TestCase):
                 full = os.path.join(root, fname)
                 rel = os.path.relpath(full, REPO).replace('\\', '/')
                 try:
-                    lines = open(full, encoding='utf-8').read().splitlines()
+                    with open(full, encoding='utf-8') as fh:
+                        lines = fh.read().splitlines()
                 except (OSError, UnicodeDecodeError):
                     continue
                 for i, line in enumerate(lines, 1):
@@ -70,7 +72,8 @@ class TestVersionConsistency(unittest.TestCase):
     def test_display_strings_use_dunder(self):
         """展示串必须走 f-string 插值，而不是自己写死数字。"""
         for rel in ('yang_web/server.py', 'yang_web/gui/_app.py'):
-            text = open(os.path.join(REPO, rel), encoding='utf-8').read()
+            with open(os.path.join(REPO, rel), encoding='utf-8') as fh:
+                text = fh.read()
             self.assertIn('__version__', text, '%s 未引用 __version__' % rel)
 
 
