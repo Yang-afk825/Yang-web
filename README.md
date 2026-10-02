@@ -82,7 +82,7 @@ python launch.pyw                 # 或：独立窗口（缺 pywebview 时回退
 dist/Yang-Web.exe                 # 独立窗口, 无需 Python
 ```
 
-> 📚 **CTF 知识库（内置检索）**：接入 [Des-CTF-Knowledge](https://github.com/Dest1ny-Sec/Des-CTF-Knowledge)（12 篇深度文章 + Payload 速查 + 1150+ 篇大赛 WP + 46 类脚本）。源码版用 `--recurse-submodules` 会自动拉取到 `knowledge/Des-CTF-Knowledge`；若单独 clone 了知识库，可用环境变量 `CTF_KB_DIR` 指向其根目录。exe 版需手动 clone 知识库到 `~/.qclaw/workspace/Des-CTF-Knowledge` 或设 `CTF_KB_DIR`。
+> 📚 **CTF 知识库（内置检索）**：接入 [Des-CTF-Knowledge](https://github.com/Dest1ny-Sec/Des-CTF-Knowledge)（12 篇深度文章 + Payload 速查 + 1150+ 篇大赛 WP + 46 类脚本）。源码版用 `--recurse-submodules` 会自动拉取到 `knowledge/Des-CTF-Knowledge`；若单独 clone 了知识库，可用环境变量 `CTF_KB_DIR` 指向其根目录。exe 版需手动 clone 知识库到 `~/Des-CTF-Knowledge`，或用环境变量 `CTF_KB_DIR` 指向其根目录。
 
 ---
 
@@ -433,7 +433,7 @@ Yang-Web/
 
 > 本次聚焦「桌面化 + 自动化」— 从 Web 工具走向独立应用 + 脚本库靶场闭环。
 
-- 🖥️ **独立桌面应用** — pywebview + WebView2 打包 exe（24MB），双击即用，无需 Python 环境
+- 🖥️ **独立桌面应用** — pywebview + WebView2 打包 exe（约 32MB），双击即用，无需 Python 环境
 - 🌐 **内嵌浏览器** — 工具箱内置浏览器，支持 Headers 编辑 + CORS 服务端代理
 - ⚡ **SSE 实时攻击流** — 自动攻击页实时推送 `{stage,item,status}` 攻击进度
 - 🎮 **脚本库靶场** — 内置 4 关 Web 靶场（时间盲注/布尔盲注/JS硬编码/命令执行），脚本库脚本一键解出 Flag

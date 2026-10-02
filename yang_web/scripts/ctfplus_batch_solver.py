@@ -7,10 +7,13 @@ Usage:
 """
 import sys, os, json
 
-sys.path.insert(0, r'C:\Users\阳\.qclaw\workspace\Yang-web\yang_web')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.smart_solver import SmartSolver, classify_problem
 
-CTFPLUS_JSON = r'C:\Users\阳\.qclaw\workspace\ctfplus_problems_detailed.json'
+CTFPLUS_JSON = os.environ.get(
+    "CTFPLUS_JSON",
+    os.path.join(os.getcwd(), "ctfplus_problems_detailed.json"),
+)
 
 def load_problems(filepath: str = CTFPLUS_JSON) -> list:
     with open(filepath, 'r', encoding='utf-8') as f:

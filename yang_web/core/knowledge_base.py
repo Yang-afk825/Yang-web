@@ -38,8 +38,8 @@ def _find_kb_root() -> Path:
             return cand
     # 3. 常见位置（向后兼容旧路径 / 手动 clone）
     for cand in (
-        Path.home() / ".qclaw" / "workspace" / "Des-CTF-Knowledge",
         Path.home() / "Des-CTF-Knowledge",
+        repo_root.parent / "Des-CTF-Knowledge",
     ):
         if (cand / "PAYLOAD-CHEATSHEET.md").exists():
             return cand

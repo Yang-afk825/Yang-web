@@ -11,7 +11,7 @@
 
 ### CLI 命令行
 ```bash
-cd C:\Users\阳\.qclaw\workspace\Yang-web
+cd <Yang-Web 克隆目录>
 python -m yang_web sqli --db MySQL
 ```
 
