@@ -419,7 +419,7 @@ Yang-Web/
 │   │   ├── php_lfi.py          # PHP文件包含
 │   │   ├── php_eval_rce.py     # PHP eval RCE
 │   │   ├── multi_stage.py      # 多阶段攻击
-│   │   ├── smart_solver.py     # 智能一键解题
+│   │   ├── smart_solver/       # 智能一键解题（拆分为 8 个原子模块 + 6 个 Mixin）
 │   │   └── ...                 # 12+ 引擎
 │   ├── scripts/           # 51个CTF脚本
 │   └── wordlists/         # 词库 + 古典密码参考图
