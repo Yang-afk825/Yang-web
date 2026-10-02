@@ -76,10 +76,10 @@ python -m yang_web.server         # 启动 Web 服务 (默认 8765)
 python launch.pyw                 # 或：独立窗口（缺 pywebview 时回退到浏览器）
 ```
 
-**免安装**：直接使用打包好的桌面应用。
+**免安装**：直接使用打包好的桌面应用，从 [Releases](https://github.com/Yang-afk825/Yang-web/releases/latest) 下载最新版。
 
 ```bash
-dist/Yang-Web.exe                 # 独立窗口, 无需 Python
+Yang-Web.exe                      # 下载后双击, 无需 Python
 ```
 
 > 📚 **CTF 知识库（内置检索）**：接入 [Des-CTF-Knowledge](https://github.com/Dest1ny-Sec/Des-CTF-Knowledge)（12 篇深度文章 + Payload 速查 + 1150+ 篇大赛 WP + 46 类脚本）。源码版用 `--recurse-submodules` 会自动拉取到 `knowledge/Des-CTF-Knowledge`；若单独 clone 了知识库，可用环境变量 `CTF_KB_DIR` 指向其根目录。exe 版需手动 clone 知识库到 `~/Des-CTF-Knowledge`，或用环境变量 `CTF_KB_DIR` 指向其根目录。
@@ -424,7 +424,7 @@ Yang-Web/
 │   ├── scripts/           # 51个CTF脚本
 │   └── wordlists/         # 词库 + 古典密码参考图
 ├── 靶场.py                # 内置4关Web靶场 (9999)
-└── dist/Yang-Web.exe      # 独立桌面应用
+└── dist/                  # 本地构建产物（不入库，发布走 Releases）
 ```
 
 ---
