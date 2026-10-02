@@ -1,0 +1,75 @@
+name: Release
+
+# 打包 exe 并发布到 GitHub Releases。
+# exe 不再入库（见 .gitignore 与 README），因此"发布"这件事必须自动化，
+# 否则每次都要有人手工打包 + 手工上传，迟早会发出版本与源码不一致的包。
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "要发布的版本 tag（如 v4.0.0）；不存在时会自动创建"
+        required: true
+        default: "v4.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: 构建 exe 并发布
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 知识库是 17MB 的独立仓，源码版按需拉取；exe 内不含它
+          submodules: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 安装打包依赖
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller fastapi uvicorn pywebview pythonnet requests
+
+      # 打包前先跑一遍测试：宁可发布失败，也不要发布一个测试没过的包
+      - name: 发布前回归测试
+        run: python -m unittest discover -s tests -t .
+
+      - name: 构建 exe
+        run: python -m PyInstaller Yang-Web.spec --noconfirm
+
+      - name: 校验产物
+        run: |
+          if (-not (Test-Path "dist/Yang-Web.exe")) {
+            Write-Error "构建产物 dist/Yang-Web.exe 缺失"
+            exit 1
+          }
+          $mb = (Get-Item "dist/Yang-Web.exe").Length / 1MB
+          Write-Host ("exe 大小: {0:N1} MB" -f $mb)
+          if ($mb -lt 10) {
+            Write-Error "产物体积异常（小于 10MB），疑似构建不完整"
+            exit 1
+          }
+
+      - name: 计算校验和
+        run: |
+          $h = (Get-FileHash "dist/Yang-Web.exe" -Algorithm SHA256).Hash
+          "SHA256: $h" | Tee-Object -FilePath "dist/Yang-Web.exe.sha256"
+          Write-Host "SHA256 = $h"
+
+      - name: 发布 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: Yang-Web ${{ github.event.inputs.tag || github.ref_name }}
+          body_path: .github/release-notes.md
+          files: |
+            dist/Yang-Web.exe
+            dist/Yang-Web.exe.sha256
+          draft: false
+          prerelease: false
