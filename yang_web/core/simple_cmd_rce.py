@@ -18,6 +18,8 @@ import urllib.request
 import urllib.parse
 import ssl
 
+from .. import __version__
+
 FLAG_RE = re.compile(
     r'(flag\{[^{};:#\n]{4,}\}|ISCC\{[^{};:#\n]{4,}\}|ctf\{[^{};:#\n]{4,}\}|CTF\{[^{};:#\n]{4,}\}|'
     r'Gee?sec\{[^{};:#\n]{4,}\}|BUUCTF\{[^{};:#\n]{4,}\}|NSSCTF\{[^{};:#\n]{4,}\}|'
@@ -61,7 +63,7 @@ def _http_fetch(url, data=None, timeout=8):
     """GET (data=None) 或 POST (data=bytes) 请求, 返回响应文本。"""
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) YangWeb/4.0',
+            'User-Agent': f'Mozilla/5.0 (Windows NT 10.0; Win64; x64) YangWeb/{__version__}',
             'Content-Type': 'application/x-www-form-urlencoded',
         }
         req = urllib.request.Request(url, data=data, headers=headers,

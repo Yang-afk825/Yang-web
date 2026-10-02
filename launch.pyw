@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Yang-Web v4.0 启动入口 — 本地 Web UI (无窗口)。
+"""Yang-Web 启动入口 — 本地 Web UI (无窗口)。
 
 启动 FastAPI 服务并自动打开默认浏览器。
 """

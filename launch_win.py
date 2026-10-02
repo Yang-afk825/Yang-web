@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Yang-Web v4.1 exe 启动入口 (无控制台版)。
+"""Yang-Web exe 启动入口 (无控制台版)。
 
 启动 FastAPI 服务 + pywebview 独立窗口。
 """

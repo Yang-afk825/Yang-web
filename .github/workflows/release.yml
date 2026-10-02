@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "要发布的版本 tag（如 v4.1.0）；不存在时会自动创建"
+        description: "要发布的版本 tag（如 v4.1.1）；不存在时会自动创建"
         required: true
-        default: "v4.1.0"
+        default: "v4.1.1"
 
 permissions:
   contents: write
@@ -22,12 +22,12 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # 知识库是 17MB 的独立仓，源码版按需拉取；exe 内不含它
           submodules: false
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -63,7 +63,7 @@ jobs:
           Write-Host "SHA256 = $h"
 
       - name: 发布 Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           name: Yang-Web ${{ github.event.inputs.tag || github.ref_name }}

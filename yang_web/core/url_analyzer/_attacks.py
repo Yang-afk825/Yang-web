@@ -534,7 +534,7 @@ def auto_exploit(url, results, on_progress=None, on_found=None, fingerprint=None
         lfi_result['stages'] = ['php_file_inclusion']
         return lfi_result
 
-    # ── v4.0: 简单命令注入直接探测 (无WAF场景, 秒杀 system($_POST[x])) ──
+    # ── 简单命令注入直接探测 (无WAF场景, 秒杀 system($_POST[x])) ──
     _emit('plan', '简单RCE检测', '直接命令注入探测...')
     try:
         from yang_web.core.simple_cmd_rce import simple_cmd_rce as _scmdrce

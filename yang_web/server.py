@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Yang-Web v4.1 Web API 服务 — 本地 FastAPI 后端。
+"""Yang-Web Web API 服务 — 本地 FastAPI 后端。
 
 复用全部现有引擎 (decoder / hashid / jwt / url_analyzer / misc_crypto /
 crypto_engine / chinese_ciphers / advanced_engines / scripts registry)，
@@ -577,7 +577,7 @@ def api_proxy(req: ProxyReq):
     import ssl as _ssl
     try:
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) YangWeb/4.0",
+            "User-Agent": f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) YangWeb/{__version__}",
             "Accept": "*/*",
         }
         if req.headers:
@@ -633,7 +633,7 @@ def api_proxy_view(url: str):
     from urllib.error import HTTPError as _HE
     try:
         req = _ur.Request(url, headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) YangWeb/4.0",
+            "User-Agent": f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) YangWeb/{__version__}",
         })
         resp = _ur.urlopen(req, timeout=15)
         data = resp.read()
@@ -664,9 +664,16 @@ _WEB_DIR = Path(__file__).resolve().parent / "web"
 if _WEB_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(_WEB_DIR)), name="static")
 
+    _INDEX_HTML = _WEB_DIR / "index.html"
+
     @app.get("/")
     def index():
-        return FileResponse(str(_WEB_DIR / "index.html"))
+        # 版本号在服务端注入，而不是写死在 HTML 里：
+        # 页面 <title> 与左上角 logo 各写一份数字，正是发版时漏改的来源。
+        # 现读现替换，改前端无需重启服务。
+        html = _INDEX_HTML.read_text(encoding="utf-8")
+        return Response(content=html.replace("__VERSION__", __version__),
+                        media_type="text/html; charset=utf-8")
 
 # ---------------------------------------------------------------------------
 # 入口

@@ -1,5 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""Yang-Web v4.1 PyInstaller 打包配置"""
+"""Yang-Web PyInstaller 打包配置"""
 import os
 
 # SPECPATH 是 PyInstaller 提供的 spec 所在目录
