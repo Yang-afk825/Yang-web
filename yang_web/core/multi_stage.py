@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Yang-Web v3.6 Multi-Stage Attack Engine
-========================================
+Yang-Web Multi-Stage Attack Engine
+==================================
 通用多阶段解题引擎 — 自动发现+利用攻击链，覆盖多种题型
 
 架构:

@@ -11,7 +11,7 @@ SQLi-LABS 专项求解器 — 适配 CTF+ 平台 SQLi-LABS 靶场
 
 靶场地址: http://80-d81dd610-1f3d-45b2-bccd-cf64012932fd.challenge.ctfplus.cn
 
-@author Yang-Web Arsenal v2.2
+@author Yang-Web
 """
 from __future__ import annotations
 

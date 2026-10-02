@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "要发布的版本 tag（如 v4.0.0）；不存在时会自动创建"
+        description: "要发布的版本 tag（如 v4.1.0）；不存在时会自动创建"
         required: true
-        default: "v4.0.0"
+        default: "v4.1.0"
 
 permissions:
   contents: write

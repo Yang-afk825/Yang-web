@@ -9,5 +9,5 @@ Features:
     - Directory & file wordlists
 """
 
-__version__ = "1.4.0"
+__version__ = "4.1.0"
 __author__ = "XiaoYang"

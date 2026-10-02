@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Yang-Web v3.5 Advanced Scanner Engine
+Yang-Web Advanced Scanner Engine
 基于随波逐流Web扫描工具的设计理念优化
 
 新增能力:

@@ -15,7 +15,7 @@ JS / 客户端挑战求解器 — 处理浏览器端 CTF 题目
     - 阶段2: 逻辑还原 — 识别游戏规则、加密算法、状态机
     - 阶段3: 暴力/绕过 — 生成浏览器控制台命令、直接调用内部函数
 
-@author Yang-Web Arsenal v2.2
+@author Yang-Web
 """
 from __future__ import annotations
 

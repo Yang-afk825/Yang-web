@@ -4,6 +4,7 @@
 从 yang_web/gui.py 机械拆分而来（相对导入升一层）, 行为等价。
 """
 
+from .. import __version__
 from ._deps import (HAS_JS_SOLVER, HAS_SQLI_LABS, lfi, php, sqli, ssrf, ssti, sys, tk, ttk, upload, xss)
 from ._panels_attack import (SQLLabsPanel, UrlAttackPanel)
 from ._panels_codec import (AdvancedEncodePanel, ChineseCipherPanel, CryptoPanel, DecodePanel)
@@ -14,10 +15,9 @@ from ._theme import (ACCENT, BG, BORDER, DARK, FG, GREEN, INPUT_BG, YELLOW, appl
 from ._widgets import (_append, _clear_output, _output_area)
 
 
-
 def run_gui():
     root = tk.Tk()
-    root.title("Yang-Web Arsenal v3.6 — 全能CTF工具箱")
+    root.title(f"Yang-Web Arsenal v{__version__} — 全能CTF工具箱")
     root.geometry("1100x720")
     root.minsize(900, 600)
     apply_theme(root)
@@ -481,6 +481,6 @@ def run_gui():
     status = tk.Frame(root, bg=DARK, height=28)
     status.pack(fill=tk.X, side=tk.BOTTOM)
     status.pack_propagate(False)
-    tk.Label(status, text="Yang-Web v1.4.0  |  GUI+CLI 双模式  |  上传靶场分析 + SQLi认证绕过  |  💻 切换",
+    tk.Label(status, text=f"Yang-Web v{__version__}  |  GUI+CLI 双模式  |  上传靶场分析 + SQLi认证绕过  |  💻 切换",
              bg=DARK, fg=BORDER, font=("Microsoft YaHei UI", 8)).pack(side=tk.LEFT, padx=16, pady=4)
     root.mainloop()

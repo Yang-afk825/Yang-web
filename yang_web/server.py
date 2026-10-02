@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Yang-Web v4.0 Web API 服务 — 本地 FastAPI 后端。
+"""Yang-Web v4.1 Web API 服务 — 本地 FastAPI 后端。
 
 复用全部现有引擎 (decoder / hashid / jwt / url_analyzer / misc_crypto /
 crypto_engine / chinese_ciphers / advanced_engines / scripts registry)，
@@ -28,6 +28,7 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from . import __version__
 from .core import decoder, hashid, jwt as jwt_mod
 from .core import misc_crypto, crypto_engine, chinese_ciphers, advanced_engines
 from .core import file_tools, shell_stego
@@ -35,7 +36,7 @@ from .core import url_analyzer
 from .core import knowledge_base
 from .scripts import registry
 
-app = FastAPI(title="Yang-Web API", version="4.0.0")
+app = FastAPI(title="Yang-Web API", version=__version__)
 
 app.add_middleware(
     CORSMiddleware,
@@ -108,7 +109,7 @@ def _err(msg: str, code: int = 400):
 # ---------------------------------------------------------------------------
 @app.get("/api/health")
 def health():
-    return {"ok": True, "name": "Yang-Web", "version": "4.0.0", "time": time.time()}
+    return {"ok": True, "name": "Yang-Web", "version": __version__, "time": time.time()}
 
 # ---------------------------------------------------------------------------
 # 解码
@@ -729,14 +730,14 @@ def main():
     else:
         _log("health NOT ready after 10s")
 
-    print(f"Yang-Web v4.0 API 服务: {url}")
+    print(f"Yang-Web v{__version__} API 服务: {url}")
 
     # 优先用 pywebview 独立窗口 (无浏览器标签栏，工具箱形态)
     try:
         import webview
         _log("webview creating window...")
         webview.create_window(
-            "Yang-Web v4.0 — CTF 综合工具箱",
+            f"Yang-Web v{__version__} — CTF 综合工具箱",
             url,
             width=1360, height=860,
             min_size=(980, 640),

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Yang-Web v2.1 Smart Auto-Solver — 智能多类型 CTF 一键解题引擎
+Yang-Web Smart Auto-Solver — 智能多类型 CTF 一键解题引擎
 
 功能：
     1. 问题分类器 — 自动识别题目类型 (Web/PWN/Reverse/Crypto/Misc/Blockchain)
