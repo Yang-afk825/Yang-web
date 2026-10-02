@@ -191,3 +191,142 @@ PyInstaller 每次构建产物都不同、**无法去重**，等于每发一版�
 - `python -m compileall` 全绿；82 项单元测试全绿；
 - 功能冒烟：`misc_crypto` 95 种密码注册正常、base64/morse 编解码正确；
   `advanced_scanner` 双模式入口打印用法正常。
+
+---
+---
+
+# 第三轮：v4.1.0 → v4.1.1
+
+第三轮由一句用户反馈启动：**「这不还是 V4.0 嘛」**。
+v4.1.0 已经发布出去了，但用户打开看到的仍是旧版本号。顺着这条线往下查，
+牵出了一批「看着对、实际错」的东西。本轮共 11 个提交。
+
+## 一、版本号漂移的根因（用户唯一直接可见的缺陷）
+
+`yang_web/web/index.html` 的 `<title>` 和左上角 logo **各写死了一份 `v4.0`**。
+exe 启动后用户眼睛落到的就是这个文件，而发版时只改了 `__init__.py` 和 `pyproject.toml`。
+
+更关键的是**守卫测试为什么没拦住**：它的 `SCAN_EXT` 只有
+`.py/.spec/.toml/.yml/.yaml` —— **不含 `.html`**。测试全绿，缺陷照旧。
+
+修法分三层：
+
+1. **消除重复真相**：HTML 改占位符 `__VERSION__`，由 `server.py` 的 `/` 路由
+   现读现替换。改前端不必重启服务，也不再需要在两个地方同步改数字。
+2. **扩大守卫面**：`SCAN_EXT` 加入 `.html`；正则从 1 种扩到 3 种
+   （展示串 `Yang-Web vX.Y.Z` / 字面量 `version = "X.Y.Z"` / UA 串 `YangWeb/X.Y.Z`）；
+   新增 README 标题校验与一条**端到端**用例（真起 FastAPI，断言渲染结果 == `__version__`
+   且无占位符残留）。
+3. **删掉负债**：所有 docstring 里的版本前缀一律去掉。
+   `v4.1` 这种短格式遇到 `4.1.1` 必然漂移 —— 留着一个"迟早要改、但没人会记得改"的数字，
+   比不留更危险。
+
+## 二、编解码引擎的 12 处静默失效
+
+`advanced_engines` 注册表里有 18 个引擎，**一条测试都没有**。
+`tests/test_ciphers.py` 覆盖的是 `misc_crypto`，两者不是一回事。
+
+本轮引入两条通用检查手法，一次把它们全揪出来：
+
+- **注册表全引擎往返扫描**：`dec(x) == x` 对每个引擎过一遍；
+- **标准库对标**：能对标准库的就对标准库（UUEncode → `binascii`；base91/92 → PyPI 包）。
+
+| 引擎 | 症状 | 根因 |
+|---|---|---|
+| `base91_decode` | `HELLO` → `HELL\x80` | 收尾 `(v \| b << n)` 应为 `(b \| v << n)`，位序颠倒 |
+| `base92` | 任何输入都解不回原文 | 编码按 13 bit 分组、尾部按「模 92」，解码按 `value*92` 递推，成对不自洽 |
+| `rot18_encode` | 恒返回空串 | 函数体第一行 `return rot5_encode(rot47_encode(text)[:0])`，切片恒空 → 真实现成死代码 |
+| `jsfuck_decode` | 连自己的输出都解不回 | 正则 `fromCharCode\)\(` 与产出 `["fromCharCode"](72)` 不匹配 |
+| `quoted_printable` | `'a b'` → `'a_b'` | 编码把空格写成 `_`，解码从不还原（单向丢失） |
+| `brainfuck` / `ook` | 中文生成上千个 `+` | 用 `ord(c)` 取码点当字节 |
+| `shellcode` | 产出 `\x4e2d` 四位伪字节 | `f'{ord(c):02x}'` 的 `02` 只是**最小**宽度 |
+| `zerowidth` | emoji 之后全部错位 | `f'{ord(c):016b}'` 的 16 同理，码点 > U+FFFF 输出 17 位 |
+| `uuencode` | 解不开任何外部数据 | 直接套 `base64.b64encode`，根本不是 uuencode |
+
+### base91 的隐蔽之处
+
+它只在**编码串长度为奇数**时现形：
+
+```
+HELLO       -> '>O$G+3A'      (7 字符，末组单字符) -> 解错
+flag{test}  -> '@iH<,{!eaUo{B' (13 字符)           -> 解错
+abc         -> '#G(I'          (4 字符)            -> 正确
+test123     -> 'fPNK,i~RD'     (10 字符)           -> 正确
+```
+
+偶数长度恰好把缺陷盖住了。**这解释了它为什么能活这么久**：随手试两个例子，
+成功率大约一半。若不是用「注册表轮询 + 权威实现逐字符比对」，它还会继续潜伏。
+
+### 验证
+
+- base91/base92 对 PyPI 权威实现：**408 条文本编码 + 407 条全字节解码，零不一致**；
+- UUEncode 对 `binascii.b2a_uu`/`a2b_uu`：**207 样本双向互解，零失败**
+  （顺带确认标准库对 `0` 值的空格/反引号两种约定都接受，所以编码端选更抗空白裁剪的反引号）；
+- `aaencode`/`jjencode` 确需 JS 运行时，在测试里显式登记为 `ONE_WAY_BY_DESIGN`，
+  而不是混进"漏测"或"假装修好"。
+
+## 三、巨型文件清零
+
+`>800 行` 的文件：**8 个 → 0 个**，单文件最大 2004 → 728 行。
+
+| 原文件 | 行数 | 拆为 |
+|---|---|---|
+| `core/multi_stage.py` | 1062 | 10 模块（含 4 Mixin） |
+| `core/url_analyzer/_attacks.py` | 1001 | 6 模块 |
+| `core/cipher_keyed.py` | 978 | 9 模块 |
+| `gui/_panels_attack.py` | 976 | 3 模块 |
+| `scripts/registry.py` | 947 | 4 模块 |
+| `core/decoder.py` | 875 | 9 模块 |
+| `core/advanced_engines.py` | 846 | 7 模块 |
+| `gui/_panels_tools.py` | 809 | 6 模块 |
+
+每次拆分都跑 `diff_api`（方法集合 / 方法签名 / 顶层数据对象三类比对），全部 MATCH。
+
+### 拆分器自身修掉的三个 bug
+
+工具是被真实缺陷打磨出来的，本轮在它身上也踩了坑：
+
+1. **`try/except` 里的纯导入块会被漏掉。** `cipher_keyed` 拆完后
+   `fernet: NameError: name 'crypto_engine' is not defined` ——
+   `try: from .. import X / except: import X` 这种"可选依赖兜底"不是模块级 `Import` 节点，
+   `tree.body` 扫不到，于是整段被当作普通行归给了某个分组，
+   跨组引用者一运行就炸。**AST 扫描、`diff_api`、`compileall` 三重掩护全都看不出来，
+   只有真的调用才暴露** —— 最后是 `tests/test_ciphers.py` 的全密码 roundtrip 逮住的。
+2. **`diff_api` 遇到 TypedDict 会崩**：`builtin has invalid signature` → 加兜底返回 `<unavailable>`。
+3. **`selftest` 的夹具无法复现该缺陷**（原本是组内引用，改为跨组引用后才回归得住）。
+
+### 为什么 GUI 那两个文件没做 Mixin 拆分
+
+每个面板的 `__init__` 都调 `super().__init__(parent, bg=BG)`。
+把 `__init__` 挪进 Mixin 后，`super()` 的落点取决于 MRO 里 Mixin 的位置 ——
+文件从 728 降到 ~300 的收益，不值这个风险。包拆分已足够把两个文件压到 800 以下。
+
+## 四、工程化
+
+- **测试 82 → 116 项**。两把真正管用的钥匙：
+  `test_advanced_engines.py` 的「注册表全引擎往返」，和
+  `test_package_layout.py` 的「14 个面板**真构造**再销毁」——
+  `hasattr` 通过只说明名字在，构造期缺符号照样炸，而那正是拆包最容易伤到的地方。
+- **CI 消除 Node.js 20 弃用告警**：`checkout` / `setup-python` / `gh-release`
+  升到声明 `using: node24` 的版本（v7/v7/v3），py3.8 / 3.10 / 3.12 三档全绿。
+- **清掉历史格式化残留**：早期批量 `re.sub` 把 `\n` 写成 `\n\n`，
+  `registry.py` 里塞了 368 行空行（38.9%），连 `TypedDict` 字段之间、
+  `tk.Text(...)` 参数之间都被插空行；另有同一行重复导入被拆分器原样带进 9 个文件。
+
+## 五、仍已知未修（留档）
+
+- **`rot8000` 只旋转可打印 ASCII**，不是整个 BMP。它能自洽往返，且
+  "ROT8000" 在社区有多个互不兼容的定义，改动会让它和某一边对不上 —— 故保持现状。
+- **`xxencode` 的解码对最后一行依赖循环变量**，能往返但写法脆弱；
+  本轮给它补了与 uuencode 一致的 `begin/end` 信封，未重写分组逻辑。
+- `shellcode_decode` 对「无 `\x` 前缀的裸十六进制」走 `bytes.fromhex` 兜底，
+  奇数长度输入会落到 `'[!] 无法解析'`。
+
+## 验证方式
+
+- `python -m unittest discover -s tests -t .` → **116 项全绿**（跳过 3 项，均为 fastapi 相关）；
+- 用带 tkinter 的系统 Python 3.12 复跑，跳过数从 14 降到 3 —— **GUI 路径这次是真的跑过了**
+  （托管 Python 3.13 无 tkinter，此前的 GUI 测试长期静默 skip）；
+- `python -m compileall yang_web tests` 全绿；
+- 8 次拆分的 `diff_api` 输出全部 `全部一致`。
+

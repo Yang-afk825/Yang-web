@@ -53,7 +53,7 @@ ONE_WAY_BY_DESIGN = {
 
 # 往返测试的输入：覆盖 ASCII、中文、emoji（BMP 之外）、长串、全可打印字符集。
 TEXTS = [
-    'HELLO', 'flag{test}', 'Yang-Web 4.1.1', '中文测试', 'A', 'abc123', ' ',
+    'HELLO', 'flag{test}', 'Yang-Web x.y.z', '中文测试', 'A', 'abc123', ' ',
     'emoji😀😀x', 'a' * 200, ''.join(chr(c) for c in range(0x20, 0x7f)),
 ]
 

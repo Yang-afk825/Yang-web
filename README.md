@@ -396,33 +396,37 @@ Yang-Web/
 │   │   ├── _theme.py          # 配色与主题
 │   │   ├── _widgets.py        # 控件工厂 / 输出区助手
 │   │   ├── _routing.py        # 「送到下一步」路由总线 + _SendBar
-│   │   ├── _panels_*.py       # 15 个功能面板（编解码/密码学/工具/攻击）
 │   │   ├── _deps.py           # 外部依赖与可选引擎导入（try/except 兜底）
+│   │   ├── _panels_codec.py   # 编解码面板
+│   │   ├── _panels_crypto.py  # 密码学面板
+│   │   ├── _panels_attack/    # URL 攻击 + SQLi Labs（2 模块）
+│   │   ├── _panels_tools/     # Shell / 隐写 / 脚本库 / 文档 / JS 游戏（5 模块）
 │   │   └── _app.py            # 窗口组装、Tab 布局与 GUI/CLI 切换
 │   ├── core/              # 核心引擎
-│   │   ├── decoder.py         # 智能解码
+│   │   ├── decoder/           # 智能解码（9 模块）
+│   │   ├── advanced_engines/  # 18 种高级编码（7 模块）
+│   │   ├── cipher_keyed/      # 带密钥古典密码（9 模块）
 │   │   ├── hashid.py          # Hash识别
 │   │   ├── jwt.py             # JWT攻击
-│   │   ├── misc_crypto/       # 古典密码（拆分为 9 个原子模块）
+│   │   ├── misc_crypto/       # 古典密码（9 模块）
 │   │   ├── crypto_engine.py   # AES/RC4/RSA
-│   │   ├── advanced_engines.py # 18种高级编码
 │   │   ├── chinese_ciphers.py  # 中文特色密码
 │   │   ├── url_analyzer/       # 自动攻击调度（分层包）
 │   │   │   ├── _http.py           # 传输原语 / HTML 解析 / FLAG 识别
 │   │   │   ├── _signatures.py     # 参数·路径·payload 签名表
 │   │   │   ├── _engines.py        # 指纹 + 单次执行 + 并发 + 调度
-│   │   │   ├── _attacks.py        # 具体利用尝试（PHP/LFI/SQLi/bashFuck）
+│   │   │   ├── _attacks/          # 具体利用尝试（PHP/LFI/SQLi/bashFuck，6 模块）
 │   │   │   └── _analyze.py        # 题型判定与攻击指南
+│   │   ├── multi_stage/        # 多阶段攻击（10 模块）
 │   │   ├── simple_cmd_rce.py   # 简单命令注入探测
 │   │   ├── bashfuck_solver.py  # 无字母RCE
 │   │   ├── ssrf_rebind.py      # SSRF DNS Rebinding
 │   │   ├── php_lfi.py          # PHP文件包含
 │   │   ├── php_eval_rce.py     # PHP eval RCE
-│   │   ├── multi_stage.py      # 多阶段攻击
-│   │   ├── advanced_scanner/   # 高级扫描（字典爆破/Diff/攻击链，9 个原子模块）
-│   │   ├── smart_solver/       # 智能一键解题（拆分为 8 个原子模块 + 6 个 Mixin）
+│   │   ├── advanced_scanner/   # 高级扫描（字典爆破/Diff/攻击链，11 模块）
+│   │   ├── smart_solver/       # 智能一键解题（16 模块，含 6 个 Mixin）
 │   │   └── ...                 # 12+ 引擎
-│   ├── scripts/           # 51个CTF脚本
+│   ├── scripts/           # CTF 脚本库（registry/ 存放脚本元数据表）
 │   └── wordlists/         # 词库 + 古典密码参考图
 ├── 靶场.py                # 内置4关Web靶场 (9999)
 └── dist/                  # 本地构建产物（不入库，发布走 Releases）
@@ -430,7 +434,51 @@ Yang-Web/
 
 ---
 
-## 🆕 v4.1.0 更新 (2026-10-02)
+## 🆕 v4.1.1 更新 (2026-10-02)
+
+> 本次聚焦「把看着对但实际错的东西修掉」— 版本号漂移的根因、一批静默失效的编解码引擎，以及剩余全部巨型文件。
+
+### 🔢 版本号：从"改了看不到"到"只有一处真相"
+
+界面上一直显示 **v4.0**，而不是发布时的版本 —— 根因是 `yang_web/web/index.html` 的 `<title>` 与左上角 logo **各写死了一份版本号**，发版时没人改到它们；而守卫测试只扫 `.py/.toml/.yml`，`SCAN_EXT` 里压根没有 `.html`。
+
+- 页面改为 `__VERSION__` 占位符，由 `server.py` 的 `/` 路由**现读现替换**（改前端无需重启）
+- 守卫测试从 3 项扩到 5 项：新增 `.html` 扫描、README 标题、UA 串校验，以及一条**端到端**用例（真起 FastAPI，断言渲染结果等于 `__version__` 且无占位符残留）
+- 所有 docstring 里的版本前缀一律删除 —— `v4.1` 这种短格式遇到 `4.1.1` 必然漂移，留着就是负债
+
+### 🐛 编解码引擎：12 处静默失效
+
+`advanced_engines` 注册表里 18 个引擎此前**一条测试都没有**。用「全引擎往返扫描 + 标准库对标」一次查出全部问题：
+
+| 引擎 | 症状 | 根因 |
+|---|---|---|
+| `base91_decode` | `HELLO` → `HELL\x80` | 收尾一行位序写反，`v \| b << n` 应为 `b \| v << n`；只有编码串长度为**奇数**时才现形，偶数长度恰好掩盖 |
+| `base92` | 任何输入都解不回原文 | 编码按 13 bit 分组、尾部却按「模 92」，解码又用 `value*92` 递推，成对不自洽 |
+| `rot18_encode` | 恒返回空串 | 函数体第一行是 `return ...[:0]`，切片恒为空 —— 真实现成了死代码 |
+| `jsfuck_decode` | 连自己编出来的都解不回 | 正则写 `fromCharCode\)\(`，而实际产出是 `["fromCharCode"](72)`，属性名后是引号不是括号 |
+| `quoted_printable` | `'a b'` → `'a_b'` | 编码把空格写成 `_`（那是 RFC 2047 Q-word 的约定），解码却从不还原 |
+| `brainfuck` / `ook` | 中文生成上千个 `+` | 用 `ord(c)` 取码点当字节，`'中'`=20013 |
+| `shellcode` | `'\x4e2d'` 四位伪字节 | `f'{ord(c):02x}'` 的 `02` 只是最小宽度，解码端只认两位 |
+| `zerowidth` | emoji 之后全部错位 | `f'{ord(c):016b}'` 的 16 也是最小宽度，码点 > U+FFFF 输出 17 位 |
+| `uuencode` | 解不开任何外部数据 | 直接套 `base64.b64encode` —— 根本不是 uuencode |
+
+修复后逐项对标权威实现：base91/base92 对 PyPI 包 **408 条编码 + 407 条全字节解码零不一致**；UUEncode 对 `binascii.b2a_uu`/`a2b_uu` **207 样本双向互解零失败**。`aaencode`/`jjencode` 确需 JS 运行时，在测试里显式登记为「设计上单向」，而不是混在漏测里。
+
+### 🧩 巨型文件清零
+
+`>800 行` 的文件从 **8 个**降到 **0 个**（单文件最大 2004 → 728 行）。本轮拆完：
+
+`decoder`(875→9 模块)、`cipher_keyed`(978→9)、`url_analyzer/_attacks`(1001→6)、`multi_stage`(1062→10 含 4 Mixin)、`scripts/registry`(947→4)、`advanced_engines`(846→7)、`gui/_panels_attack`(976→3)、`gui/_panels_tools`(809→6)
+
+每次拆分都用 `diff_api` 比对：**方法集合、方法签名、顶层数据对象全部一致**，并跑全量测试 + 面板实例化冒烟。
+
+### ✅ 工程化
+
+- **新增 34 项回归测试**（82 → 116），其中 `test_advanced_engines.py` 的「注册表全引擎往返」和 `test_package_layout.py` 的「14 个面板真构造」是本次发现并锁死缺陷的两把钥匙
+- **CI 消除 Node.js 20 弃用告警** —— `checkout`/`setup-python`/`gh-release` 升级到声明 `using: node24` 的版本，py3.8/3.10/3.12 三档全绿
+- **清掉历史格式化残留** —— 早期批量 `re.sub` 把 `\n` 写成 `\n\n`，在 `registry.py` 里塞进 368 行空行（38.9%）；另有同一行重复导入被拆分器原样带进 9 个文件
+
+## v4.1.0 更新 (2026-10-02)
 
 > 本次聚焦「工程化」— 修掉对外失真与静默缺陷，把发布流程自动化。
 
