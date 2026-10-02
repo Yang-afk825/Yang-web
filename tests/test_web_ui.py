@@ -18,7 +18,6 @@ import yang_web
 
 try:
     from fastapi.testclient import TestClient
-
     from yang_web import server
     _SKIP_REASON = None
 except Exception as _e:  # pragma: no cover - 环境相关
@@ -42,7 +41,6 @@ class TestWebUiVersion(unittest.TestCase):
         r = self.client.get('/')
         self.assertEqual(r.status_code, 200)
         html = r.text
-
         self.assertNotIn('__VERSION__', html,
                          'index.html 的占位符未被替换，原样漏到了页面上')
 
@@ -52,7 +50,6 @@ class TestWebUiVersion(unittest.TestCase):
             self.assertEqual(_norm(v), _norm(yang_web.__version__),
                              '页面渲染出的版本 %s != __version__ %s'
                              % (v, yang_web.__version__))
-
     def test_health_endpoint_version(self):
         d = self.client.get('/api/health').json()
         self.assertEqual(d.get('version'), yang_web.__version__)

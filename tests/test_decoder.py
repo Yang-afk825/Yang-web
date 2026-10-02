@@ -25,7 +25,6 @@ def solve(text):
 
 class TestChainDecode(unittest.TestCase):
     """常见编码应能正确解出。"""
-
     def test_base64_padded(self):
         self.assertEqual(solve("ZmxhZ3t0ZXN0fQ=="), "flag{test}")
 
@@ -53,13 +52,11 @@ class TestChainDecode(unittest.TestCase):
 
 class TestPlaintextNotMangled(unittest.TestCase):
     """已是明文的输入，不得被继续解码成乱码（回归）。"""
-
     PLAINTEXTS = [
         "flag{test}",
         "DASCTF{abc_123}",
         "flag{0d3747db-16f6-4c62-9665-b3e7531cefc8}",
     ]
-
     def test_no_replacement_char_in_output(self):
         for text in self.PLAINTEXTS:
             with self.subTest(text=text):
@@ -75,7 +72,6 @@ class TestPlaintextNotMangled(unittest.TestCase):
 
 class TestDetectionPriority(unittest.TestCase):
     """编码检测优先级（回归）。"""
-
     def test_hex_preferred_over_base58(self):
         """hex 字符集是 base58 字母表的子集，base16 必须优先。"""
         detections = detect_encoding("666c61677b746573747d")
