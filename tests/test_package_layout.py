@@ -108,6 +108,39 @@ class TestGuiPackage(unittest.TestCase):
         import yang_web.gui.__main__ as main_mod
         self.assertIs(main_mod.run_gui, gui.run_gui)
 
+    def test_split_submodules_importable(self):
+        """每个分层子包都要能被单独导入（相对导入升层没写错）。"""
+        import importlib
+        for mod in ("yang_web.gui._panels_attack._url_attack",
+                    "yang_web.gui._panels_attack._sqli_labs",
+                    "yang_web.gui._panels_tools._shell",
+                    "yang_web.gui._panels_tools._stego",
+                    "yang_web.gui._panels_tools._scripts",
+                    "yang_web.gui._panels_tools._docs",
+                    "yang_web.gui._panels_tools._jsgame"):
+            with self.subTest(mod=mod):
+                self.assertIsNotNone(importlib.import_module(mod))
+
+    def test_all_panels_construct(self):
+        """每个面板都要能真正构造出来。
+
+        `hasattr` 通过只说明名字在，`__init__` 里少一个符号照样炸 ——
+        拆包最容易伤到的恰恰是构造期。
+        """
+        import tkinter
+        from yang_web import gui
+        root = tkinter.Tk()
+        root.withdraw()
+        try:
+            for name in ("UrlAttackPanel", "SQLLabsPanel", "ShellPanel", "StegoPanel",
+                         "ScriptsPanel", "DocsPanel", "JSGamePanel", "DecodePanel",
+                         "AdvancedEncodePanel", "ChineseCipherPanel", "CryptoPanel",
+                         "HashPanel", "JWTPanel", "MiscCryptoPanel"):
+                with self.subTest(panel=name):
+                    getattr(gui, name)(root).destroy()
+        finally:
+            root.destroy()
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
