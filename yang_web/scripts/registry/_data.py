@@ -1,30 +1,11 @@
-# -*- coding: utf-8 -*-
-"""CTF 脚本注册表 — 元数据、分类、依赖信息."""
-
-
+"""yang_web.scripts.registry 子模块 _data（自 registry.py 拆分，请勿手工重排）。"""
 
 from __future__ import annotations
-
 from typing import Dict, List, TypedDict, Optional
-
 import os
 
+from ._meta import (ScriptMeta)
 
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-
-class ScriptMeta(TypedDict):
-
-    name: str           # 脚本文件名
-    title: str          # 中文名
-    category: str       # 分类: crypto / web / reverse / misc / forensics
-    description: str    # 功能简述
-    usage: str          # 使用示例
-    deps: List[str]     # 依赖库 (非标准库)
-    input_type: str     # 输入类型: text / file / apk / pcap / url
-    output_type: str    # 输出类型: text / flag / decode
 
 
 
@@ -625,44 +606,3 @@ SCRIPTS: Dict[str, ScriptMeta] = {
     },
 
 }
-# ── 分类映射 ──
-CATEGORIES: Dict[str, str] = {
-    "web": "🌐 Web",
-    "pwn": "💣 PWN / 二进制漏洞",
-    "reverse": "🔧 逆向工程",
-    "crypto": "🔐 密码 / 编码",
-    "misc": "📦 杂项 / Misc",
-    "forensics": "🔍 取证 / 隐写",
-    "blockchain": "⛓️ 区块链 / 智能合约",
-}
-def list_scripts(category: Optional[str] = None) -> List[tuple]:
-    """列出脚本（可按分类筛选），返回 (key, meta) 列表."""
-    results = []
-    for key, meta in SCRIPTS.items():
-        if category and meta["category"] != category:
-            continue
-        results.append((key, meta))
-    return sorted(results, key=lambda x: x[0])
-def search_scripts(query: str) -> List[tuple]:
-    """按关键词搜索脚本."""
-    q = query.lower()
-    results = []
-    for key, meta in SCRIPTS.items():
-        if (q in key.lower() or q in meta["title"].lower()
-                or q in meta["description"].lower()
-                or q in meta["category"].lower()):
-            results.append((key, meta))
-    return sorted(results, key=lambda x: x[0])
-def get_script(key: str) -> Optional[ScriptMeta]:
-    """获取单个脚本元数据."""
-    return SCRIPTS.get(key)
-def get_script_path(key: str) -> Optional[str]:
-    """获取脚本的绝对路径."""
-    meta = SCRIPTS.get(key)
-    if not meta:
-        return None
-    path = os.path.join(SCRIPT_DIR, meta["name"])
-    if os.path.isfile(path):
-        return path
-    return None
-
